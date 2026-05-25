@@ -8,10 +8,18 @@ use Illuminate\Http\Request;
 
 class NationalHolidayController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $holidays = NationalHoliday::orderBy('date', 'desc')->paginate(20);
-        return view('national-holidays.index', compact('holidays'));
+        $years = NationalHoliday::selectRaw('YEAR(date) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        $holidays = NationalHoliday::when($request->year, fn($q, $year) => $q->whereYear('date', $year))
+            ->orderBy('date', 'desc')
+            ->paginate(20);
+
+        return view('national-holidays.index', compact('holidays', 'years'));
     }
 
     public function create()

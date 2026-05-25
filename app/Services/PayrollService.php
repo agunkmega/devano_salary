@@ -77,7 +77,7 @@ class PayrollService
             $dailyRate = $daysInPeriod > 0 ? ($totalGaji / $daysInPeriod) : 0;
             $ratePerMinute = $daysInPeriod > 0 ? ($totalGaji / $daysInPeriod / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
-            $totalWorkingDays = $this->getTotalWorkingDays($period);
+            $totalWorkingDays = $this->getTotalWorkingDays($period, $startDate, $endDate, $employee);
             $absentDays = max(0, $totalWorkingDays - $effectiveAttendanceDays);
             $absentPenalty = $dailyRate * $absentDays;
         }
@@ -240,15 +240,35 @@ class PayrollService
         return $generated;
     }
 
-    private function getTotalWorkingDays(string $period): int
+    private function getTotalWorkingDays(string $period, ?Carbon $startDate = null, ?Carbon $endDate = null, ?Employee $employee = null): int
     {
-        [$year, $month] = explode('-', $period);
-        $start = Carbon::createFromDate($year, $month, 1);
-        $end = $start->copy()->endOfMonth();
+        if (!$startDate || !$endDate) {
+            [$year, $month] = explode('-', $period);
+            $start = Carbon::createFromDate($year, $month, 1);
+            $end = $start->copy()->endOfMonth();
+        } else {
+            $start = $startDate->copy();
+            $end = $endDate->copy();
+        }
+
+        $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end)
+            ->get(['date', 'religion'])
+            ->groupBy(fn($h) => $h->date->format('Y-m-d'))
+            ->map(fn($items) => $items->pluck('religion')->toArray())
+            ->toArray();
+
         $count = 0;
         $cursor = $start->copy();
         while ($cursor->lte($end)) {
-            if ($cursor->dayOfWeek !== Carbon::SUNDAY) {
+            $dateStr = $cursor->format('Y-m-d');
+            $isHoliday = false;
+            if (isset($holidaysByDate[$dateStr])) {
+                $empReligion = $employee?->religion;
+                $isHoliday = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
+            }
+            if ($cursor->dayOfWeek !== Carbon::SUNDAY && !$isHoliday) {
                 $count++;
             }
             $cursor->addDay();

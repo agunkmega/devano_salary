@@ -200,10 +200,24 @@ class PayrollController extends Controller
 
         $effectiveAttendanceDays = $attendanceDays + $paidLeaveDays;
 
+        $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->get(['date', 'religion'])
+            ->groupBy(fn($h) => $h->date->format('Y-m-d'))
+            ->map(fn($items) => $items->pluck('religion')->toArray())
+            ->toArray();
+
         $totalWorkingDays = 0;
         $cursor = $startDate->copy()->startOfDay();
         while ($cursor->lte($endDate)) {
-            if ($cursor->dayOfWeek !== Carbon::SUNDAY) {
+            $dateStr = $cursor->format('Y-m-d');
+            $isHoliday = false;
+            if (isset($holidaysByDate[$dateStr])) {
+                $empReligion = $employee->religion;
+                $isHoliday = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
+            }
+            if ($cursor->dayOfWeek !== Carbon::SUNDAY && !$isHoliday) {
                 $totalWorkingDays++;
             }
             $cursor->addDay();

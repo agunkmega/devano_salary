@@ -92,81 +92,51 @@ class EmployeeController extends Controller
             'phone' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:L,P',
+            'religion' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'join_date' => 'nullable|date',
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
             'shift_id' => 'nullable|exists:shifts,id',
-            'base_salary' => 'nullable|numeric|min:0',
-            'allowance' => 'nullable|numeric|min:0',
-            'allowance_type' => 'nullable|string|max:100',
-            'allowance_absensi' => 'nullable|numeric|min:0',
-            'allowance_transport' => 'nullable|numeric|min:0',
-            'allowance_jabatan' => 'nullable|numeric|min:0',
-            'allowance_insentif' => 'nullable|numeric|min:0',
-            'bank_name' => 'nullable|string|max:100',
-            'bank_account' => 'nullable|string|max:100',
-            'bank_holder' => 'nullable|string|max:255',
-            'bpjs_ketenagakerjaan' => 'nullable|string|max:50',
-            'bpjs_ketenagakerjaan_type' => 'nullable|in:full,partial',
-            'bpjs_kesehatan' => 'nullable|string|max:50',
-            'bpjs_kesehatan_active' => 'nullable|boolean',
-            'bpjs_kesehatan_tanggungan' => 'nullable|integer|min:0',
-            'iuran_wajib_amount' => 'nullable|numeric|min:0',
-            'is_active' => 'boolean',
-            'employee_type' => 'nullable|in:bulanan,harian',
-            'overtime_pay_per_hour' => 'nullable|numeric|min:0',
-            'uang_makan_lembur' => 'nullable|numeric|min:0',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'birth_date' => 'nullable|date',
         ]);
 
-        $password = Str::random(8);
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('photos', 'public');
+        }
 
-
-        $user = User::create([
-            'name' => $validated['full_name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($password),
-            'role' => 'staff',
-            'is_active' => true,
-        ]);
-
-        $validated['user_id'] = $user->id;
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
-        $employee = Employee::create($validated);
+
+        Employee::create($validated);
 
         return redirect()->route('admin.employees.index')
-            ->with('success', "Employee created successfully. Login credentials: Email: {$user->email}, Password: {$password}");
+            ->with('success', 'Pegawai berhasil ditambahkan.');
     }
 
     public function show(Employee $employee)
     {
-        $employee->load(['user', 'department', 'position', 'shift', 'attendances' => function ($q) {
-            $q->latest()->take(30);
-        }, 'leaves' => function ($q) {
-            $q->latest()->take(10);
-        }]);
-
+        $employee->load(['department', 'position', 'shift', 'user']);
         return view('employees.show', compact('employee'));
     }
 
     public function edit(Employee $employee)
     {
-        $departments = Department::where('is_active', true)->get();
-        $positions = Position::where('is_active', true)->get();
-        $shifts = Shift::where('is_active', true)->get();
-
+        $departments = Department::where('is_active', true)->get(['id', 'name']);
+        $positions = Position::where('is_active', true)->get(['id', 'name', 'department_id']);
+        $shifts = Shift::orderBy('name')->get(['id', 'name']);
         return view('employees.edit', compact('employee', 'departments', 'positions', 'shifts'));
     }
 
     public function update(Request $request, Employee $employee)
     {
         $validated = $request->validate([
-            'nik' => 'required|string|max:50|unique:employees,nik,' . $employee->id,
+            'nik' => 'required|string|max:20|unique:employees,nik,' . $employee->id,
             'full_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:employees,email,' . $employee->id,
-            'phone' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:L,P',
+            'religion' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'join_date' => 'nullable|date',
             'department_id' => 'nullable|exists:departments,id',

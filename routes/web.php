@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\NationalHolidayController;
 
 Route::redirect('/', '/admin/dashboard');
 
@@ -75,6 +76,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::patch('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
 
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+
+    Route::resource('national-holidays', NationalHolidayController::class);
 });
 
 require __DIR__.'/auth.php';

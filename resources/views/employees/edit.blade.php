@@ -44,6 +44,20 @@
                         <option value="L" {{ ($employee->gender ?? '') === 'L' ? 'selected' : '' }}>Laki-laki</option>
                         <option value="P" {{ ($employee->gender ?? '') === 'P' ? 'selected' : '' }}>Perempuan</option>
                     </select>
+                    @error('gender') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Agama</label>
+                    <select name="religion" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('religion') border-red-500 @enderror">
+                        <option value="">Pilih Agama</option>
+                        <option value="Islam" {{ ($employee->religion ?? '') === 'Islam' ? 'selected' : '' }}>Islam</option>
+                        <option value="Kristen" {{ ($employee->religion ?? '') === 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                        <option value="Katolik" {{ ($employee->religion ?? '') === 'Katolik' ? 'selected' : '' }}>Katolik</option>
+                        <option value="Hindu" {{ ($employee->religion ?? '') === 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                        <option value="Buddha" {{ ($employee->religion ?? '') === 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                        <option value="Konghucu" {{ ($employee->religion ?? '') === 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                    </select>
+                    @error('religion') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Departemen</label>

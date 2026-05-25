@@ -52,6 +52,14 @@ class AttendanceController extends Controller
                 ->get()
                 ->groupBy('employee_id');
 
+            $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
+                ->whereDate('date', '>=', $dateFrom)
+                ->whereDate('date', '<=', $dateTo)
+                ->get(['date', 'religion'])
+                ->groupBy(fn($h) => $h->date->format('Y-m-d'))
+                ->map(fn($items) => $items->pluck('religion')->toArray())
+                ->toArray();
+
             $period = \Carbon\CarbonPeriod::create($dateFrom, $dateTo);
             $dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -75,6 +83,17 @@ class AttendanceController extends Controller
                         if ($date->between($leave->start_date, $leave->end_date)) {
                             $status = 'Cuti';
                             break;
+                        }
+                    }
+                }
+
+                if ($status === '-') {
+                    $dateStr = $date->format('Y-m-d');
+                    if (isset($holidaysByDate[$dateStr])) {
+                        $empReligion = $emp->religion;
+                        $isHolidayForEmployee = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
+                        if ($isHolidayForEmployee) {
+                            $status = 'Libur';
                         }
                     }
                 }

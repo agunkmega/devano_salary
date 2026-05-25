@@ -18,6 +18,7 @@ class Employee extends Model
         'full_name',
         'birth_date',
         'gender',
+        'religion',
         'phone',
         'email',
         'address',

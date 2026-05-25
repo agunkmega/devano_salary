@@ -43,6 +43,7 @@
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Telepon</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->phone ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Lahir</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->birth_date?->format('d M Y') ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jenis Kelamin</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->gender === 'L' ? 'Laki-laki' : ($employee->gender === 'P' ? 'Perempuan' : '-') }}</dd></div>
+                    <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Agama</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->religion ?: '-' }}</dd></div>
                     <div class="sm:col-span-2"><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alamat</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->address ?? '-' }}</dd></div>
                 </dl>
             </div>

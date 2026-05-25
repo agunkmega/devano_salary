@@ -1,0 +1,80 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\PositionController;
+use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\LeaveController;
+use App\Http\Controllers\Admin\CashAdvanceController;
+use App\Http\Controllers\Admin\LeaveTypeController;
+use App\Http\Controllers\Admin\PayrollController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\ActivityLogController;
+
+Route::redirect('/', '/admin/dashboard');
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:super_admin,hr,manager,staff'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::post('employees/import', [EmployeeController::class, 'importExcel'])->name('employees.import');
+    Route::get('employees/export-excel', [EmployeeController::class, 'exportExcel'])->name('employees.export-excel');
+    Route::get('employees/export-pdf', [EmployeeController::class, 'exportPdf'])->name('employees.export-pdf');
+    Route::resource('employees', EmployeeController::class);
+    Route::resource('departments', DepartmentController::class);
+    Route::resource('positions', PositionController::class);
+    Route::resource('shifts', ShiftController::class);
+
+    Route::resource('attendances', AttendanceController::class)->except(['destroy']);
+    Route::post('attendances/import-txt', [AttendanceController::class, 'importTxt'])->name('attendances.import-txt');
+    Route::post('attendances/import-csv', [AttendanceController::class, 'importCsv'])->name('attendances.import-csv');
+    Route::post('attendances/import-checkpoint', [AttendanceController::class, 'importCheckpoint'])->name('attendances.import-checkpoint');
+    Route::get('attendances/history', [AttendanceController::class, 'history'])->name('attendances.history');
+
+    Route::resource('leave-types', LeaveTypeController::class)->except(['show']);
+    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave'])->except(['edit', 'update', 'destroy']);
+    Route::patch('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+    Route::patch('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
+    Route::patch('leaves/{leave}/cancel', [LeaveController::class, 'cancel'])->name('leaves.cancel');
+    Route::get('my-leaves', [LeaveController::class, 'myLeaves'])->name('leaves.my-leaves');
+
+    Route::resource('cash-advances', CashAdvanceController::class)->except(['edit', 'update', 'destroy']);
+    Route::patch('cash-advances/{cashAdvance}/approve', [CashAdvanceController::class, 'approve'])->name('cash-advances.approve');
+    Route::patch('cash-advances/{cashAdvance}/reject', [CashAdvanceController::class, 'reject'])->name('cash-advances.reject');
+    Route::post('cash-advances/{cashAdvance}/pay', [CashAdvanceController::class, 'pay'])->name('cash-advances.pay');
+
+    Route::resource('payrolls', PayrollController::class);
+    Route::post('payrolls/generate/{employee}', [PayrollController::class, 'generate'])->name('payrolls.generate');
+    Route::post('payrolls/generate-all', [PayrollController::class, 'generateAll'])->name('payrolls.generate-all');
+    Route::patch('payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
+    Route::patch('payrolls/{payroll}/regenerate', [PayrollController::class, 'regenerate'])->name('payrolls.regenerate');
+    Route::patch('payrolls/{payroll}/pay', [PayrollController::class, 'pay'])->name('payrolls.pay');
+    Route::get('payrolls/{payroll}/slip-pdf', [PayrollController::class, 'slipPdf'])->name('payrolls.slip-pdf');
+
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('attendance', [ReportController::class, 'attendance'])->name('attendance');
+        Route::get('attendance-excel', [ReportController::class, 'attendanceExcel'])->name('attendance-excel');
+        Route::get('attendance-pdf', [ReportController::class, 'attendancePdf'])->name('attendance-pdf');
+        Route::get('lateness', [ReportController::class, 'lateness'])->name('lateness');
+        Route::get('lateness-excel', [ReportController::class, 'latenessExcel'])->name('lateness-excel');
+        Route::get('overtime', [ReportController::class, 'overtime'])->name('overtime');
+        Route::get('leave', [ReportController::class, 'leave'])->name('leave');
+        Route::get('payroll', [ReportController::class, 'payroll'])->name('payroll');
+    });
+
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
+
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('notifications/{notification}/mark-read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
+    Route::patch('notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+});
+
+require __DIR__.'/auth.php';

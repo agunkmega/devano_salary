@@ -1,0 +1,165 @@
+@extends('layouts.admin')
+
+@section('page-title', 'Dashboard')
+@section('page-subtitle', 'Overview & statistics')
+
+@section('page-content')
+<div x-data="dashboard()" x-init="init()" class="space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Selamat datang, {{ auth()->user()->name ?? 'User' }}!</h2>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">{{ now()->translatedFormat('l, d F Y') }}</p>
+        </div>
+        <div class="hidden sm:flex items-center gap-2">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Periode:</span>
+            <select x-model="period" class="text-sm border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                <option value="this-month">Bulan Ini</option>
+                <option value="last-month">Bulan Lalu</option>
+                <option value="this-year">Tahun Ini</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />' label="Total Pegawai" value="{{ $totalEmployees }}" color="blue" />
+        <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />' label="Hadir Hari Ini" value="{{ $todayAttendance }}" color="green" />
+        <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />' label="Terlambat" value="{{ $lateToday }}" color="orange" />
+        <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />' label="Cuti" value="{{ $onLeaveToday }}" color="purple" />
+        <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />' label="Tidak Hadir" value="{{ $absentToday }}" color="red" />
+        <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' label="Total Gaji Bulanan" value="Rp {{ number_format($monthlyPayroll, 0, ',', '.') }}" color="indigo" />
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Grafik Kehadiran Bulanan</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Bulan</th>
+                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Hadir</th>
+                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Terlambat</th>
+                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Izin</th>
+                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Sakit</th>
+                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Cuti</th>
+                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Alpha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($chartData as $item)
+                        <tr class="border-b border-gray-100 dark:border-gray-700/50">
+                            <td class="py-3 px-2 text-gray-900 dark:text-white font-medium">{{ $item['month'] }}</td>
+                            <td class="py-3 px-2 text-center text-emerald-600 dark:text-emerald-400">{{ $item['hadir'] }}</td>
+                            <td class="py-3 px-2 text-center text-orange-600 dark:text-orange-400">{{ $item['terlambat'] }}</td>
+                            <td class="py-3 px-2 text-center text-blue-600 dark:text-blue-400">{{ $item['izin'] }}</td>
+                            <td class="py-3 px-2 text-center text-purple-600 dark:text-purple-400">{{ $item['sakit'] }}</td>
+                            <td class="py-3 px-2 text-center text-indigo-600 dark:text-indigo-400">{{ $item['cuti'] }}</td>
+                            <td class="py-3 px-2 text-center text-red-600 dark:text-red-400">{{ $item['alpha'] }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ringkasan Kasbon</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Total Outstanding</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white">Rp {{ number_format($cashAdvanceSummary['total_outstanding'], 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Jumlah Pegawai</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $cashAdvanceSummary['count'] }} orang</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Statistik Departemen</h3>
+                <div class="space-y-3">
+                    @foreach($departmentStats as $dept)
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ $dept->name }}</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $dept->employees_count }} pegawai</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Absensi Terbaru</h3>
+                <a href="{{ route('admin.attendances.index') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Lihat Semua</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Nama</th>
+                            <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Masuk</th>
+                            <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Keluar</th>
+                            <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentAttendances as $att)
+                        <tr class="border-b border-gray-100 dark:border-gray-700/50">
+                            <td class="py-3 px-2 text-gray-900 dark:text-white">{{ $att->employee?->full_name ?? 'N/A' }}</td>
+                            <td class="py-3 px-2 text-gray-600 dark:text-gray-400">{{ $att->clock_in ? Carbon\Carbon::parse($att->clock_in)->format('H:i') : '-' }}</td>
+                            <td class="py-3 px-2 text-gray-600 dark:text-gray-400">{{ $att->clock_out ? Carbon\Carbon::parse($att->clock_out)->format('H:i') : '-' }}</td>
+                            <td class="py-3 px-2">
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full
+                                    @if($att->status == 'hadir') bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400
+                                    @elseif($att->status == 'terlambat') bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400
+                                    @elseif(in_array($att->status, ['izin','sakit'])) bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400
+                                    @elseif($att->status == 'cuti') bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400
+                                    @else bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400
+                                    @endif">
+                                    {{ ucfirst($att->status) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="4" class="py-6 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data absensi</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Cuti Menunggu Persetujuan</h3>
+                <a href="{{ route('admin.leaves.index') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Lihat Semua</a>
+            </div>
+            <div class="space-y-3">
+                @php
+                    $pendingLeaves = \App\Models\Leave::with('employee')->where('status', 'pending')->latest()->take(5)->get();
+                @endphp
+                @forelse($pendingLeaves as $leave)
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
+                        {{ substr($leave->employee?->full_name ?? '?', 0, 1) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $leave->employee?->full_name ?? 'Unknown' }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $leave->leaveType?->name ?? 'Cuti' }} - {{ $leave->total_days }} hari</p>
+                    </div>
+                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">Pending</span>
+                </div>
+                @empty
+                <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Tidak ada cuti pending</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

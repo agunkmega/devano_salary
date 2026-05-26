@@ -373,6 +373,9 @@ class AttendanceService
         if ($clockIn->lte($gracePeriodEnd)) {
             return 0;
         }
+        if ($tolerance > 0) {
+            return (int) $gracePeriodEnd->diffInMinutes($clockIn, true);
+        }
         return (int) $clockIn->diffInMinutes($shiftStart, true);
     }
 

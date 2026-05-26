@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -36,8 +38,43 @@ class SettingController extends Controller
             );
         }
 
+        Cache::forget('app_name');
+
         return redirect()->route('admin.settings.index')
             ->with('success', 'Settings updated successfully.');
+    }
+
+    public function uploadLogo(Request $request)
+    {
+        $request->validate([
+            'logo' => 'required|image|mimes:png,jpg,jpeg,svg|max:2048',
+        ]);
+
+        $path = $request->file('logo')->store('logos', 'public');
+
+        Setting::updateOrCreate(
+            ['key' => 'app_logo'],
+            ['value' => $path, 'group' => 'company']
+        );
+
+        Cache::forget('app_logo');
+
+        return redirect()->route('admin.settings.index')
+            ->with('success', 'Logo berhasil diupload.');
+    }
+
+    public function deleteLogo()
+    {
+        $logo = Setting::where('key', 'app_logo')->first();
+        if ($logo && $logo->value) {
+            Storage::disk('public')->delete($logo->value);
+            $logo->delete();
+        }
+
+        Cache::forget('app_logo');
+
+        return redirect()->route('admin.settings.index')
+            ->with('success', 'Logo berhasil dihapus.');
     }
 
     private function inferGroup(string $key): string

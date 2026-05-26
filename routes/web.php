@@ -69,6 +69,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('settings/logo', [SettingController::class, 'uploadLogo'])->name('settings.logo.upload');
+    Route::delete('settings/logo', [SettingController::class, 'deleteLogo'])->name('settings.logo.delete');
     Route::post('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
 
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');

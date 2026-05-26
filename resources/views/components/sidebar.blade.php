@@ -46,15 +46,22 @@ function userCanSee($itemRoles, $userRole) {
 
 <aside
     x-data="{ mobileOpen: false }"
-    class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col"
     :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
 >
     <div class="flex items-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-3">
+            @php
+                $logoPath = \App\Models\Setting::where('key', 'app_logo')?->value('value');
+            @endphp
+            @if($logoPath)
+            <img src="{{ \Illuminate\Support\Facades\Storage::url($logoPath) }}" alt="Logo" class="h-8 w-auto">
+            @else
             <div class="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-lg">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
             </div>
-            <span class="text-lg font-bold text-gray-900 dark:text-white">HRIS Absensi</span>
+            @endif
+            <span class="text-lg font-bold text-gray-900 dark:text-white">{{ config('app.name') }}</span>
         </div>
     </div>
 

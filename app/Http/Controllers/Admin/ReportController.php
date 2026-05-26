@@ -17,7 +17,7 @@ class ReportController extends Controller
 {
     public function attendance()
     {
-        $attendances = Attendance::with(['employee.user', 'employee.department', 'shift'])
+        $query = Attendance::with(['employee.user', 'employee.department', 'employee.position', 'shift'])
             ->when(request('date_from'), function ($q, $date) {
                 $q->whereDate('attendance_date', '>=', $date);
             })
@@ -32,26 +32,82 @@ class ReportController extends Controller
             ->when(request('employee_id'), function ($q, $empId) {
                 $q->where('employee_id', $empId);
             })
-            ->when(request('status'), function ($q, $status) {
-                $q->where('status', $status);
-            })
-            ->latest()
-            ->paginate(50);
+            ->when(request('employee_type'), function ($q, $type) {
+                $q->whereHas('employee', function ($sub) use ($type) {
+                    $sub->where('employee_type', $type);
+                });
+            });
+
+        $all = $query->get();
+
+        $summary = [
+            'total' => $all->count(),
+            'hadir' => $all->where('status', 'hadir')->count(),
+            'terlambat' => $all->where('status', 'terlambat')->count(),
+            'izin' => $all->where('status', 'izin')->count(),
+            'sakit' => $all->where('status', 'sakit')->count(),
+            'cuti' => $all->where('status', 'cuti')->count(),
+            'alpha' => $all->where('status', 'alpha')->count(),
+        ];
+
+        $dateFrom = request('date_from') ? Carbon::parse(request('date_from')) : now()->startOfMonth();
+        $dateTo = request('date_to') ? Carbon::parse(request('date_to')) : now()->endOfMonth();
+
+        $holidayDates = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $dateFrom)
+            ->whereDate('date', '<=', $dateTo)
+            ->pluck('date')
+            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
+
+        $periodWorkDays = 0;
+        $sundayCount = 0;
+        $cursor = $dateFrom->copy();
+        while ($cursor->lte($dateTo)) {
+            if ($cursor->dayOfWeek === Carbon::SUNDAY) {
+                $sundayCount++;
+            } elseif (!in_array($cursor->format('Y-m-d'), $holidayDates)) {
+                $periodWorkDays++;
+            }
+            $cursor->addDay();
+        }
+
+        $employeeSummaries = $all->groupBy('employee_id')->map(function ($rows, $empId) use ($periodWorkDays, $sundayCount) {
+            $emp = $rows->first()->employee;
+            $hadir = $rows->where('status', 'hadir')->count();
+            $terlambat = $rows->where('status', 'terlambat')->count();
+            $totalHadir = $hadir + $terlambat;
+
+            $totalHari = $periodWorkDays > 0 ? $periodWorkDays : $totalHadir;
+            $persentase = $emp->employee_type === 'bulanan'
+                ? round(($totalHadir + $sundayCount) / ($totalHari + $sundayCount) * 100, 1)
+                : null;
+
+            return [
+                'employee_id' => $empId,
+                'employee_type' => $emp->employee_type,
+                'nama' => $emp->full_name ?? '-',
+                'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
+                'hadir' => $hadir,
+                'terlambat' => $terlambat,
+                'izin' => $rows->where('status', 'izin')->count(),
+                'sakit' => $rows->where('status', 'sakit')->count(),
+                'cuti' => $rows->where('status', 'cuti')->count(),
+                'alpha' => $rows->where('status', 'alpha')->count(),
+                'telat_hari' => $rows->where('late_minutes', '>', 0)->count(),
+                'telat_menit' => $rows->sum('late_minutes'),
+                'pulang_awal_hari' => $rows->where('early_leave_minutes', '>', 0)->count(),
+                'pulang_awal_menit' => $rows->sum('early_leave_minutes'),
+                'istirahat_lebih_hari' => $rows->where('excess_break_minutes', '>', 0)->count(),
+                'istirahat_lebih_menit' => $rows->sum('excess_break_minutes'),
+                'persentase' => $persentase,
+            ];
+        })->values();
 
         $departments = Department::where('is_active', true)->get();
         $employees = Employee::where('is_active', true)->get();
 
-        $summary = [
-            'total' => $attendances->total(),
-            'hadir' => $attendances->where('status', 'hadir')->count(),
-            'terlambat' => $attendances->where('status', 'terlambat')->count(),
-            'izin' => $attendances->where('status', 'izin')->count(),
-            'sakit' => $attendances->where('status', 'sakit')->count(),
-            'cuti' => $attendances->where('status', 'cuti')->count(),
-            'alpha' => $attendances->where('status', 'alpha')->count(),
-        ];
-
-        return view('reports.attendance', compact('attendances', 'departments', 'employees', 'summary'));
+        return view('reports.attendance', compact('employeeSummaries', 'departments', 'employees', 'summary', 'periodWorkDays'));
     }
 
     public function attendanceExcel()
@@ -243,7 +299,7 @@ class ReportController extends Controller
 
     public function payroll()
     {
-        $payrolls = Payroll::with(['employee.user', 'employee.department'])
+        $query = Payroll::with(['employee.user', 'employee.department', 'employee.position'])
             ->when(request('period'), function ($q, $period) {
                 $q->where('period', $period);
             })
@@ -252,23 +308,33 @@ class ReportController extends Controller
                     $sub->where('department_id', $deptId);
                 });
             })
+            ->when(request('employee_id'), function ($q, $empId) {
+                $q->where('employee_id', $empId);
+            })
             ->when(request('status'), function ($q, $status) {
                 $q->where('status', $status);
             })
-            ->latest()
-            ->paginate(50);
+            ->latest();
 
-        $periods = Payroll::select('period')->distinct()->orderBy('period', 'desc')->pluck('period');
+        $all = $query->get();
 
         $summary = [
-            'total_base_salary' => $payrolls->sum('base_salary'),
-            'total_allowance' => $payrolls->sum('allowance'),
-            'total_overtime' => $payrolls->sum('overtime_pay'),
-            'total_deductions' => $payrolls->sum('total_deductions'),
-            'total_net_salary' => $payrolls->sum('net_salary'),
-            'count' => $payrolls->total(),
+            'count' => $all->count(),
+            'total_base_salary' => $all->sum('base_salary'),
+            'total_allowance' => $all->sum('allowance'),
+            'total_overtime' => $all->sum('overtime_pay'),
+            'total_deductions' => $all->sum('total_deductions'),
+            'total_net_salary' => $all->sum('net_salary'),
+            'total_bpjs' => $all->sum('bpjs_deduction'),
+            'total_tax' => $all->sum('tax_amount'),
+            'total_cash_advance' => $all->sum('cash_advance_deduction'),
         ];
 
-        return view('reports.payroll', compact('payrolls', 'periods', 'summary'));
+        $payrolls = $query->paginate(50);
+        $periods = Payroll::select('period')->distinct()->orderBy('period', 'desc')->pluck('period');
+        $departments = Department::where('is_active', true)->get();
+        $employees = Employee::where('is_active', true)->get();
+
+        return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'summary'));
     }
 }

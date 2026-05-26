@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('page-title', 'Dashboard') - {{ config('app.name', 'HRIS Absensi') }}</title>
+    <title>@yield('page-title', 'Dashboard') - {{ config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -101,7 +101,7 @@
 
         <footer class="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50">
             <div class="px-4 sm:px-6 lg:px-8 py-4">
-                <p class="text-sm text-gray-500 dark:text-gray-400 text-center">&copy; {{ date('Y') }} HRIS Absensi. All rights reserved.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 text-center">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </footer>
     </div>

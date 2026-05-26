@@ -46,6 +46,7 @@ class Employee extends Model
         'overtime_pay_per_hour',
         'uang_makan_lembur',
         'bpjs_kesehatan_tanggungan',
+        'late_penalty_active',
     ];
 
     protected function casts(): array
@@ -65,6 +66,7 @@ class Employee extends Model
         'bpjs_kesehatan_active' => 'boolean',
         'bpjs_kesehatan_tanggungan' => 'integer',
         'iuran_wajib_amount' => 'decimal:2',
+            'late_penalty_active' => 'boolean',
         ];
     }
 

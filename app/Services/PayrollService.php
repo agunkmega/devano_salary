@@ -52,6 +52,12 @@ class PayrollService
 
         $attendanceDays = $this->getAttendanceDays($employee->id, $period);
 
+        $lateDays = Attendance::where('employee_id', $employee->id)
+            ->whereYear('attendance_date', $year)
+            ->whereMonth('attendance_date', $month)
+            ->where('late_minutes', '>', 0)
+            ->count();
+
         $paidLeaveDays = \App\Models\Leave::where('employee_id', $employee->id)
             ->where('status', 'approved')
             ->whereHas('leaveType', fn($q) => $q->where('is_paid', true))
@@ -69,6 +75,7 @@ class PayrollService
             $computedBaseSalary = $baseSalary * $effectiveAttendanceDays;
             $ratePerMinute = $daysInPeriod > 0 ? ($baseSalary / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
+            $latePenaltyPercent = 0;
             $absentPenalty = 0;
             $absentDays = null;
         } else {
@@ -77,6 +84,7 @@ class PayrollService
             $dailyRate = $daysInPeriod > 0 ? ($totalGaji / $daysInPeriod) : 0;
             $ratePerMinute = $daysInPeriod > 0 ? ($totalGaji / $daysInPeriod / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
+            $latePenaltyPercent = $employee->late_penalty_active && $lateDays > 3 ? round($totalGaji * 0.08, 2) : 0;
             $totalWorkingDays = $this->getTotalWorkingDays($period, $startDate, $endDate, $employee);
             $absentDays = max(0, $totalWorkingDays - $effectiveAttendanceDays);
             $absentPenalty = $dailyRate * $absentDays;
@@ -96,7 +104,7 @@ class PayrollService
         $bpjsDeduction = $this->calculateBpjsDeduction($employee, $computedBaseSalary);
 
         $grossSalary = $computedBaseSalary + $totalAllowance + $overtimePay + $uangMakanLembur;
-        $totalDeductions = $latePenalty + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
+        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
         $netSalary = $grossSalary - $totalDeductions;
         $taxAmount = $this->calculateTax($netSalary);
 
@@ -109,7 +117,7 @@ class PayrollService
             'bonus' => 0,
             'overtime_pay' => round($overtimePay, 2),
             'uang_makan_lembur' => round($uangMakanLembur, 2),
-            'late_penalty' => round($latePenalty, 2),
+            'late_penalty' => round($latePenalty + $latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
             'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
             'bpjs_deduction' => round($bpjsDeduction, 2),

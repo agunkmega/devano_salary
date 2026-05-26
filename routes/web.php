@@ -16,6 +16,10 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\NationalHolidayController;
+use App\Http\Controllers\Portal\AuthController as PortalAuthController;
+use App\Http\Controllers\Portal\DashboardController as PortalDashboardController;
+use App\Http\Controllers\Portal\LeaveController as PortalLeaveController;
+use App\Http\Controllers\Portal\CashAdvanceController as PortalCashAdvanceController;
 
 Route::redirect('/', '/admin/dashboard');
 
@@ -65,6 +69,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::get('overtime', [ReportController::class, 'overtime'])->name('overtime');
         Route::get('leave', [ReportController::class, 'leave'])->name('leave');
         Route::get('payroll', [ReportController::class, 'payroll'])->name('payroll');
+        Route::get('leave-balance', [ReportController::class, 'leaveBalance'])->name('leave-balance');
     });
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
@@ -80,6 +85,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     Route::resource('national-holidays', NationalHolidayController::class);
+});
+
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('login', [PortalAuthController::class, 'login'])->name('login');
+    Route::post('login', [PortalAuthController::class, 'authenticate'])->name('login');
+    Route::post('logout', [PortalAuthController::class, 'logout'])->name('logout');
+
+    Route::middleware('portal')->group(function () {
+        Route::get('dashboard', [PortalDashboardController::class, 'index'])->name('dashboard');
+        Route::get('leave/create', [PortalLeaveController::class, 'create'])->name('leave.create');
+        Route::post('leave', [PortalLeaveController::class, 'store'])->name('leave.store');
+        Route::get('cash-advance/create', [PortalCashAdvanceController::class, 'create'])->name('cash-advance.create');
+        Route::post('cash-advance', [PortalCashAdvanceController::class, 'store'])->name('cash-advance.store');
+    });
 });
 
 require __DIR__.'/auth.php';

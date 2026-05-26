@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'portal' => \App\Http\Middleware\PortalAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

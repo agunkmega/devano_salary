@@ -16,6 +16,7 @@ class LeaveTypeSeeder extends Seeder
             ['name' => 'Cuti Pernikahan', 'code' => 'CP', 'description' => 'Marriage leave', 'is_paid' => true, 'max_days_per_year' => 3, 'is_active' => true],
             ['name' => 'Izin', 'code' => 'IZ', 'description' => 'Permit leave', 'is_paid' => false, 'max_days_per_year' => null, 'is_active' => true],
             ['name' => 'Izin Tanpa Keterangan', 'code' => 'ITK', 'description' => 'Unpaid leave without explanation', 'is_paid' => false, 'max_days_per_year' => null, 'is_active' => true],
+            ['name' => 'Cuti DP', 'code' => 'DP', 'description' => 'Compensatory leave', 'is_paid' => true, 'max_days_per_year' => 12, 'is_active' => true],
         ];
 
         foreach ($leaveTypes as $leaveType) {

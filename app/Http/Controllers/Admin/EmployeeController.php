@@ -108,6 +108,7 @@ class EmployeeController extends Controller
         }
 
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
+        $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
 
         Employee::create($validated);
 
@@ -162,6 +163,7 @@ class EmployeeController extends Controller
             'employee_type' => 'nullable|in:bulanan,harian',
             'overtime_pay_per_hour' => 'nullable|numeric|min:0',
             'uang_makan_lembur' => 'nullable|numeric|min:0',
+            'late_penalty_active' => 'boolean',
         ]);
 
         if ($employee->user) {
@@ -172,6 +174,7 @@ class EmployeeController extends Controller
         }
 
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
+        $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
 
         $employee->update($validated);
 

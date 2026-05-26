@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Leave;
+use App\Models\LeaveType;
 use App\Models\Payroll;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -336,5 +337,52 @@ class ReportController extends Controller
         $employees = Employee::where('is_active', true)->get();
 
         return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'summary'));
+    }
+
+    public function leaveBalance(Request $request)
+    {
+        $employees = Employee::with(['department', 'position'])
+            ->where('is_active', true)
+            ->where('employee_type', 'bulanan');
+
+        if ($request->filled('department_id')) {
+            $employees->where('department_id', $request->department_id);
+        }
+
+        $employees = $employees->get();
+
+        $ctId = LeaveType::where('code', 'CT')->value('id');
+        $dpId = LeaveType::where('code', 'DP')->value('id');
+        $currentYear = now()->year;
+
+        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $currentYear) {
+            $usedCt = Leave::where('employee_id', $emp->id)
+                ->where('leave_type_id', $ctId)
+                ->where('status', 'approved')
+                ->whereYear('start_date', $currentYear)
+                ->sum('total_days');
+
+            $usedDp = Leave::where('employee_id', $emp->id)
+                ->where('leave_type_id', $dpId)
+                ->where('status', 'approved')
+                ->whereYear('start_date', $currentYear)
+                ->sum('total_days');
+
+            return [
+                'employee_id' => $emp->id,
+                'nama' => $emp->full_name ?? '-',
+                'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
+                'ct_quota' => 12,
+                'ct_used' => $usedCt,
+                'ct_remaining' => max(0, 12 - $usedCt),
+                'dp_quota' => 12,
+                'dp_used' => $usedDp,
+                'dp_remaining' => max(0, 12 - $usedDp),
+            ];
+        });
+
+        $departments = Department::where('is_active', true)->get();
+
+        return view('reports.leave-balance', compact('balances', 'departments'));
     }
 }

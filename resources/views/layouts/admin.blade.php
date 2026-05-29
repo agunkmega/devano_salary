@@ -12,19 +12,15 @@
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
 
-<div class="min-h-screen">
+<div x-data="adminLayout()" class="min-h-screen">
     <x-sidebar />
 
-    <div class="transition-all duration-300" :class="$store.sidebar.collapsed ? 'lg:pl-16' : 'lg:pl-64'">
+    <div class="lg:pl-64 transition-all duration-300">
         <header class="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
             <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center gap-4">
-                    <button @click="$store.sidebar.toggleMobile()" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <button @click="$dispatch('toggle-sidebar')" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    </button>
-                    <button @click="$store.sidebar.toggle()" class="hidden lg:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Toggle sidebar">
-                        <svg x-show="!$store.sidebar.collapsed" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-                        <svg x-show="$store.sidebar.collapsed" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
                     </button>
                     <div>
                         <h1 class="text-lg font-semibold text-gray-900 dark:text-white">@yield('page-title', 'Dashboard')</h1>
@@ -125,18 +121,6 @@
 @stack('scripts')
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.store('sidebar', {
-            collapsed: JSON.parse(localStorage.getItem('sidebarCollapsed') || 'false'),
-            mobileOpen: false,
-            toggle() {
-                this.collapsed = !this.collapsed;
-                localStorage.setItem('sidebarCollapsed', this.collapsed);
-            },
-            toggleMobile() {
-                this.mobileOpen = !this.mobileOpen;
-                document.body.classList.toggle('overflow-hidden', this.mobileOpen);
-            }
-        });
         Alpine.data('adminLayout', () => ({
             darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches),
             init() {

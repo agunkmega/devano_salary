@@ -16,9 +16,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
+use App\Traits\LogsActivity;
 
 class EmployeeController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $employees = Employee::with(['user', 'department', 'position', 'shift'])
@@ -110,7 +112,9 @@ class EmployeeController extends Controller
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
 
-        Employee::create($validated);
+        $employee = Employee::create($validated);
+
+        $this->logActivity('employee', 'Create', 'Menambahkan pegawai: ' . $employee->full_name, 'Employee', $employee->id);
 
         return redirect()->route('admin.employees.index')
             ->with('success', 'Pegawai berhasil ditambahkan.');
@@ -176,7 +180,10 @@ class EmployeeController extends Controller
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
 
+        $old = $employee->only(['full_name', 'nik', 'department_id', 'position_id', 'base_salary', 'status']);
         $employee->update($validated);
+
+        $this->logActivity('employee', 'Update', 'Mengubah data pegawai: ' . $employee->full_name, 'Employee', $employee->id, $old, $employee->fresh()->toArray());
 
         return redirect()->route('admin.employees.index')
             ->with('success', 'Employee updated successfully.');
@@ -190,7 +197,10 @@ class EmployeeController extends Controller
             $employee->user->update(['is_active' => false]);
         }
 
+        $name = $employee->full_name;
         $employee->delete();
+
+        $this->logActivity('employee', 'Delete', 'Menghapus pegawai: ' . $name, 'Employee', $employee->id);
 
         return redirect()->route('admin.employees.index')
             ->with('success', 'Employee deleted successfully.');

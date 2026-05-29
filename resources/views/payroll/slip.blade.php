@@ -177,8 +177,10 @@
     <div class="page">
         <div class="header">
             <div class="brand">
-                <h1>PT. DEVANO SILVER INDONESIA</h1>
-                <p>Perumahan Safira Regency Blok C No. 12, Kediri</p>
+                <h1>{{ $companyName ?? 'PT. DEVANO SILVER INDONESIA' }}</h1>
+                @if($companyAddress)
+                <p>{{ $companyAddress }}</p>
+                @endif
             </div>
             <div class="badge">SLIP GAJI</div>
         </div>

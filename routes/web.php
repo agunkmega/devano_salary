@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\NationalHolidayController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DashboardController as PortalDashboardController;
 use App\Http\Controllers\Portal\LeaveController as PortalLeaveController;
@@ -30,6 +31,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::get('employees/export-excel', [EmployeeController::class, 'exportExcel'])->name('employees.export-excel');
     Route::get('employees/export-pdf', [EmployeeController::class, 'exportPdf'])->name('employees.export-pdf');
     Route::resource('employees', EmployeeController::class);
+    Route::resource('users', UserController::class);
     Route::resource('departments', DepartmentController::class);
     Route::resource('positions', PositionController::class);
     Route::resource('shifts', ShiftController::class);
@@ -59,6 +61,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::patch('payrolls/{payroll}/regenerate', [PayrollController::class, 'regenerate'])->name('payrolls.regenerate');
     Route::patch('payrolls/{payroll}/pay', [PayrollController::class, 'pay'])->name('payrolls.pay');
     Route::get('payrolls/{payroll}/slip-pdf', [PayrollController::class, 'slipPdf'])->name('payrolls.slip-pdf');
+    Route::post('payrolls/{payroll}/send-whatsapp', [PayrollController::class, 'sendWhatsApp'])->name('payrolls.send-whatsapp');
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('attendance', [ReportController::class, 'attendance'])->name('attendance');
@@ -68,7 +71,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::get('lateness-excel', [ReportController::class, 'latenessExcel'])->name('lateness-excel');
         Route::get('overtime', [ReportController::class, 'overtime'])->name('overtime');
         Route::get('leave', [ReportController::class, 'leave'])->name('leave');
+        Route::get('attendance-print', [ReportController::class, 'attendancePrint'])->name('attendance-print');
         Route::get('payroll', [ReportController::class, 'payroll'])->name('payroll');
+        Route::get('payroll-print', [ReportController::class, 'payrollPrint'])->name('payroll-print');
         Route::get('leave-balance', [ReportController::class, 'leaveBalance'])->name('leave-balance');
     });
 
@@ -77,6 +82,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::post('settings/logo', [SettingController::class, 'uploadLogo'])->name('settings.logo.upload');
     Route::delete('settings/logo', [SettingController::class, 'deleteLogo'])->name('settings.logo.delete');
     Route::post('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
+    Route::get('settings/backup/{filename}/download', [SettingController::class, 'downloadBackup'])->name('settings.backup.download');
+    Route::delete('settings/backup/{filename}', [SettingController::class, 'deleteBackup'])->name('settings.backup.delete');
 
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('notifications/{notification}/mark-read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');

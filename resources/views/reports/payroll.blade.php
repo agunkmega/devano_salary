@@ -47,6 +47,14 @@
                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Dibatalkan</option>
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Jenis</label>
+                <select name="employee_type" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua</option>
+                    <option value="bulanan" {{ request('employee_type') == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
+                    <option value="harian" {{ request('employee_type') == 'harian' ? 'selected' : '' }}>Harian</option>
+                </select>
+            </div>
             <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">Generate</button>
         </form>
     </div>
@@ -94,10 +102,10 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detail Gaji</h3>
             <div class="flex gap-2">
-                <button onclick="window.print()" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <a href="{{ route('admin.reports.payroll-print', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Print
-                </button>
+                    Print Rekapitulasi
+                </a>
             </div>
         </div>
         <div class="overflow-x-auto">
@@ -106,6 +114,10 @@
                     <tr class="border-b border-gray-200 dark:border-gray-700">
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Nama</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jabatan</th>
+                        <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jenis</th>
+                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Bank</th>
+                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">No. Rek</th>
+                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Nama Rek</th>
                         <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Gaji Pokok</th>
                         <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Tunjangan</th>
                         <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Lembur</th>
@@ -121,6 +133,12 @@
                     <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="py-3 px-3 text-gray-900 dark:text-white font-medium">{{ $p->employee->full_name ?? '-' }}</td>
                         <td class="py-3 px-3 text-gray-600 dark:text-gray-400">{{ $p->employee->position->name ?? $p->employee->department->name ?? '-' }}</td>
+                        <td class="py-3 px-3 text-center">
+                            <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' }}">{{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span>
+                        </td>
+                        <td class="py-3 px-3 text-gray-900 dark:text-white">{{ $p->employee->bank_name ?? '-' }}</td>
+                        <td class="py-3 px-3 text-gray-900 dark:text-white font-mono text-xs">{{ $p->employee->bank_account ?? '-' }}</td>
+                        <td class="py-3 px-3 text-gray-900 dark:text-white">{{ $p->employee->bank_holder ?? '-' }}</td>
                         <td class="py-3 px-3 text-right text-gray-900 dark:text-white">Rp {{ number_format($p->base_salary, 0, ',', '.') }}</td>
                         <td class="py-3 px-3 text-right text-gray-900 dark:text-white">Rp {{ number_format($p->allowance, 0, ',', '.') }}</td>
                         <td class="py-3 px-3 text-right text-indigo-600 dark:text-indigo-400">Rp {{ number_format($p->overtime_pay, 0, ',', '.') }}</td>
@@ -141,7 +159,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="10" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data payroll</td></tr>
+                    <tr><td colspan="14" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data payroll</td></tr>
                     @endforelse
                 </tbody>
             </table>

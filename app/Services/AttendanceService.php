@@ -369,18 +369,19 @@ class AttendanceService
 
     public function calculateLateMinutes(Carbon $clockIn, Carbon $shiftStart, int $tolerance = 0): int
     {
+        $clockIn = $clockIn->copy()->startOfMinute();
+        $shiftStart = $shiftStart->copy()->startOfMinute();
         $gracePeriodEnd = $shiftStart->copy()->addMinutes($tolerance);
         if ($clockIn->lte($gracePeriodEnd)) {
             return 0;
-        }
-        if ($tolerance > 0) {
-            return (int) $gracePeriodEnd->diffInMinutes($clockIn, true);
         }
         return (int) $clockIn->diffInMinutes($shiftStart, true);
     }
 
     public function calculateEarlyLeaveMinutes(Carbon $clockOut, Carbon $shiftEnd): int
     {
+        $clockOut = $clockOut->copy()->startOfMinute();
+        $shiftEnd = $shiftEnd->copy()->startOfMinute();
         if ($clockOut->gte($shiftEnd)) {
             return 0;
         }
@@ -390,6 +391,10 @@ class AttendanceService
     public function calculateExcessBreakMinutes(?Carbon $breakOut, ?Carbon $breakIn, ?Carbon $shiftBreakStart, ?Carbon $shiftBreakEnd): int
     {
         if (!$breakOut || !$breakIn || !$shiftBreakStart || !$shiftBreakEnd) return 0;
+        $breakOut = $breakOut->copy()->startOfMinute();
+        $breakIn = $breakIn->copy()->startOfMinute();
+        $shiftBreakStart = $shiftBreakStart->copy()->startOfMinute();
+        $shiftBreakEnd = $shiftBreakEnd->copy()->startOfMinute();
         $actualBreak = (int) $breakOut->diffInMinutes($breakIn, true);
         $scheduledBreak = (int) $shiftBreakStart->diffInMinutes($shiftBreakEnd, true);
         $excess = $actualBreak - $scheduledBreak;
@@ -401,6 +406,8 @@ class AttendanceService
         if (!$overtimeIn || !$overtimeOut) {
             return 0;
         }
+        $overtimeIn = $overtimeIn->copy()->startOfMinute();
+        $overtimeOut = $overtimeOut->copy()->startOfMinute();
         if ($overtimeOut->lte($overtimeIn)) {
             return 0;
         }

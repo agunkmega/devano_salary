@@ -6,10 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\CashAdvance;
 use App\Models\CashAdvancePayment;
 use App\Models\Employee;
+use App\Models\Notification;
+use App\Models\User;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 
 class CashAdvanceController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $cashAdvances = CashAdvance::with(['employee.user', 'employee.department'])
@@ -142,6 +146,19 @@ class CashAdvanceController extends Controller
             'approval_date' => now(),
         ]);
 
+        $employee = $cashAdvance->employee;
+        $this->logActivity('cash_advance', 'Approve', 'Menyetujui kasbon ' . $employee->full_name, 'CashAdvance', $cashAdvance->id);
+
+        if ($employee && $employee->user_id) {
+            Notification::create([
+                'user_id' => $employee->user_id,
+                'title' => 'Kasbon Disetujui',
+                'message' => 'Pengajuan kasbon Rp ' . number_format($cashAdvance->amount, 0, ',', '.') . ' telah disetujui',
+                'type' => 'cash_advance',
+                'icon' => 'check',
+            ]);
+        }
+
         return redirect()->route('admin.cash-advances.index')
             ->with('success', 'Cash advance approved successfully.');
     }
@@ -160,6 +177,19 @@ class CashAdvanceController extends Controller
             'approved_by' => auth()->id(),
             'approval_date' => now(),
         ]);
+
+        $employee = $cashAdvance->employee;
+        $this->logActivity('cash_advance', 'Reject', 'Menolak kasbon ' . $employee->full_name, 'CashAdvance', $cashAdvance->id);
+
+        if ($employee && $employee->user_id) {
+            Notification::create([
+                'user_id' => $employee->user_id,
+                'title' => 'Kasbon Ditolak',
+                'message' => 'Pengajuan kasbon Rp ' . number_format($cashAdvance->amount, 0, ',', '.') . ' ditolak: ' . $validated['notes'],
+                'type' => 'cash_advance',
+                'icon' => 'x',
+            ]);
+        }
 
         return redirect()->route('admin.cash-advances.index')
             ->with('success', 'Cash advance rejected successfully.');
@@ -190,6 +220,9 @@ class CashAdvanceController extends Controller
             'remaining_amount' => max(0, $remaining),
             'status' => $status,
         ]);
+
+        $employee = $cashAdvance->employee;
+        $this->logActivity('cash_advance', 'Pay', 'Membayar kasbon ' . $employee->full_name . ' Rp ' . $validated['amount'], 'CashAdvance', $cashAdvance->id);
 
         return redirect()->route('admin.cash-advances.show', $cashAdvance->id)
             ->with('success', 'Payment recorded successfully.');

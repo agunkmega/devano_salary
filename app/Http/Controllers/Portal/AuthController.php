@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Employee;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -42,12 +43,29 @@ class AuthController extends Controller
 
         session(['portal_employee_id' => $employee->id]);
 
+        ActivityLog::create([
+            'log_type' => 'portal',
+            'action' => 'Login',
+            'description' => 'Portal login: ' . $employee->full_name . ' (NIK: ' . $employee->nik . ')',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         return redirect()->intended(route('portal.dashboard'));
     }
 
     public function logout()
     {
+        $name = session('portal_employee_id') ? Employee::find(session('portal_employee_id'))?->full_name : null;
+
         session()->forget('portal_employee_id');
+
+        ActivityLog::create([
+            'log_type' => 'portal',
+            'action' => 'Logout',
+            'description' => 'Portal logout' . ($name ? ': ' . $name : ''),
+        ]);
+
         return redirect()->route('portal.login');
     }
 }

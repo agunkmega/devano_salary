@@ -4,18 +4,43 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
+    use LogsActivity;
+    private function getBackupDir(): string
+    {
+        $dir = storage_path('app/backups');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        return $dir;
+    }
+
     public function index()
     {
         $settings = Setting::all()->groupBy('group');
 
-        return view('settings.index', compact('settings'));
+        $backupDir = $this->getBackupDir();
+        $backups = [];
+        $files = glob($backupDir . '/*.sql');
+        if ($files) {
+            foreach ($files as $file) {
+                $backups[] = [
+                    'filename' => basename($file),
+                    'size' => filesize($file),
+                    'date' => filemtime($file),
+                ];
+            }
+        }
+        rsort($backups);
+
+        return view('settings.index', compact('settings', 'backups'));
     }
 
     public function update(Request $request)
@@ -91,13 +116,69 @@ class SettingController extends Controller
     public function backup()
     {
         try {
-            Artisan::call('backup:run');
+            $backupDir = $this->getBackupDir();
+            $filename = 'backup-' . date('Y-m-d-His') . '.sql';
+            $filepath = $backupDir . '/' . $filename;
 
-            return redirect()->route('admin.settings.index')
-                ->with('success', 'Database backup completed successfully.');
+            $db = config('database.connections.mysql');
+            $host = $db['host'];
+            $port = $db['port'];
+            $database = $db['database'];
+            $username = $db['username'];
+            $password = $db['password'];
+
+            $cmd = sprintf(
+                '"%s" --host=%s --port=%s --user=%s --password=%s --routines --single-transaction %s > "%s" 2>&1',
+                'D:\FlyEnv-Data\env\mysql\bin\mysqldump.exe',
+                escapeshellarg($host),
+                escapeshellarg($port),
+                escapeshellarg($username),
+                escapeshellarg($password),
+                escapeshellarg($database),
+                $filepath
+            );
+
+            $output = null;
+            $returnCode = null;
+            exec($cmd, $output, $returnCode);
+
+            if ($returnCode !== 0 || !file_exists($filepath) || filesize($filepath) === 0) {
+                throw new \Exception('mysqldump gagal: ' . implode("\n", $output));
+            }
+
+            $this->logActivity('system', 'Backup', 'Backup database: ' . $filename);
+
+            return redirect()->route('admin.settings.index', ['tab' => 'database'])
+                ->with('success', 'Backup database berhasil: ' . $filename);
         } catch (\Exception $e) {
-            return redirect()->route('admin.settings.index')
-                ->with('error', 'Backup failed: ' . $e->getMessage());
+            return redirect()->route('admin.settings.index', ['tab' => 'database'])
+                ->with('error', 'Backup gagal: ' . $e->getMessage());
         }
+    }
+
+    public function downloadBackup($filename)
+    {
+        $backupDir = $this->getBackupDir();
+        $filepath = $backupDir . '/' . basename($filename);
+
+        if (!file_exists($filepath)) {
+            return redirect()->route('admin.settings.index', ['tab' => 'database'])
+                ->with('error', 'File backup tidak ditemukan.');
+        }
+
+        return response()->download($filepath);
+    }
+
+    public function deleteBackup($filename)
+    {
+        $backupDir = $this->getBackupDir();
+        $filepath = $backupDir . '/' . basename($filename);
+
+        if (file_exists($filepath)) {
+            unlink($filepath);
+        }
+
+        return redirect()->route('admin.settings.index', ['tab' => 'database'])
+            ->with('success', 'Backup berhasil dihapus.');
     }
 }

@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\Notification;
+use App\Models\User;
 use Carbon\Carbon;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 
 class LeaveController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $leaves = Leave::with(['employee.user', 'employee.department', 'leaveType', 'approver'])
@@ -105,6 +109,17 @@ class LeaveController extends Controller
 
         Leave::create($validated);
 
+        $emp = Employee::find($validated['employee_id']);
+        if ($emp && $emp->user_id) {
+            Notification::create([
+                'user_id' => $emp->user_id,
+                'title' => 'Cuti Baru',
+                'message' => 'Pengajuan cuti atas nama Anda telah dibuat oleh admin',
+                'type' => 'leave',
+                'icon' => 'calendar',
+            ]);
+        }
+
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave request created successfully.');
     }
@@ -131,6 +146,18 @@ class LeaveController extends Controller
             'approval_date' => now(),
         ]);
 
+        $this->logActivity('leave', 'Approve', 'Menyetujui cuti ' . $leave->employee?->full_name, 'Leave', $leave->id);
+
+        if ($leave->employee?->user_id) {
+            Notification::create([
+                'user_id' => $leave->employee->user_id,
+                'title' => 'Cuti Disetujui',
+                'message' => 'Pengajuan cuti ' . ($leave->leaveType?->name ?? '') . ' ' . $leave->total_days . ' hari telah disetujui',
+                'type' => 'leave',
+                'icon' => 'check',
+            ]);
+        }
+
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave approved successfully.');
     }
@@ -155,6 +182,18 @@ class LeaveController extends Controller
             'approval_date' => now(),
         ]);
 
+        $this->logActivity('leave', 'Reject', 'Menolak cuti ' . $leave->employee?->full_name . ': ' . $validated['notes'], 'Leave', $leave->id);
+
+        if ($leave->employee?->user_id) {
+            Notification::create([
+                'user_id' => $leave->employee->user_id,
+                'title' => 'Cuti Ditolak',
+                'message' => 'Pengajuan cuti ' . ($leave->leaveType?->name ?? '') . ' ditolak: ' . $validated['notes'],
+                'type' => 'leave',
+                'icon' => 'x',
+            ]);
+        }
+
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave rejected successfully.');
     }
@@ -174,6 +213,8 @@ class LeaveController extends Controller
         }
 
         $leave->update(['status' => 'cancelled']);
+
+        $this->logActivity('leave', 'Cancel', 'Membatalkan cuti ' . $leave->employee?->full_name, 'Leave', $leave->id);
 
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave cancelled successfully.');

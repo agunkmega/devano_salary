@@ -134,10 +134,9 @@ class PayrollService
     {
         [$year, $month] = explode('-', $period);
 
-        $ratePerHour = (float) Setting::where('key', 'overtime_rate_per_hour')->value('value') ?? 25000;
-
-        if ($employee && ($employee->overtime_pay_per_hour ?? 0) > 0) {
-            $ratePerHour = (float) $employee->overtime_pay_per_hour;
+        $employeeRate = (float) ($employee->overtime_pay_per_hour ?? 0);
+        if ($employeeRate <= 0) {
+            return 0;
         }
 
         $totalOvertimeMinutes = Attendance::where('employee_id', $employeeId)
@@ -145,7 +144,7 @@ class PayrollService
             ->whereMonth('attendance_date', $month)
             ->sum('overtime_minutes');
 
-        return ($totalOvertimeMinutes / 60) * $ratePerHour;
+        return ($totalOvertimeMinutes / 60) * $employeeRate;
     }
 
     public function calculateCashAdvanceDeduction($employeeId): float

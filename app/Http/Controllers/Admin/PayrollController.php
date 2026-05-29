@@ -9,13 +9,16 @@ use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollDetail;
 use App\Models\Setting;
+use App\Services\FlowkirimService;
 use App\Services\PayrollService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 
 class PayrollController extends Controller
 {
+    use LogsActivity;
     protected $payrollService;
 
     public function __construct(PayrollService $payrollService)
@@ -106,7 +109,9 @@ class PayrollController extends Controller
 
         $payroll = $this->calculatePayroll($employee, $validated['period'], null, null, (float) ($validated['bonus'] ?? 0), $validated['notes'] ?? null);
 
-        Payroll::create($payroll);
+        $payrollModel = Payroll::create($payroll);
+
+        $this->logActivity('payroll', 'Create', 'Generate payroll ' . $employee->full_name . ' periode ' . $validated['period'], 'Payroll', $payrollModel->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
             ->with('success', 'Payroll generated successfully.');
@@ -146,6 +151,8 @@ class PayrollController extends Controller
             Payroll::create($payroll);
             $generated++;
         }
+
+        $this->logActivity('payroll', 'Create', 'Generate all payroll periode ' . $period, 'Payroll');
 
         return redirect()->route('admin.payrolls.index', ['date_from' => $dateFrom, 'date_to' => $dateTo])
             ->with('success', "Payroll generated for {$generated} employees. {$skipped} skipped (already exist).");
@@ -251,7 +258,7 @@ class PayrollController extends Controller
             $absentPenalty = $dailyRate * $absentDays;
             $overtimeRate = ($employee->overtime_pay_per_hour ?? 0) > 0
                 ? (float) $employee->overtime_pay_per_hour
-                : (($baseSalary > 0 ? ($baseSalary / 173) : 0) * 1.5);
+                : 0;
         }
 
         $overtimePay = $overtimeMinutes > 0 ? ($overtimeMinutes / 60) * $overtimeRate : 0;
@@ -269,7 +276,9 @@ class PayrollController extends Controller
         $totalDeductions = $latePenalty + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
 
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
-        $taxAmount = $netBeforeTax > 4500000 ? ($netBeforeTax * 0.05) : 0;
+        $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
+        $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;
+        $taxAmount = $netBeforeTax > $taxThreshold ? (($netBeforeTax - $taxThreshold) * ($taxRate / 100)) : 0;
 
         $netSalary = max(0, $netBeforeTax - $taxAmount);
         $totalDeductions += $taxAmount;
@@ -324,7 +333,9 @@ class PayrollController extends Controller
         $grossBeforeTax = $payroll->base_salary + $payroll->allowance + $bonus + $payroll->overtime_pay + $payroll->uang_makan_lembur + $uangMakanHarian;
         $totalDeductions = $payroll->late_penalty + $payroll->absent_penalty + $payroll->cash_advance_deduction + $payroll->bpjs_deduction;
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
-        $taxAmount = $netBeforeTax > 4500000 ? ($netBeforeTax * 0.05) : 0;
+        $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
+        $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;
+        $taxAmount = $netBeforeTax > $taxThreshold ? (($netBeforeTax - $taxThreshold) * ($taxRate / 100)) : 0;
         $netSalary = max(0, $netBeforeTax - $taxAmount);
         $totalDeductions += $taxAmount;
 
@@ -351,6 +362,8 @@ class PayrollController extends Controller
             'approval_date' => now(),
         ]);
 
+        $this->logActivity('payroll', 'Approve', 'Menyetujui payroll ' . $payroll->employee?->full_name, 'Payroll', $payroll->id);
+
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
             ->with('success', 'Payroll approved successfully.');
     }
@@ -363,6 +376,8 @@ class PayrollController extends Controller
             'status' => 'paid',
             'payment_date' => now(),
         ]);
+
+        $this->logActivity('payroll', 'Pay', 'Membayar payroll ' . $payroll->employee?->full_name, 'Payroll', $payroll->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
             ->with('success', 'Payroll marked as paid successfully.');
@@ -388,7 +403,9 @@ class PayrollController extends Controller
         $grossBeforeTax = $data['base_salary'] + $data['allowance'] + $data['bonus'] + $data['overtime_pay'] + $data['uang_makan_lembur'] + $uangMakanHarian;
         $totalDeductions = $data['late_penalty'] + $data['absent_penalty'] + $data['cash_advance_deduction'] + $data['bpjs_deduction'];
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
-        $taxAmount = $netBeforeTax > 4500000 ? ($netBeforeTax * 0.05) : 0;
+        $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
+        $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;
+        $taxAmount = $netBeforeTax > $taxThreshold ? (($netBeforeTax - $taxThreshold) * ($taxRate / 100)) : 0;
         $netSalary = max(0, $netBeforeTax - $taxAmount);
         $totalDeductions += $taxAmount;
 
@@ -396,7 +413,9 @@ class PayrollController extends Controller
         $data['total_deductions'] = round($totalDeductions, 2);
         $data['net_salary'] = round($netSalary, 2);
 
-        Payroll::create($data);
+        $newPayroll = Payroll::create($data);
+
+        $this->logActivity('payroll', 'Update', 'Regenerate payroll ' . $payroll->employee?->full_name, 'Payroll', $newPayroll->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
             ->with('success', 'Payroll regenerated successfully.');
@@ -411,11 +430,30 @@ class PayrollController extends Controller
             ->with('success', 'Payroll deleted successfully.');
     }
 
+    public function sendWhatsApp($id)
+    {
+        $payroll = Payroll::with(['employee.user', 'employee.department', 'employee.position'])->findOrFail($id);
+
+        $flowkirim = new FlowkirimService();
+        $result = $flowkirim->sendPayslip($payroll);
+
+        if ($result['success']) {
+            return redirect()->back()->with('success', 'Slip gaji berhasil dikirim ke WhatsApp.');
+        }
+
+        $error = $result['error'] ?? ($result['text_status']['body']['message'] ?? 'Gagal mengirim WhatsApp');
+        return redirect()->back()->with('error', $error);
+    }
+
     public function slipPdf($id)
     {
         $payroll = Payroll::with(['employee.user', 'employee.department', 'employee.position'])->findOrFail($id);
 
-        $pdf = Pdf::loadView('payroll.slip', compact('payroll'));
+        $companySettings = Setting::where('group', 'company')->get()->keyBy('key');
+        $companyName = $companySettings->get('company_name')?->value ?? 'PT. DEVANO SILVER INDONESIA';
+        $companyAddress = $companySettings->get('company_address')?->value ?? '';
+
+        $pdf = Pdf::loadView('payroll.slip', compact('payroll', 'companyName', 'companyAddress'));
 
         return $pdf->download("payslip-{$payroll->employee->nik}-{$payroll->period}.pdf");
     }

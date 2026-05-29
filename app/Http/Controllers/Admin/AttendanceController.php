@@ -11,10 +11,12 @@ use App\Models\ImportLog;
 use App\Models\Shift;
 use App\Services\AttendanceService;
 use Carbon\Carbon;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
+    use LogsActivity;
     protected $attendanceService;
 
     public function __construct(AttendanceService $attendanceService)
@@ -165,6 +167,8 @@ class AttendanceController extends Controller
 
         Attendance::create($data);
 
+        $this->logActivity('attendance', 'Create', 'Menambahkan absensi ' . $employee->full_name, 'Attendance', $employee->id);
+
         return redirect()->to(route('admin.attendances.index') . '?' . http_build_query(request()->only(['date_from', 'date_to', 'department_id', 'employee'])))
             ->with('success', 'Manual attendance created successfully.');
     }
@@ -212,6 +216,9 @@ class AttendanceController extends Controller
 
         $attendance->update($validated);
         $this->attendanceService->recalculateAttendance($attendance->fresh());
+
+        $emp = $attendance->employee;
+        $this->logActivity('attendance', 'Update', 'Mengubah absensi ' . ($emp->full_name ?? '') . ' tanggal ' . $attendance->attendance_date->format('Y-m-d'), 'Attendance', $attendance->id);
 
         return redirect()->to(route('admin.attendances.index') . '?' . http_build_query(request()->only(['date_from', 'date_to', 'department_id', 'employee'])))
             ->with('success', 'Attendance updated successfully.');
@@ -276,6 +283,8 @@ class AttendanceController extends Controller
             if ($failed > 0) {
                 $message .= " {$failed} records failed.";
             }
+
+            $this->logActivity('attendance', 'Import', 'Import absensi via TXT', 'Attendance');
 
             return redirect()->route('admin.attendances.index')
                 ->with('success', $message);
@@ -377,6 +386,8 @@ class AttendanceController extends Controller
             if ($failed > 0) {
                 $message .= " {$failed} records failed.";
             }
+
+            $this->logActivity('attendance', 'Import', 'Import absensi via CSV', 'Attendance');
 
             return redirect()->route('admin.attendances.index')
                 ->with('success', $message);

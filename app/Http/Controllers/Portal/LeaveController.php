@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\Notification;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -45,6 +48,20 @@ class LeaveController extends Controller
         }
 
         Leave::create($data);
+
+        $employee = Employee::find(session('portal_employee_id'));
+        $leaveType = LeaveType::find($request->leave_type_id);
+        $admins = User::whereIn('role', [User::ROLE_SUPER_ADMIN, User::ROLE_HR])->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'title' => 'Cuti Baru',
+                'message' => $employee?->full_name . ' mengajukan ' . ($leaveType?->name ?? 'cuti') . ' ' . $totalDays . ' hari',
+                'type' => 'leave',
+                'url' => route('admin.leaves.index', ['status' => 'pending']),
+                'icon' => 'calendar',
+            ]);
+        }
 
         return redirect()->route('portal.dashboard')
             ->with('success', 'Pengajuan cuti berhasil dikirim.');

@@ -111,6 +111,108 @@ class ReportController extends Controller
         return view('reports.attendance', compact('employeeSummaries', 'departments', 'employees', 'summary', 'periodWorkDays'));
     }
 
+    public function attendancePrint(Request $request)
+    {
+        $query = Attendance::with(['employee.user', 'employee.department', 'employee.position', 'shift'])
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                $q->whereDate('attendance_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($q) use ($request) {
+                $q->whereDate('attendance_date', '<=', $request->date_to);
+            })
+            ->when($request->filled('department_id'), function ($q) use ($request) {
+                $q->whereHas('employee', fn($sub) => $sub->where('department_id', $request->department_id));
+            })
+            ->when($request->filled('employee'), function ($q) use ($request) {
+                $q->whereHas('employee', fn($sub) => $sub->where('full_name', 'like', '%' . $request->employee . '%'));
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+
+        $attendances = $query->orderBy('attendance_date')->orderBy('employee_id')->get();
+
+        $leaveEmpQuery = \App\Models\Leave::where('status', 'approved')
+            ->whereDate('end_date', '>=', $request->date_from ?? $attendances->min('attendance_date'))
+            ->whereDate('start_date', '<=', $request->date_to ?? $attendances->max('attendance_date'));
+        if ($request->filled('department_id')) {
+            $leaveEmpQuery->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
+        }
+        if ($request->filled('employee')) {
+            $leaveEmpQuery->whereHas('employee', fn($q) => $q->where('full_name', 'like', '%' . $request->employee . '%'));
+        }
+        $leaveEmpIds = $leaveEmpQuery->pluck('employee_id')->unique();
+
+        $employeeIds = $attendances->pluck('employee_id')->unique()->merge($leaveEmpIds)->unique();
+        $allEmployees = Employee::with(['position', 'department'])->whereIn('id', $employeeIds)->get()->keyBy('id');
+
+        $dateFrom = $request->filled('date_from') ? Carbon::parse($request->date_from) : $attendances->min('attendance_date');
+        $dateTo = $request->filled('date_to') ? Carbon::parse($request->date_to) : $attendances->max('attendance_date');
+
+        if (!$dateFrom) {
+            return view('reports.attendance-print', ['employees' => collect(), 'dateFrom' => null, 'dateTo' => null]);
+        }
+
+        $holidayDates = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $dateFrom)
+            ->whereDate('date', '<=', $dateTo)
+            ->pluck('date')
+            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
+
+        $leaves = \App\Models\Leave::whereIn('employee_id', $employeeIds)
+            ->where('status', 'approved')
+            ->whereDate('end_date', '>=', $dateFrom)
+            ->whereDate('start_date', '<=', $dateTo)
+            ->get(['employee_id', 'start_date', 'end_date']);
+
+        $leaveDateMap = [];
+        foreach ($leaves as $leave) {
+            $s = Carbon::parse($leave->start_date);
+            $e = Carbon::parse($leave->end_date);
+            while ($s->lte($e)) {
+                $leaveDateMap[$leave->employee_id][$s->format('Y-m-d')] = true;
+                $s->addDay();
+            }
+        }
+
+        $grouped = $attendances->groupBy('employee_id')->map(function ($rows, $empId) use ($allEmployees, $dateFrom, $dateTo, $holidayDates, $leaveDateMap) {
+            $emp = $allEmployees->get($empId);
+            $attByDate = $rows->keyBy(fn($r) => $r->attendance_date->format('Y-m-d'));
+            $fullRows = [];
+            $cursor = $dateFrom->copy();
+            while ($cursor->lte($dateTo)) {
+                $dateStr = $cursor->format('Y-m-d');
+                $dayName = $cursor->locale('id')->dayName;
+                if (isset($attByDate[$dateStr])) {
+                    $att = $attByDate[$dateStr];
+                    $att->day_name = $dayName;
+                    $fullRows[] = $att;
+                } elseif ($cursor->dayOfWeek === Carbon::SUNDAY || in_array($dateStr, $holidayDates)) {
+                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
+                    $fullRows[] = $dummy;
+                } elseif (isset($leaveDateMap[$empId][$dateStr])) {
+                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'cuti');
+                    $fullRows[] = $dummy;
+                } else {
+                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'alpha');
+                    $fullRows[] = $dummy;
+                }
+                $cursor->addDay();
+            }
+            return [
+                'employee_id' => $empId,
+                'nama' => $emp->full_name ?? '-',
+                'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
+                'rows' => collect($fullRows),
+            ];
+        })->values();
+
+        $employees = $grouped;
+
+        return view('reports.attendance-print', compact('employees', 'dateFrom', 'dateTo'));
+    }
+
     public function attendanceExcel()
     {
         $attendances = Attendance::with(['employee.user', 'employee.department', 'shift'])
@@ -315,6 +417,11 @@ class ReportController extends Controller
             ->when(request('status'), function ($q, $status) {
                 $q->where('status', $status);
             })
+            ->when(request('employee_type'), function ($q, $type) {
+                $q->whereHas('employee', function ($sub) use ($type) {
+                    $sub->where('employee_type', $type);
+                });
+            })
             ->latest();
 
         $all = $query->get();
@@ -337,6 +444,32 @@ class ReportController extends Controller
         $employees = Employee::where('is_active', true)->get();
 
         return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'summary'));
+    }
+
+    public function payrollPrint(Request $request)
+    {
+        $query = Payroll::with(['employee.position', 'employee.department']);
+
+        if ($request->filled('period')) {
+            $query->where('period', $request->period);
+        }
+        if ($request->filled('department_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
+        }
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('employee_type')) {
+            $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+        }
+
+        $payrolls = $query->orderBy('period', 'desc')->get();
+        $period = $request->period;
+
+        return view('reports.payroll-print', compact('payrolls', 'period'));
     }
 
     public function leaveBalance(Request $request)
@@ -384,5 +517,24 @@ class ReportController extends Controller
         $departments = Department::where('is_active', true)->get();
 
         return view('reports.leave-balance', compact('balances', 'departments'));
+    }
+
+    private function makeDummyAtt(string $dateStr, string $dayName, string $status): \stdClass
+    {
+        $dummy = new \stdClass();
+        $dummy->attendance_date = $dateStr;
+        $dummy->day_name = $dayName;
+        $dummy->clock_in = null;
+        $dummy->clock_out = null;
+        $dummy->break_out = null;
+        $dummy->break_in = null;
+        $dummy->overtime_in = null;
+        $dummy->overtime_out = null;
+        $dummy->late_minutes = 0;
+        $dummy->early_leave_minutes = 0;
+        $dummy->excess_break_minutes = 0;
+        $dummy->overtime_minutes = 0;
+        $dummy->status = $status;
+        return $dummy;
     }
 }

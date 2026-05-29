@@ -154,25 +154,43 @@
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Backup Database</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400">Backup database untuk mencegah kehilangan data. Disarankan melakukan backup secara rutin.</p>
             <div class="flex items-center gap-4">
-                <button class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Backup Sekarang
-                </button>
-                <div class="text-sm text-gray-400">Terakhir backup: 15 Jan 2024</div>
+                <form method="POST" action="{{ route('admin.settings.backup') }}">
+                    @csrf
+                    <button type="submit" class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Backup Sekarang
+                    </button>
+                </form>
+                <div class="text-sm text-gray-400">
+                    @if(count($backups) > 0)
+                    Terakhir backup: {{ \Carbon\Carbon::createFromTimestamp($backups[0]['date'])->format('d M Y H:i') }}
+                    @else
+                    Belum ada backup
+                    @endif
+                </div>
             </div>
+            @if(count($backups) > 0)
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Riwayat Backup</h4>
                 <div class="space-y-2">
+                    @foreach($backups as $b)
                     <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div><p class="text-sm text-gray-900 dark:text-white">backup-2024-01-15.sql</p><p class="text-xs text-gray-500">15 Jan 2024, 10:30</p></div>
-                        <button class="text-blue-600 dark:text-blue-400 text-sm hover:underline">Download</button>
+                        <div>
+                            <p class="text-sm text-gray-900 dark:text-white">{{ $b['filename'] }}</p>
+                            <p class="text-xs text-gray-500">{{ \Carbon\Carbon::createFromTimestamp($b['date'])->format('d M Y, H:i') }} &middot; {{ round($b['size'] / 1024) }} KB</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('admin.settings.backup.download', basename($b['filename'])) }}" class="text-blue-600 dark:text-blue-400 text-sm hover:underline">Download</a>
+                            <form method="POST" action="{{ route('admin.settings.backup.delete', basename($b['filename'])) }}" onsubmit="return confirm('Hapus backup ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 dark:text-red-400 text-sm hover:underline">Hapus</button>
+                            </form>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div><p class="text-sm text-gray-900 dark:text-white">backup-2024-01-01.sql</p><p class="text-xs text-gray-500">1 Jan 2024, 08:00</p></div>
-                        <button class="text-blue-600 dark:text-blue-400 text-sm hover:underline">Download</button>
-                    </div>
+                    @endforeach
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>
@@ -181,7 +199,7 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('settings', () => ({
-            activeTab: 'general',
+            activeTab: new URLSearchParams(window.location.search).get('tab') || 'general',
             init() {}
         }));
     });

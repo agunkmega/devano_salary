@@ -130,7 +130,7 @@ class PayrollController extends Controller
 
         $dateFrom = $validated['date_from'];
         $dateTo = $validated['date_to'];
-        $period = substr($dateFrom, 0, 7);
+        $period = substr($dateTo, 0, 7);
 
         $employees = Employee::where('is_active', true)
             ->when($validated['employee_id'] ?? null, function ($q, $empId) {

@@ -366,7 +366,7 @@ class ReportController extends Controller
 
     public function leave()
     {
-        $leaves = Leave::with(['employee.user', 'employee.department', 'leaveType', 'approver'])
+        $query = Leave::with(['employee.user', 'employee.department', 'leaveType', 'approver'])
             ->when(request('status'), function ($q, $status) {
                 $q->where('status', $status);
             })
@@ -383,19 +383,21 @@ class ReportController extends Controller
             })
             ->when(request('date_to'), function ($q, $date) {
                 $q->whereDate('end_date', '<=', $date);
-            })
-            ->latest()
-            ->paginate(50);
+            });
 
-        $departments = Department::where('is_active', true)->get();
+        $all = (clone $query)->get();
 
         $summary = [
-            'pending' => $leaves->where('status', 'pending')->count(),
-            'approved' => $leaves->where('status', 'approved')->count(),
-            'rejected' => $leaves->where('status', 'rejected')->count(),
-            'cancelled' => $leaves->where('status', 'cancelled')->count(),
-            'total_days' => $leaves->sum('total_days'),
+            'pending' => $all->where('status', 'pending')->count(),
+            'approved' => $all->where('status', 'approved')->count(),
+            'rejected' => $all->where('status', 'rejected')->count(),
+            'cancelled' => $all->where('status', 'cancelled')->count(),
+            'total_days' => $all->sum('total_days'),
         ];
+
+        $leaves = $query->latest()->paginate(50);
+
+        $departments = Department::where('is_active', true)->get();
 
         return view('reports.leave', compact('leaves', 'departments', 'summary'));
     }
@@ -484,33 +486,37 @@ class ReportController extends Controller
 
         $employees = $employees->get();
 
-        $ctId = LeaveType::where('code', 'CT')->value('id');
-        $dpId = LeaveType::where('code', 'DP')->value('id');
+        $ct = LeaveType::where('code', 'CT')->first(['id', 'max_days_per_year']);
+        $dp = LeaveType::where('code', 'DP')->first(['id', 'max_days_per_year']);
+        $ctId = $ct?->id;
+        $dpId = $dp?->id;
+        $ctQuota = $ct?->max_days_per_year ?? 12;
+        $dpQuota = $dp?->max_days_per_year ?? 12;
         $currentYear = now()->year;
 
-        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $currentYear) {
-            $usedCt = Leave::where('employee_id', $emp->id)
+        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $dpQuota, $currentYear) {
+            $usedCt = $ctId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $ctId)
                 ->where('status', 'approved')
                 ->whereYear('start_date', $currentYear)
-                ->sum('total_days');
+                ->sum('total_days') : 0;
 
-            $usedDp = Leave::where('employee_id', $emp->id)
+            $usedDp = $dpId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $dpId)
                 ->where('status', 'approved')
                 ->whereYear('start_date', $currentYear)
-                ->sum('total_days');
+                ->sum('total_days') : 0;
 
             return [
                 'employee_id' => $emp->id,
                 'nama' => $emp->full_name ?? '-',
                 'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
-                'ct_quota' => 12,
+                'ct_quota' => $ctQuota,
                 'ct_used' => $usedCt,
-                'ct_remaining' => max(0, 12 - $usedCt),
-                'dp_quota' => 12,
+                'ct_remaining' => max(0, $ctQuota - $usedCt),
+                'dp_quota' => $dpQuota,
                 'dp_used' => $usedDp,
-                'dp_remaining' => max(0, 12 - $usedDp),
+                'dp_remaining' => max(0, $dpQuota - $usedDp),
             ];
         });
 

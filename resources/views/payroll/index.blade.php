@@ -23,6 +23,15 @@
                 <input type="date" name="date_to" value="{{ $dateTo }}" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Periode</label>
+                <select name="period" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua Periode</option>
+                    @foreach($periodsData as $pd)
+                        <option value="{{ $pd['value'] }}" {{ request('period') == $pd['value'] ? 'selected' : '' }}>{{ $pd['range'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Departemen</label>
                 <select name="department_id" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
                     <option value="">Semua</option>
@@ -70,7 +79,7 @@
                 </button>
                 <div x-show="open" @click.outside="open = false" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50" style="display: none;">
                     <div class="p-4 space-y-3">
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Periode: <span id="generate_period_label">{{ \Carbon\Carbon::parse($dateFrom)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($dateTo)->translatedFormat('d M Y') }}</span></p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Periode: <span id="generate_period_label">{{ \Carbon\Carbon::parse($dateFrom)->format('d M Y') }} - {{ \Carbon\Carbon::parse($dateTo)->format('d M Y') }}</span></p>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pegawai</label>
                             <div x-data="employeeSearch()" class="relative">
@@ -119,7 +128,9 @@
                         $initials = strtoupper(substr($words[0] ?? '', 0, 1) . substr($words[1] ?? $words[0] ?? '', 0, 1));
                         [$year, $month] = explode('-', $p->period);
                         $monthNames = ['01'=>'Januari','02'=>'Februari','03'=>'Maret','04'=>'April','05'=>'Mei','06'=>'Juni','07'=>'Juli','08'=>'Agustus','09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Desember'];
-                        $periodLabel = ($monthNames[$month] ?? $month) . ' ' . $year;
+                        $periodStart = \Carbon\Carbon::create((int)$year, (int)$month, 26)->subMonth();
+                        $periodEnd = \Carbon\Carbon::create((int)$year, (int)$month, 25);
+                        $periodRange = $periodStart->format('d M') . ' - ' . $periodEnd->format('d M Y');
                         $statusMap = ['draft' => 'Draft', 'pending' => 'Pending', 'approved' => 'Disetujui', 'paid' => 'Dibayar'];
                         $fmt = function($v) { return 'Rp ' . number_format((float) $v, 0, ',', '.'); };
                     @endphp
@@ -133,7 +144,7 @@
                         <td class="py-3 px-4">
                             <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $empType === 'harian' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' }}">{{ $empType === 'harian' ? 'Harian' : 'Bulanan' }}</span>
                         </td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">{{ $periodLabel }}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">{{ $periodRange }}</td>
                         <td class="py-3 px-4 text-right text-gray-900 dark:text-white">
                             @if($empType === 'harian' && $p->attendance_days !== null)
                                 {{ $fmt($p->base_salary) }}

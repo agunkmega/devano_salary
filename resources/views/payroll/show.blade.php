@@ -1,7 +1,13 @@
 @extends('layouts.admin')
 
 @section('page-title', 'Detail Payroll')
-@section('page-subtitle', 'Periode ' . (\Carbon\Carbon::createFromFormat('Y-m', $payroll->period)->locale('id')->translatedFormat('F Y') ?? $payroll->period))
+@section('page-subtitle')
+    @php
+        $perStart = \Carbon\Carbon::createFromFormat('Y-m', $payroll->period)->subMonth()->day(26);
+        $perEnd = \Carbon\Carbon::createFromFormat('Y-m', $payroll->period)->day(25);
+    @endphp
+    {{ $perStart->format('d M') }} - {{ $perEnd->format('d M Y') }}
+@endsection
 
 @section('page-content')
 @php

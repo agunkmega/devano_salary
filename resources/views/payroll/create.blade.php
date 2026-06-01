@@ -27,7 +27,8 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Periode <span class="text-red-500">*</span></label>
-                    <input type="month" name="period" value="{{ old('period', $period) }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('period') border-red-500 @enderror" required>
+                    <input type="month" name="period" x-model="period" value="{{ old('period', $period) }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('period') border-red-500 @enderror" required>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" x-text="periodRange"></p>
                     @error('period') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
@@ -74,7 +75,19 @@
             selected: '{{ old('employee_id') }}',
             selectedName: '',
             selectedType: 'bulanan',
+            period: '{{ old('period', $period) }}',
             employees: @json($employees->map(fn($e) => ['id' => $e->id, 'full_name' => $e->full_name, 'nik' => $e->nik, 'employee_type' => $e->employee_type])),
+            get periodRange() {
+                if (!this.period) return '';
+                const [year, month] = this.period.split('-').map(Number);
+                const start = new Date(year, month - 2, 26);
+                const end = new Date(year, month - 1, 25);
+                const fmt = (d) => {
+                    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+                    return d.getDate() + ' ' + months[d.getMonth()];
+                };
+                return fmt(start) + ' - ' + fmt(end) + ' ' + end.getFullYear();
+            },
             init() {
                 if (this.selected) {
                     const emp = this.employees.find(e => e.id == this.selected);

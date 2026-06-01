@@ -70,7 +70,10 @@ class PayrollController extends Controller
 
         $periodsData = $periods->map(function ($p) use ($monthNames) {
             [$year, $month] = explode('-', $p);
-            return ['value' => $p, 'label' => ($monthNames[$month] ?? $month) . ' ' . $year];
+            $start = Carbon::create((int)$year, (int)$month, 26)->subMonth();
+            $end = Carbon::create((int)$year, (int)$month, 25);
+            $range = $start->format('d M') . ' - ' . $end->format('d M Y');
+            return ['value' => $p, 'label' => ($monthNames[$month] ?? $month) . ' ' . $year, 'range' => $range];
         });
 
         $departments = \App\Models\Department::where('is_active', true)->get(['id', 'name']);

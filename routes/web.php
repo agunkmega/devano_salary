@@ -43,7 +43,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::get('attendances/history', [AttendanceController::class, 'history'])->name('attendances.history');
 
     Route::resource('leave-types', LeaveTypeController::class)->except(['show']);
-    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave'])->except(['edit', 'update', 'destroy']);
+    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave'])->except(['destroy']);
     Route::patch('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::patch('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
     Route::patch('leaves/{leave}/cancel', [LeaveController::class, 'cancel'])->name('leaves.cancel');

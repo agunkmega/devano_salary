@@ -81,6 +81,9 @@
     </div>
 
     <div class="flex justify-end gap-3">
+        @if($leave->status === 'approved')
+            <a href="{{ route('admin.leaves.edit', $leave->id) }}" class="px-6 py-2.5 text-sm font-medium text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-xl hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors">Edit</a>
+        @endif
         <a href="{{ route('admin.leaves.index') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Kembali</a>
     </div>
 </div>

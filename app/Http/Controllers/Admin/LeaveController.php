@@ -131,6 +131,42 @@ class LeaveController extends Controller
         return view('leaves.show', compact('leave'));
     }
 
+    public function edit(Leave $leave)
+    {
+        $leave->load('employee');
+        $leaveTypes = LeaveType::where('is_active', true)->get();
+        $employees = Employee::where('is_active', true)->get();
+
+        return view('leaves.edit', compact('leave', 'leaveTypes', 'employees'));
+    }
+
+    public function update(Request $request, Leave $leave)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'leave_type_id' => 'required|exists:leave_types,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'required|string',
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ]);
+
+        $start = Carbon::parse($validated['start_date']);
+        $end = Carbon::parse($validated['end_date']);
+        $validated['total_days'] = $start->diffInDays($end) + 1;
+
+        if ($request->hasFile('attachment')) {
+            $validated['attachment'] = $request->file('attachment')->store('leaves', 'public');
+        }
+
+        $leave->update($validated);
+
+        $this->logActivity('leave', 'Update', 'Mengupdate cuti ' . $leave->employee?->full_name, 'Leave', $leave->id);
+
+        return redirect()->route('admin.leaves.index')
+            ->with('success', 'Leave updated successfully.');
+    }
+
     public function approve($id)
     {
         $leave = Leave::findOrFail($id);

@@ -30,6 +30,8 @@ class Attendance extends Model
         'manual_reason',
         'edited_by',
         'ignore_late',
+        'ignore_early_leave',
+        'ignore_excess_break',
     ];
 
     protected function casts(): array
@@ -48,6 +50,8 @@ class Attendance extends Model
             'excess_break_minutes' => 'integer',
             'is_manual' => 'boolean',
             'ignore_late' => 'boolean',
+            'ignore_early_leave' => 'boolean',
+            'ignore_excess_break' => 'boolean',
         ];
     }
 

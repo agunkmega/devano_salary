@@ -118,14 +118,28 @@
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.overtime_minutes != null ? Math.floor(att.overtime_minutes / 60) + 'j ' + (att.overtime_minutes % 60) + 'm' : '-'"></td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
                                 <template x-if="att.ignore_late">
-                                    <span class="text-xs italic text-gray-400 dark:text-gray-500">Diabaikan</span>
+                                    <span class="text-xs font-semibold text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded">Diabaikan</span>
                                 </template>
                                 <template x-if="!att.ignore_late">
                                     <span x-text="att.late_minutes > 0 ? att.late_minutes + ' menit' : '-'"></span>
                                 </template>
                             </td>
-                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.early_leave_minutes != null && att.early_leave_minutes > 0 ? att.early_leave_minutes + ' menit' : '-'"></td>
-                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.excess_break_minutes != null && att.excess_break_minutes > 0 ? att.excess_break_minutes + ' menit' : '-'"></td>
+                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
+                                <template x-if="att.ignore_early_leave">
+                                    <span class="text-xs font-semibold text-purple-500 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-1.5 py-0.5 rounded">Diabaikan</span>
+                                </template>
+                                <template x-if="!att.ignore_early_leave">
+                                    <span x-text="att.early_leave_minutes != null && att.early_leave_minutes > 0 ? att.early_leave_minutes + ' menit' : '-'"></span>
+                                </template>
+                            </td>
+                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
+                                <template x-if="att.ignore_excess_break">
+                                    <span class="text-xs font-semibold text-cyan-500 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20 px-1.5 py-0.5 rounded">Diabaikan</span>
+                                </template>
+                                <template x-if="!att.ignore_excess_break">
+                                    <span x-text="att.excess_break_minutes != null && att.excess_break_minutes > 0 ? att.excess_break_minutes + ' menit' : '-'"></span>
+                                </template>
+                            </td>
                             <td class="py-3 px-3">
                                 <span class="text-xs font-medium px-2.5 py-1 rounded-full" :class="{
                                     'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400': att.status === 'Hadir',
@@ -289,7 +303,15 @@
                     </div>
                     <div class="flex items-center gap-2 py-1">
                         <input type="checkbox" x-model="editForm.ignore_late" name="ignore_late" id="edit_ignore_late" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="edit_ignore_late" class="text-sm text-gray-700 dark:text-gray-300">Abaikan telat (late=0)</label>
+                        <label for="edit_ignore_late" class="text-sm text-gray-700 dark:text-gray-300">Abaikan telat</label>
+                    </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" x-model="editForm.ignore_early_leave" name="ignore_early_leave" id="edit_ignore_early_leave" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="edit_ignore_early_leave" class="text-sm text-gray-700 dark:text-gray-300">Abaikan pulang awal</label>
+                    </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" x-model="editForm.ignore_excess_break" name="ignore_excess_break" id="edit_ignore_excess_break" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="edit_ignore_excess_break" class="text-sm text-gray-700 dark:text-gray-300">Abaikan lebih istirahat</label>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
@@ -326,7 +348,7 @@
             departments: @json($departments),
             attendances: @json($attendancesData),
             get filteredAttendances() { return this.attendances.filter(a => { if (this.filters.status && a.status !== this.filters.status) return false; if (this.filters.employee && !a.employee.toLowerCase().includes(this.filters.employee.toLowerCase())) return false; return true; }); },
-            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : 'hadir', ignore_late: att.ignore_late || false }; this.editModal = true; },
+            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : 'hadir', ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false }; this.editModal = true; },
             init() {}
         }));
     });

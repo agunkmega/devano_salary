@@ -436,11 +436,17 @@ class AttendanceService
 
         if ($attendance->ignore_late) {
             $attendance->late_minutes = 0;
-            $attendance->early_leave_minutes = 0;
-            $attendance->excess_break_minutes = 0;
             if ($attendance->status === 'terlambat') {
                 $attendance->status = 'hadir';
             }
+        }
+
+        if ($attendance->ignore_early_leave) {
+            $attendance->early_leave_minutes = 0;
+        }
+
+        if ($attendance->ignore_excess_break) {
+            $attendance->excess_break_minutes = 0;
         }
 
         if (!$attendance->ignore_late && $attendance->clock_in && !$isSunday) {
@@ -457,7 +463,7 @@ class AttendanceService
             }
         }
 
-        if (!$attendance->ignore_late && $attendance->clock_out && !$isSunday) {
+        if (!$attendance->ignore_early_leave && $attendance->clock_out && !$isSunday) {
             $saturdayEnd = $shift->saturday_clock_out_time && $attDate->dayOfWeek === Carbon::SATURDAY
                 ? $shift->saturday_clock_out_time
                 : $shift->clock_out_time;
@@ -477,7 +483,7 @@ class AttendanceService
             );
         }
 
-        if (!$attendance->ignore_late && $attendance->break_out && $attendance->break_in) {
+        if (!$attendance->ignore_excess_break && $attendance->break_out && $attendance->break_in) {
             $breakStart = $shift->break_start ? Carbon::parse($dateStr . ' ' . $shift->break_start) : null;
             $breakEnd = $shift->break_end ? Carbon::parse($dateStr . ' ' . $shift->break_end) : null;
             $attendance->excess_break_minutes = $this->calculateExcessBreakMinutes(

@@ -120,6 +120,8 @@ class AttendanceController extends Controller
                     'overtime_minutes' => $att?->overtime_minutes,
                     'department' => $emp->department?->name ?? '',
                     'ignore_late' => $att?->ignore_late ?? false,
+                    'ignore_early_leave' => $att?->ignore_early_leave ?? false,
+                    'ignore_excess_break' => $att?->ignore_excess_break ?? false,
                 ]);
             }
         }
@@ -204,11 +206,15 @@ class AttendanceController extends Controller
             'notes' => 'nullable|string',
             'manual_reason' => 'nullable|string',
             'ignore_late' => 'nullable|boolean',
+            'ignore_early_leave' => 'nullable|boolean',
+            'ignore_excess_break' => 'nullable|boolean',
         ]);
 
         $validated['is_manual'] = true;
         $validated['edited_by'] = auth()->id();
         $validated['ignore_late'] = $request->boolean('ignore_late');
+        $validated['ignore_early_leave'] = $request->boolean('ignore_early_leave');
+        $validated['ignore_excess_break'] = $request->boolean('ignore_excess_break');
 
         $dateStr = $validated['attendance_date'];
         foreach (['clock_in', 'clock_out', 'break_out', 'break_in', 'overtime_in', 'overtime_out'] as $field) {

@@ -29,6 +29,7 @@ class Attendance extends Model
         'is_manual',
         'manual_reason',
         'edited_by',
+        'ignore_late',
     ];
 
     protected function casts(): array
@@ -46,6 +47,7 @@ class Attendance extends Model
             'overtime_minutes' => 'integer',
             'excess_break_minutes' => 'integer',
             'is_manual' => 'boolean',
+            'ignore_late' => 'boolean',
         ];
     }
 

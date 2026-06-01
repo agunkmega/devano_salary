@@ -116,7 +116,14 @@
                             <td class="py-3 px-3 font-mono text-blue-600 dark:text-blue-400" x-text="att.overtime_in || '-'"></td>
                             <td class="py-3 px-3 font-mono text-blue-600 dark:text-blue-400" x-text="att.overtime_out || '-'"></td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.overtime_minutes != null ? Math.floor(att.overtime_minutes / 60) + 'j ' + (att.overtime_minutes % 60) + 'm' : '-'"></td>
-                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.late_minutes > 0 ? att.late_minutes + ' menit' : '-'"></td>
+                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
+                                <template x-if="att.ignore_late">
+                                    <span class="text-xs italic text-gray-400 dark:text-gray-500">Diabaikan</span>
+                                </template>
+                                <template x-if="!att.ignore_late">
+                                    <span x-text="att.late_minutes > 0 ? att.late_minutes + ' menit' : '-'"></span>
+                                </template>
+                            </td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.early_leave_minutes != null && att.early_leave_minutes > 0 ? att.early_leave_minutes + ' menit' : '-'"></td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400" x-text="att.excess_break_minutes != null && att.excess_break_minutes > 0 ? att.excess_break_minutes + ' menit' : '-'"></td>
                             <td class="py-3 px-3">
@@ -280,6 +287,10 @@
                             <input type="time" x-model="editForm.overtime_out" name="overtime_out" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" x-model="editForm.ignore_late" name="ignore_late" id="edit_ignore_late" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="edit_ignore_late" class="text-sm text-gray-700 dark:text-gray-300">Abaikan telat (late=0)</label>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
                         <select x-model="editForm.status" name="status" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
@@ -311,11 +322,11 @@
             showManualModal: false,
             editModal: false,
             editing: null,
-            editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '' },
+            editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '', ignore_late: false },
             departments: @json($departments),
             attendances: @json($attendancesData),
             get filteredAttendances() { return this.attendances.filter(a => { if (this.filters.status && a.status !== this.filters.status) return false; if (this.filters.employee && !a.employee.toLowerCase().includes(this.filters.employee.toLowerCase())) return false; return true; }); },
-            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : 'hadir' }; this.editModal = true; },
+            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : 'hadir', ignore_late: att.ignore_late || false }; this.editModal = true; },
             init() {}
         }));
     });

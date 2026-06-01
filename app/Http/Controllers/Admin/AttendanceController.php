@@ -28,6 +28,7 @@ class AttendanceController extends Controller
     {
         $dateFrom = request('date_from');
         $dateTo = request('date_to');
+        $employeeSearch = request('employee');
 
         $employees = Employee::with('department')
             ->where('is_active', true)
@@ -40,8 +41,13 @@ class AttendanceController extends Controller
 
         $attendancesData = collect();
 
-        if ($dateFrom && $dateTo) {
+        if ($dateFrom && $dateTo && $employeeSearch) {
+            $filteredEmployees = $employees->filter(fn($emp) =>
+                stripos($emp->full_name, $employeeSearch) !== false
+            );
+
             $attendances = Attendance::with(['employee.user', 'employee.department', 'shift'])
+                ->whereIn('employee_id', $filteredEmployees->pluck('id'))
                 ->whereDate('attendance_date', '>=', $dateFrom)
                 ->whereDate('attendance_date', '<=', $dateTo)
                 ->get()
@@ -66,7 +72,7 @@ class AttendanceController extends Controller
             $dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
             foreach ($period as $date) {
-            foreach ($employees as $emp) {
+            foreach ($filteredEmployees as $emp) {
                 $key = $emp->id . '|' . $date->format('Y-m-d');
                 $att = $attendances->get($key);
 

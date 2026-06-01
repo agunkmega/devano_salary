@@ -13,35 +13,31 @@
     @endif
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div class="flex flex-wrap gap-3 flex-1">
-                <form method="GET" action="{{ route('admin.attendances.index') }}" class="flex items-end gap-2">
-                    <input type="hidden" name="department_id" value="{{ request('department_id') }}">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dari</label>
-                        <input type="date" name="date_from" value="{{ $dateFrom }}" @change="$el.form.requestSubmit()" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sampai</label>
-                        <input type="date" name="date_to" value="{{ $dateTo }}" @change="$el.form.requestSubmit()" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </form>
+            <form method="GET" action="{{ route('admin.attendances.index') }}" class="flex flex-wrap gap-3 items-end flex-1">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dari</label>
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sampai</label>
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Departemen</label>
-                    <form method="GET" action="{{ route('admin.attendances.index') }}" class="contents">
-                        <input type="hidden" name="date_from" value="{{ $dateFrom }}">
-                        <input type="hidden" name="date_to" value="{{ $dateTo }}">
-                        <select name="department_id" @change="$el.form.requestSubmit()" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                            <option value="">Semua</option>
-                            @foreach ($departments as $dept)
-                                <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
-                            @endforeach
-                        </select>
-                    </form>
+                    <select name="department_id" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="">Semua</option>
+                        @foreach ($departments as $dept)
+                            <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai</label>
-                    <input type="text" x-model="filters.employee" placeholder="Cari pegawai..." class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    <input type="text" name="employee" value="{{ request('employee') }}" placeholder="Nama pegawai..." class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
                 </div>
+                <button type="submit" class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">Cari</button>
+            </form>
+            <div class="flex flex-wrap items-center gap-2">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
                     <select x-model="filters.status" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
@@ -54,8 +50,6 @@
                         <option>Alpha</option>
                     </select>
                 </div>
-            </div>
-            <div class="flex items-center gap-2">
                 <form x-ref="importForm" action="{{ route('admin.attendances.import-checkpoint') }}" method="POST" enctype="multipart/form-data" class="inline" @submit="importing = true">
                     @csrf
                     <label class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" :class="{ 'opacity-50 pointer-events-none': importing }">
@@ -97,6 +91,17 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <template x-if="attendances.length === 0">
+                        <tr>
+                            <td colspan="14" class="text-center py-12 text-gray-400 dark:text-gray-500">
+                                @if($dateFrom && $dateTo && request('employee'))
+                                <p>Tidak ada data absensi untuk filter tersebut.</p>
+                                @else
+                                <p>Isi rentang tanggal dan nama pegawai, lalu klik <strong>Cari</strong> untuk menampilkan data.</p>
+                                @endif
+                            </td>
+                        </tr>
+                    </template>
                     <template x-for="att in filteredAttendances" :key="att.employee_id + '|' + att.date">
                         <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                             <td class="py-3 px-3">
@@ -191,7 +196,7 @@
             </table>
         </div>
 
-        <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div x-show="filteredAttendances.length > 0" class="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
             <p class="text-sm text-gray-500 dark:text-gray-400">Menampilkan <span x-text="filteredAttendances.length"></span> data</p>
             <p class="text-xs text-gray-400" x-data="{ dates: [...new Set(attendances.map(a => a.date))].sort() }" x-text="'Rentang: ' + dates[0] + ' s/d ' + dates[dates.length-1] + ' (' + dates.length + ' hari)'"></p>
         </div>

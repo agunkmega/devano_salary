@@ -74,21 +74,21 @@ class ReportController extends Controller
         }
 
         $employeeSummaries = $all->groupBy('employee_id')->map(function ($rows, $empId) use ($periodWorkDays, $sundayCount) {
-            $emp = $rows->first()->employee;
+            $emp = $rows->first()?->employee;
             $hadir = $rows->where('status', 'hadir')->count();
             $terlambat = $rows->where('status', 'terlambat')->count();
             $totalHadir = $hadir + $terlambat;
 
             $totalHari = $periodWorkDays > 0 ? $periodWorkDays : $totalHadir;
-            $persentase = $emp->employee_type === 'bulanan'
+            $persentase = $emp?->employee_type === 'bulanan'
                 ? round(($totalHadir + $sundayCount) / ($totalHari + $sundayCount) * 100, 1)
                 : null;
 
             return [
                 'employee_id' => $empId,
-                'employee_type' => $emp->employee_type,
+                'employee_type' => $emp->employee_type ?? 'bulanan',
                 'nama' => $emp->full_name ?? '-',
-                'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
+                'jabatan' => $emp?->position?->name ?? $emp?->department?->name ?? '-',
                 'hadir' => $hadir,
                 'terlambat' => $terlambat,
                 'izin' => $rows->where('status', 'izin')->count(),
@@ -202,8 +202,8 @@ class ReportController extends Controller
             }
             return [
                 'employee_id' => $empId,
-                'nama' => $emp->full_name ?? '-',
-                'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
+                'nama' => $emp?->full_name ?? '-',
+                'jabatan' => $emp?->position?->name ?? $emp?->department?->name ?? '-',
                 'rows' => collect($fullRows),
             ];
         })->values();

@@ -486,7 +486,7 @@ class ReportController extends Controller
 
         $employees = $employees->get();
 
-        $ct = LeaveType::where('code', 'CT')->first(['id', 'max_days_per_year']);
+        $ct = LeaveType::whereIn('code', ['CT', 'CUTI'])->first(['id', 'max_days_per_year']);
         $dp = LeaveType::where('code', 'DP')->first(['id', 'max_days_per_year']);
         $ctId = $ct?->id;
         $dpId = $dp?->id;

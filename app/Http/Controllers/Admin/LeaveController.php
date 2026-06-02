@@ -40,6 +40,11 @@ class LeaveController extends Controller
             ->when(request('date_to'), function ($q, $date) {
                 $q->whereDate('end_date', '<=', $date);
             })
+            ->when(request('employee'), function ($q, $employee) {
+                $q->whereHas('employee', function ($sub) use ($employee) {
+                    $sub->where('full_name', 'like', '%' . $employee . '%');
+                });
+            })
             ->latest()
             ->paginate(20);
 

@@ -42,30 +42,30 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label>
                     <textarea name="settings[company_address]" rows="3" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">{{ $settings->get('company')?->firstWhere('key', 'company_address')?->value ?? 'Jl. Contoh No. 123, Kelurahan, Kecamatan, Kota, Provinsi' }}</textarea>
                 </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo</label>
-                    @php $logoPath = $settings->get('company')?->firstWhere('key', 'app_logo')?->value; @endphp
-                    <div class="flex items-center gap-4">
-                        @if($logoPath)
-                        <div class="relative">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($logoPath) }}" alt="Logo" class="h-12 w-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                            <form method="POST" action="{{ route('admin.settings.logo.delete') }}" class="absolute -top-2 -right-2">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600">&times;</button>
-                            </form>
-                        </div>
-                        @endif
-                        <form method="POST" action="{{ route('admin.settings.logo.upload') }}" enctype="multipart/form-data" class="flex items-center gap-3">
-                            @csrf
-                            <input type="file" name="logo" accept="image/png,image/jpeg,image/svg+xml" class="text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100">
-                            <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Upload</button>
-                        </form>
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Format: PNG, JPG, SVG. Maks 2MB.</p>
-                </div>
             </div>
             <div class="flex justify-end"><button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">Simpan</button></div>
         </form>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Logo Perusahaan</h3>
+            @php $logoPath = $settings->get('company')?->firstWhere('key', 'app_logo')?->value; @endphp
+            <div class="flex items-center gap-4">
+                @if($logoPath)
+                <div class="relative">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url($logoPath) }}" alt="Logo" class="h-12 w-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <form method="POST" action="{{ route('admin.settings.logo.delete') }}" class="absolute -top-2 -right-2">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600">&times;</button>
+                    </form>
+                </div>
+                @endif
+                <form method="POST" action="{{ route('admin.settings.logo.upload') }}" enctype="multipart/form-data" class="flex items-center gap-3">
+                    @csrf
+                    <input type="file" name="logo" accept="image/png,image/jpeg,image/svg+xml" class="text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100">
+                    <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Upload</button>
+                </form>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Format: PNG, JPG, SVG. Maks 2MB.</p>
+        </div>
     </div>
 
     <div x-show="activeTab === 'payroll'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">

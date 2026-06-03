@@ -20,7 +20,7 @@
                 <a href="/">
                     @php $logoPath = \App\Models\Setting::where('key', 'app_logo')?->value('value'); @endphp
                     @if($logoPath)
-                    <img src="{{ \Illuminate\Support\Facades\Storage::url($logoPath) }}" alt="Logo" class="h-16 w-auto">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url($logoPath) }}" alt="Logo" class="h-28 w-auto">
                     @else
                     <x-application-logo class="w-20 h-20 fill-current text-gray-500 dark:text-gray-400" />
                     @endif

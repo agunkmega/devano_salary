@@ -60,6 +60,12 @@
                 </tbody>
             </table>
         </div>
+        <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 px-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Menampilkan {{ $positions->firstItem() }} - {{ $positions->lastItem() }} dari {{ $positions->total() }}
+            </p>
+            {{ $positions->withQueryString()->links() }}
+        </div>
     </div>
 
     <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="modalOpen = false">

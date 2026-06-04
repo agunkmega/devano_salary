@@ -185,7 +185,8 @@ class EmployeeController extends Controller
 
         $this->logActivity('employee', 'Update', 'Mengubah data pegawai: ' . $employee->full_name, 'Employee', $employee->id, $old, $employee->fresh()->toArray());
 
-        return redirect()->route('admin.employees.index')
+        $page = $request->input('prev_page', 1);
+        return redirect()->route('admin.employees.index', ['page' => $page])
             ->with('success', 'Employee updated successfully.');
     }
 

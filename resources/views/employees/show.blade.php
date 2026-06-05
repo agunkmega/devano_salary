@@ -7,8 +7,13 @@
 <div class="max-w-5xl mx-auto space-y-6">
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <div class="w-20 h-20 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl font-bold flex-shrink-0">
+            @php $photoUrl = $employee->photo ? \Illuminate\Support\Facades\Storage::url($employee->photo) : null; @endphp
+            <div class="w-20 h-20 rounded-2xl flex-shrink-0 overflow-hidden {{ $photoUrl ? '' : 'bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-2xl font-bold' }}">
+                @if($photoUrl)
+                <img src="{{ $photoUrl }}" alt="{{ $employee->full_name }}" class="w-full h-full object-cover">
+                @else
                 {{ substr($employee->full_name ?? 'U', 0, 1) }}
+                @endif
             </div>
             <div class="flex-1">
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $employee->full_name ?? '-' }}</h2>

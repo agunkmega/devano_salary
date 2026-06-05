@@ -168,6 +168,7 @@ class EmployeeController extends Controller
             'overtime_pay_per_hour' => 'nullable|numeric|min:0',
             'uang_makan_lembur' => 'nullable|numeric|min:0',
             'late_penalty_active' => 'boolean',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($employee->user) {
@@ -179,6 +180,10 @@ class EmployeeController extends Controller
 
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('photos', 'public');
+        }
 
         $old = $employee->only(['full_name', 'nik', 'department_id', 'position_id', 'base_salary', 'status']);
         $employee->update($validated);

@@ -55,8 +55,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::post('cash-advances/{cashAdvance}/pay', [CashAdvanceController::class, 'pay'])->name('cash-advances.pay');
 
     Route::resource('payrolls', PayrollController::class);
-    Route::post('payrolls/generate/{employee}', [PayrollController::class, 'generate'])->name('payrolls.generate');
     Route::post('payrolls/generate-all', [PayrollController::class, 'generateAll'])->name('payrolls.generate-all');
+    Route::post('payrolls/generate/{employee}', [PayrollController::class, 'generate'])->name('payrolls.generate');
     Route::patch('payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
     Route::patch('payrolls/{payroll}/regenerate', [PayrollController::class, 'regenerate'])->name('payrolls.regenerate');
     Route::patch('payrolls/{payroll}/pay', [PayrollController::class, 'pay'])->name('payrolls.pay');

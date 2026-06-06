@@ -37,8 +37,8 @@ class PayrollController extends Controller
         $payrolls = Payroll::with(['employee.user', 'employee.department'])
             ->when(request('period'), function ($q, $period) {
                 $q->where('period', $period);
-            }, function ($q) use ($periodFrom, $periodTo) {
-                $q->whereBetween('period', [$periodFrom, $periodTo]);
+            }, function ($q) use ($periodTo) {
+                $q->where('period', $periodTo);
             })
             ->when(request('department_id'), function ($q, $deptId) {
                 $q->whereHas('employee', function ($sub) use ($deptId) {

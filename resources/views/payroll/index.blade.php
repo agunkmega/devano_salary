@@ -40,14 +40,18 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div x-data="filterEmployeeSearch()">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai</label>
-                <select name="employee_id" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    <option value="">Semua</option>
-                    @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>{{ $emp->full_name }}</option>
-                    @endforeach
-                </select>
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @input="open = true" @click.outside="open = false" class="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Ketik nama...">
+                    <input type="hidden" name="employee_id" x-model="selected">
+                    <ul x-show="open && filtered.length > 0" x-cloak class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                        <li @click="clear()" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer transition-colors">Semua</li>
+                        <template x-for="emp in filtered" :key="emp.id">
+                            <li @click="select(emp)" class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-colors" x-text="emp.full_name"></li>
+                        </template>
+                    </ul>
+                </div>
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Jenis</label>
@@ -257,6 +261,27 @@
                 this.selected = emp.id;
                 this.selectedName = emp.full_name;
                 this.search = emp.full_name;
+                this.open = false;
+            },
+        }));
+        Alpine.data('filterEmployeeSearch', () => ({
+            search: '{{ request('employee_id') ? ($employees->firstWhere('id', request('employee_id'))?->full_name ?? '') : '' }}',
+            open: false,
+            selected: '{{ request('employee_id') }}',
+            employees: @json($employees->map(fn($e) => ['id' => $e->id, 'full_name' => $e->full_name])),
+            get filtered() {
+                if (!this.search) return this.employees;
+                const q = this.search.toLowerCase();
+                return this.employees.filter(e => e.full_name.toLowerCase().includes(q));
+            },
+            select(emp) {
+                this.selected = emp.id;
+                this.search = emp.full_name;
+                this.open = false;
+            },
+            clear() {
+                this.selected = '';
+                this.search = '';
                 this.open = false;
             },
         }));

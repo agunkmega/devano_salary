@@ -60,6 +60,15 @@
                     </select>
                     @error('religion') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Station</label>
+                    <select name="station_id" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        <option value="">Pilih Station</option>
+                        @foreach($stations as $station)
+                        <option value="{{ $station->id }}" {{ old('station_id') == $station->id ? 'selected' : '' }}>{{ $station->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
 

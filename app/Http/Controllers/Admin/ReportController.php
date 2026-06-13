@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\Payroll;
+use App\Models\Station;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -424,6 +425,16 @@ class ReportController extends Controller
                     $sub->where('employee_type', $type);
                 });
             })
+            ->when(request('station_id'), function ($q, $stationId) {
+                $q->whereHas('employee', function ($sub) use ($stationId) {
+                    $sub->where('station_id', $stationId);
+                });
+            })
+            ->when(request('bank_name'), function ($q, $bank) {
+                $q->whereHas('employee', function ($sub) use ($bank) {
+                    $sub->where('bank_name', $bank);
+                });
+            })
             ->latest();
 
         $all = $query->get();
@@ -444,8 +455,10 @@ class ReportController extends Controller
         $periods = Payroll::select('period')->distinct()->orderBy('period', 'desc')->pluck('period');
         $departments = Department::where('is_active', true)->get();
         $employees = Employee::where('is_active', true)->get();
+        $stations = Station::where('is_active', true)->get();
+        $banks = Employee::whereNotNull('bank_name')->where('bank_name', '!=', '')->distinct()->orderBy('bank_name')->pluck('bank_name');
 
-        return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'summary'));
+        return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'stations', 'banks', 'summary'));
     }
 
     public function payrollPrint(Request $request)
@@ -466,6 +479,12 @@ class ReportController extends Controller
         }
         if ($request->filled('employee_type')) {
             $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+        }
+        if ($request->filled('station_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
+        }
+        if ($request->filled('bank_name')) {
+            $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
         }
 
         $payrolls = $query->orderBy('period', 'desc')->get();

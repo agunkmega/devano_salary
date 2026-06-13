@@ -40,6 +40,12 @@
                     <option value="bulanan" {{ request('employee_type') == 'bulanan' ? 'selected' : '' }}>Bulanan</option>
                     <option value="harian" {{ request('employee_type') == 'harian' ? 'selected' : '' }}>Harian</option>
                 </select>
+                <select name="station_id" @change="$el.form.requestSubmit()" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua Station</option>
+                    @foreach($stations as $station)
+                        <option value="{{ $station->id }}" {{ request('station_id') == $station->id ? 'selected' : '' }}>{{ $station->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto">
                 <button @click="showImportModal = true" type="button" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">

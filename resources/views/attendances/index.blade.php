@@ -40,15 +40,16 @@
             <div class="flex flex-wrap items-center gap-2">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
-                    <select x-model="filters.status" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                        <option value="">Semua</option>
-                        <option>Hadir</option>
-                        <option>Terlambat</option>
-                        <option>Izin</option>
-                        <option>Sakit</option>
-                        <option>Cuti</option>
-                        <option>Alpha</option>
-                    </select>
+                        <select x-model="filters.status" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Semua</option>
+                            <option>Hadir</option>
+                            <option>Terlambat</option>
+                            <option>Izin</option>
+                            <option>Sakit</option>
+                            <option>Cuti</option>
+                            <option>Libur</option>
+                            <option>Alpha</option>
+                        </select>
                 </div>
                 <form x-ref="importForm" action="{{ route('admin.attendances.import-checkpoint') }}" method="POST" enctype="multipart/form-data" class="inline" @submit="importing = true">
                     @csrf
@@ -105,8 +106,8 @@
                     <template x-for="att in filteredAttendances" :key="att.employee_id + '|' + att.date">
                         <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                             <td class="py-3 px-3">
-                                <div class="text-gray-900 dark:text-white font-medium" x-text="att.date"></div>
-                                <div class="text-xs text-gray-400" x-text="att.day_name"></div>
+                                <div class="font-medium" :class="att.day_name === 'Minggu' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'" x-text="att.date"></div>
+                                <div class="text-xs" :class="att.day_name === 'Minggu' ? 'text-red-400 dark:text-red-500' : 'text-gray-400 dark:text-gray-500'" x-text="att.day_name"></div>
                             </td>
                             <td class="py-3 px-3">
                                 <div class="flex items-center gap-2">
@@ -150,12 +151,12 @@
                                     'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400': att.status === 'Hadir',
                                     'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400': att.status === 'Terlambat',
                                     'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400': att.status === 'Izin' || att.status === 'Sakit',
-                                    'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400': att.status === 'Cuti',
-                                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': att.status === 'Alpha'
-                                }" x-text="att.status"></span>
+                                    'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400': att.status === 'Cuti' || att.status === 'Libur' || (att.status === '-' && att.day_name === 'Minggu'),
+                                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': att.status === 'Alpha' || (att.status === '-' && att.day_name !== 'Minggu')
+                                }" x-text="att.status === 'Cuti' && att.leave_type_name ? att.leave_type_name : (att.status === '-' ? (att.day_name === 'Minggu' ? 'Libur' : 'Alpha') : att.status)"></span>
                             </td>
                             <td class="py-3 px-3 text-right">
-                                <button @click="openEditModal(att)" :disabled="!att.id" class="p-2 rounded-lg transition-colors" :class="att.id ? 'text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'">
+                                <button @click="openEditModal(att)" class="p-2 rounded-lg transition-colors text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
                             </td>
@@ -266,8 +267,11 @@
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="editModal = false"></div>
         <div x-show="editModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Edit Absensi</h3>
-            <form :action="`/admin/attendances/${editing?.id}`" method="POST">
-                @csrf @method('PUT')
+            <form :action="editing?.id ? `/admin/attendances/${editing.id}` : '{{ route('admin.attendances.store') }}'" method="POST">
+                @csrf
+                <template x-if="editing?.id">
+                    @method('PUT')
+                </template>
                 <input type="hidden" name="employee_id" :value="editing?.employee_id">
                 <input type="hidden" name="attendance_date" :value="editing?.date">
                 <input type="hidden" name="manual_reason" value="Edit from web">
@@ -325,7 +329,12 @@
                             <option value="terlambat">Terlambat</option>
                             <option value="izin">Izin</option>
                             <option value="sakit">Sakit</option>
-                            <option value="cuti">Cuti</option>
+                            <optgroup label="Cuti">
+                                <option value="cuti">Cuti</option>
+                                @foreach($leaveTypes ?? [] as $lt)
+                                <option value="cuti">{{ $lt->name }}</option>
+                                @endforeach
+                            </optgroup>
                             <option value="alpha">Alpha</option>
                         </select>
                     </div>
@@ -352,8 +361,8 @@
             editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '', ignore_late: false },
             departments: @json($departments),
             attendances: @json($attendancesData),
-            get filteredAttendances() { return this.attendances.filter(a => { if (this.filters.status && a.status !== this.filters.status) return false; if (this.filters.employee && !a.employee.toLowerCase().includes(this.filters.employee.toLowerCase())) return false; return true; }); },
-            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : 'hadir', ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false }; this.editModal = true; },
+            get filteredAttendances() { return this.attendances.filter(a => { let status = a.status === '-' ? (a.day_name === 'Minggu' ? 'Libur' : 'Alpha') : a.status; if (this.filters.status && status !== this.filters.status) return false; if (this.filters.employee && !a.employee.toLowerCase().includes(this.filters.employee.toLowerCase())) return false; return true; }); },
+            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : (att.day_name === 'Minggu' ? 'hadir' : 'alpha'), ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false }; this.editModal = true; },
             init() {}
         }));
     });

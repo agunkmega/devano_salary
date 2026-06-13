@@ -40,6 +40,15 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Station</label>
+                <select name="station_id" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua</option>
+                    @foreach($stations as $station)
+                        <option value="{{ $station->id }}" {{ request('station_id') == $station->id ? 'selected' : '' }}>{{ $station->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div x-data="filterEmployeeSearch()">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai</label>
                 <div class="relative">
@@ -185,6 +194,8 @@
                                 <form action="{{ route('admin.payrolls.approve', $p->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PATCH')
+                                    <input type="hidden" name="date_from" value="{{ $dateFrom }}">
+                                    <input type="hidden" name="date_to" value="{{ $dateTo }}">
                                     <button type="submit" class="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Setujui">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
@@ -194,6 +205,8 @@
                                 <form action="{{ route('admin.payrolls.pay', $p->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PATCH')
+                                    <input type="hidden" name="date_from" value="{{ $dateFrom }}">
+                                    <input type="hidden" name="date_to" value="{{ $dateTo }}">
                                     <button type="submit" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Bayar">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                     </button>

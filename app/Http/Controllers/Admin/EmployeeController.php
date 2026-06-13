@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Position;
 use App\Models\Shift;
+use App\Models\Station;
 use App\Models\User;
 use App\Exports\EmployeesExport;
 use App\Imports\EmployeesImport;
@@ -47,11 +48,15 @@ class EmployeeController extends Controller
             ->when(request('employee_type'), function ($q, $type) {
                 $q->where('employee_type', $type);
             })
+            ->when(request('station_id'), function ($q, $stationId) {
+                $q->where('station_id', $stationId);
+            })
             ->latest()
             ->paginate(20);
 
         $departments = Department::where('is_active', true)->get();
         $positions = Position::where('is_active', true)->get();
+        $stations = Station::where('is_active', true)->get();
 
         $employeesData = $employees->getCollection()->map(function ($e) {
             $words = explode(' ', $e->full_name);
@@ -73,7 +78,7 @@ class EmployeeController extends Controller
             ];
         })->values();
 
-        return view('employees.index', compact('employees', 'departments', 'positions', 'employeesData'));
+        return view('employees.index', compact('employees', 'departments', 'positions', 'stations', 'employeesData'));
     }
 
     public function create()
@@ -81,8 +86,9 @@ class EmployeeController extends Controller
         $departments = Department::where('is_active', true)->get();
         $positions = Position::where('is_active', true)->get();
         $shifts = Shift::where('is_active', true)->get();
+        $stations = Station::where('is_active', true)->get();
 
-        return view('employees.create', compact('departments', 'positions', 'shifts'));
+        return view('employees.create', compact('departments', 'positions', 'shifts', 'stations'));
     }
 
     public function store(Request $request)
@@ -103,6 +109,7 @@ class EmployeeController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'birth_date' => 'nullable|date',
+            'station_id' => 'nullable|exists:stations,id',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -129,9 +136,19 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $departments = Department::where('is_active', true)->get(['id', 'name']);
-        $positions = Position::where('is_active', true)->get(['id', 'name', 'department_id']);
+        $allPositions = Position::where('is_active', true)->get(['id', 'name', 'department_id']);
+        $positions = $employee->department_id
+            ? $allPositions->where('department_id', $employee->department_id)->values()
+            : collect();
+        if ($employee->position_id && !$positions->contains('id', $employee->position_id)) {
+            $currentPosition = Position::where('id', $employee->position_id)->first(['id', 'name', 'department_id']);
+            if ($currentPosition) {
+                $positions->prepend($currentPosition);
+            }
+        }
         $shifts = Shift::orderBy('name')->get(['id', 'name']);
-        return view('employees.edit', compact('employee', 'departments', 'positions', 'shifts'));
+        $stations = Station::where('is_active', true)->get();
+        return view('employees.edit', compact('employee', 'departments', 'positions', 'allPositions', 'shifts', 'stations'));
     }
 
     public function update(Request $request, Employee $employee)
@@ -139,6 +156,8 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'nik' => 'required|string|max:20|unique:employees,nik,' . $employee->id,
             'full_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:L,P',
             'religion' => 'nullable|string|max:50',
@@ -147,6 +166,7 @@ class EmployeeController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
             'shift_id' => 'nullable|exists:shifts,id',
+            'station_id' => 'nullable|exists:stations,id',
             'base_salary' => 'nullable|numeric|min:0',
             'allowance' => 'nullable|numeric|min:0',
             'allowance_type' => 'nullable|string|max:100',

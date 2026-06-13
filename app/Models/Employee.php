@@ -47,6 +47,7 @@ class Employee extends Model
         'uang_makan_lembur',
         'bpjs_kesehatan_tanggungan',
         'late_penalty_active',
+        'station_id',
     ];
 
     protected function casts(): array
@@ -113,6 +114,11 @@ class Employee extends Model
     public function payrolls()
     {
         return $this->hasMany(Payroll::class);
+    }
+
+    public function station()
+    {
+        return $this->belongsTo(Station::class);
     }
 
     public function getTotalSalaryAttribute()

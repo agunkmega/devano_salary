@@ -54,7 +54,8 @@ class AttendanceController extends Controller
                 ->each(fn($att) => $this->attendanceService->recalculateAttendance($att))
                 ->keyBy(fn($att) => $att->employee_id . '|' . $att->attendance_date->format('Y-m-d'));
 
-            $leaves = \App\Models\Leave::where('status', 'approved')
+            $leaves = \App\Models\Leave::with('leaveType')
+                ->where('status', 'approved')
                 ->whereDate('start_date', '<=', $dateTo)
                 ->whereDate('end_date', '>=', $dateFrom)
                 ->get()
@@ -86,10 +87,12 @@ class AttendanceController extends Controller
                 $status = $att ? ucfirst($att->status) : '-';
 
                 $employeeLeaves = $leaves->get($emp->id);
+                $leaveTypeName = null;
                 if ($employeeLeaves) {
                     foreach ($employeeLeaves as $leave) {
                         if ($date->between($leave->start_date, $leave->end_date)) {
                             $status = 'Cuti';
+                            $leaveTypeName = $leave->leaveType?->name;
                             break;
                         }
                     }
@@ -120,6 +123,7 @@ class AttendanceController extends Controller
                     'overtime_in' => $att?->overtime_in?->format('H:i'),
                     'overtime_out' => $att?->overtime_out?->format('H:i'),
                     'status' => $status,
+                    'leave_type_name' => $leaveTypeName,
                     'late_minutes' => $att?->late_minutes,
                     'early_leave_minutes' => $att?->early_leave_minutes,
                     'excess_break_minutes' => $att?->excess_break_minutes,
@@ -133,7 +137,8 @@ class AttendanceController extends Controller
         }
         }
 
-        return view('attendances.index', compact('attendancesData', 'employees', 'departments', 'dateFrom', 'dateTo'));
+        $leaveTypes = \App\Models\LeaveType::where('is_active', true)->get(['id', 'name', 'code']);
+        return view('attendances.index', compact('attendancesData', 'employees', 'departments', 'dateFrom', 'dateTo', 'leaveTypes'));
     }
 
     public function create()

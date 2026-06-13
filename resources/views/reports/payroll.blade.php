@@ -26,6 +26,24 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Station</label>
+                <select name="station_id" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua</option>
+                    @foreach($stations as $station)
+                    <option value="{{ $station->id }}" {{ request('station_id') == $station->id ? 'selected' : '' }}>{{ $station->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bank</label>
+                <select name="bank_name" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua</option>
+                    @foreach($banks as $bank)
+                    <option value="{{ $bank }}" {{ request('bank_name') == $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div x-data="employeeSearch()" class="relative">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai</label>
                 <input type="text" x-model="query" @input="open = true" @focus="open = true" @click.away="open = false" @keydown.escape="open = false" placeholder="Cari pegawai..." class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 w-48 focus:ring-2 focus:ring-blue-500">
@@ -102,7 +120,7 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detail Gaji</h3>
             <div class="flex gap-2">
-                <a href="{{ route('admin.reports.payroll-print', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
+                <a href="{{ route('admin.reports.payroll-print', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Print Rekapitulasi
                 </a>

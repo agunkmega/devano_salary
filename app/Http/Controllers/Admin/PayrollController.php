@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\CashAdvance;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Payroll;
 use App\Models\PayrollDetail;
 use App\Models\Setting;
+use App\Models\Station;
 use App\Services\FlowkirimService;
 use App\Services\PayrollService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -56,6 +58,11 @@ class PayrollController extends Controller
             ->when(request('status'), function ($q, $status) {
                 $q->where('status', $status);
             })
+            ->when(request('station_id'), function ($q, $stationId) {
+                $q->whereHas('employee', function ($sub) use ($stationId) {
+                    $sub->where('station_id', $stationId);
+                });
+            })
             ->latest()
             ->paginate(20);
 
@@ -76,10 +83,11 @@ class PayrollController extends Controller
             return ['value' => $p, 'label' => ($monthNames[$month] ?? $month) . ' ' . $year, 'range' => $range];
         });
 
-        $departments = \App\Models\Department::where('is_active', true)->get(['id', 'name']);
-        $employees = \App\Models\Employee::where('is_active', true)->get(['id', 'full_name']);
+        $departments = Department::where('is_active', true)->get(['id', 'name']);
+        $employees = Employee::where('is_active', true)->get(['id', 'full_name']);
+        $stations = Station::where('is_active', true)->get();
 
-        return view('payroll.index', compact('payrolls', 'periods', 'periodsData', 'departments', 'employees', 'dateFrom', 'dateTo'));
+        return view('payroll.index', compact('payrolls', 'periods', 'periodsData', 'departments', 'employees', 'stations', 'dateFrom', 'dateTo'));
     }
 
     public function create()

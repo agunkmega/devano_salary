@@ -4,7 +4,7 @@
 @section('page-subtitle', $employee->full_name ?? 'Edit data pegawai')
 
 @section('page-content')
-<div x-data="employeeForm()" x-init="init()" class="max-w-4xl mx-auto">
+<div x-data="employeeForm()" class="max-w-4xl mx-auto">
     <form action="{{ route('admin.employees.update', $employee->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @php
             $prevUrl = url()->previous();
@@ -67,6 +67,15 @@
                     @error('religion') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Station</label>
+                    <select name="station_id" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        <option value="">Pilih Station</option>
+                        @foreach($stations as $station)
+                        <option value="{{ $station->id }}" {{ old('station_id', $employee->station_id) == $station->id ? 'selected' : '' }}>{{ $station->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Departemen</label>
                     <select name="department_id" x-model="departmentId" @change="loadPositions" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                         <option value="">Pilih Departemen</option>
@@ -77,7 +86,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jabatan</label>
-                    <select name="position_id" x-model="positionId" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <select name="position_id" x-ref="positionSelect" x-model="positionId"  class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                         <option value="">Pilih Jabatan</option>
                         <template x-for="pos in positions" :key="pos.id">
                             <option :value="pos.id" x-text="pos.name"></option>
@@ -279,17 +288,25 @@
         Alpine.data('employeeForm', () => ({
             departmentId: '{{ $employee->department_id ?? "" }}',
             positionId: '{{ $employee->position_id ?? "" }}',
-            positions: [],
-            allPositions: @json($positions),
+            positions: @json($positions),
+            allPositions: @json($allPositions),
             photoPreview: null,
+            init() {
+                this.$nextTick(() => {
+                    if (this.$refs.positionSelect && this.$refs.positionSelect._x_model) {
+                        this.$refs.positionSelect._x_forceModelUpdate(
+                            this.$refs.positionSelect._x_model.get()
+                        );
+                    }
+                });
+            },
             loadPositions() {
-                this.positions = this.allPositions.filter(p => p.department_id == this.departmentId);
+                this.positions = this.allPositions.filter(p => String(p.department_id) === this.departmentId);
             },
             previewPhoto(event) {
                 const file = event.target.files[0];
                 if (file) { const reader = new FileReader(); reader.onload = e => this.photoPreview = e.target.result; reader.readAsDataURL(file); }
-            },
-            init() { if (this.departmentId) this.loadPositions(); }
+            }
         }));
     });
 </script>

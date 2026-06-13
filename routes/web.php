@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\PositionController;
+use App\Http\Controllers\Admin\StationController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\LeaveController;
@@ -34,6 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::resource('users', UserController::class);
     Route::resource('departments', DepartmentController::class);
     Route::resource('positions', PositionController::class);
+    Route::resource('stations', StationController::class);
     Route::resource('shifts', ShiftController::class);
 
     Route::resource('attendances', AttendanceController::class)->except(['destroy']);
@@ -105,6 +107,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('leave', [PortalLeaveController::class, 'store'])->name('leave.store');
         Route::get('cash-advance/create', [PortalCashAdvanceController::class, 'create'])->name('cash-advance.create');
         Route::post('cash-advance', [PortalCashAdvanceController::class, 'store'])->name('cash-advance.store');
+        Route::post('photo', [PortalDashboardController::class, 'updatePhoto'])->name('photo.update');
     });
 });
 

@@ -58,6 +58,8 @@ class PayrollService
             ->where('late_minutes', '>', 0)
             ->count();
 
+        $offDays = $employee->off_days ?? ['sunday'];
+
         $paidLeaveDays = \App\Models\Leave::where('employee_id', $employee->id)
             ->where('status', 'approved')
             ->whereHas('leaveType', fn($q) => $q->where('is_paid', true))
@@ -65,14 +67,14 @@ class PayrollService
             ->whereDate('end_date', '>=', $startDate)
             ->get()
             ->flatMap(fn($leave) => \Carbon\CarbonPeriod::create($leave->start_date, $leave->end_date)->toArray())
-            ->filter(fn($date) => $date->between($startDate, $endDate) && $date->dayOfWeek !== Carbon::SUNDAY)
+            ->filter(fn($date) => $date->between($startDate, $endDate) && !in_array(strtolower($date->format('l')), $offDays))
             ->unique()
             ->count();
 
         $effectiveAttendanceDays = $attendanceDays + $paidLeaveDays;
 
         if ($employee->employee_type === 'harian') {
-            $computedBaseSalary = $baseSalary * $effectiveAttendanceDays;
+            $computedBaseSalary = $employee->full_salary_no_attendance ? ($baseSalary * $daysInPeriod) : ($baseSalary * $effectiveAttendanceDays);
             $ratePerMinute = $daysInPeriod > 0 ? ($baseSalary / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
             $latePenaltyPercent = 0;
@@ -86,7 +88,7 @@ class PayrollService
             $latePenalty = $ratePerMinute * $totalLateMinutes;
             $latePenaltyPercent = $employee->late_penalty_active && $lateDays > 3 ? round($totalGaji * 0.08, 2) : 0;
             $totalWorkingDays = $this->getTotalWorkingDays($period, $startDate, $endDate, $employee);
-            $absentDays = max(0, $totalWorkingDays - $effectiveAttendanceDays);
+            $absentDays = $employee->full_salary_no_attendance ? 0 : max(0, $totalWorkingDays - $effectiveAttendanceDays);
             $absentPenalty = $dailyRate * $absentDays;
         }
 
@@ -117,7 +119,8 @@ class PayrollService
             'bonus' => 0,
             'overtime_pay' => round($overtimePay, 2),
             'uang_makan_lembur' => round($uangMakanLembur, 2),
-            'late_penalty' => round($latePenalty + $latePenaltyPercent, 2),
+            'late_penalty' => round($latePenalty, 2),
+            'late_penalty_percent' => round($latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
             'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
             'bpjs_deduction' => round($bpjsDeduction, 2),
@@ -275,7 +278,7 @@ class PayrollService
                 $empReligion = $employee?->religion;
                 $isHoliday = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
             }
-            if ($cursor->dayOfWeek !== Carbon::SUNDAY && !$isHoliday) {
+            if (!in_array(strtolower($cursor->format('l')), $employee?->off_days ?? ['sunday']) && !$isHoliday) {
                 $count++;
             }
             $cursor->addDay();

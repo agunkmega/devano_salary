@@ -10,13 +10,14 @@ use App\Models\CashAdvance;
 use App\Models\Payroll;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $employee = Employee::with(['department', 'position', 'shift'])->findOrFail(session('portal_employee_id'));
+        $employee = Employee::with(['department', 'position', 'shift', 'station'])->findOrFail(session('portal_employee_id'));
 
         $payrolls = Payroll::where('employee_id', $employee->id)
             ->orderBy('period', 'desc')
@@ -49,13 +50,60 @@ class DashboardController extends Controller
             ->whereDate('attendance_date', '<=', $dateTo)
             ->get();
 
+        $totalHadir = $attendances->where('status', 'hadir')->count();
+        $totalTerlambat = $attendances->where('status', 'terlambat')->count();
+        $totalIzin = $attendances->where('status', 'izin')->count();
+        $totalSakit = $attendances->where('status', 'sakit')->count();
+        $totalCuti = $attendances->where('status', 'cuti')->count();
+
+        $attendanceDays = $attendances->whereNotNull('clock_in')->count();
+        $paidLeaveDays = \App\Models\Leave::where('employee_id', $employee->id)
+            ->where('status', 'approved')
+            ->whereHas('leaveType', fn($q) => $q->where('is_paid', true))
+            ->whereDate('start_date', '<=', $dateTo)
+            ->whereDate('end_date', '>=', $dateFrom)
+            ->get()
+            ->flatMap(fn($leave) => \Carbon\CarbonPeriod::create($leave->start_date, $leave->end_date)->toArray())
+            ->filter(fn($date) => $date->between($dateFrom, $dateTo) && $date->dayOfWeek !== Carbon::SUNDAY)
+            ->unique()
+            ->count();
+
+        $effectiveAttendanceDays = $attendanceDays + $paidLeaveDays;
+
+        $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $dateFrom)
+            ->whereDate('date', '<=', $dateTo)
+            ->get(['date', 'religion'])
+            ->groupBy(fn($h) => $h->date->format('Y-m-d'))
+            ->map(fn($items) => $items->pluck('religion')->toArray())
+            ->toArray();
+
+        $offDays = $employee->off_days ?? ['sunday'];
+
+        $totalWorkingDays = 0;
+        $cursor = $dateFrom->copy()->startOfDay();
+        while ($cursor->lte($dateTo)) {
+            $dateStr = $cursor->format('Y-m-d');
+            $isHoliday = false;
+            if (isset($holidaysByDate[$dateStr])) {
+                $empReligion = $employee->religion;
+                $isHoliday = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
+            }
+            if (!in_array(strtolower($cursor->format('l')), $offDays) && !$isHoliday) {
+                $totalWorkingDays++;
+            }
+            $cursor->addDay();
+        }
+
+        $alpha = max(0, $totalWorkingDays - $effectiveAttendanceDays);
+
         $attendanceSummary = [
-            'hadir' => $attendances->where('status', 'hadir')->count(),
-            'terlambat' => $attendances->where('status', 'terlambat')->count(),
-            'izin' => $attendances->where('status', 'izin')->count(),
-            'sakit' => $attendances->where('status', 'sakit')->count(),
-            'cuti' => $attendances->where('status', 'cuti')->count(),
-            'alpha' => $attendances->where('status', 'alpha')->count(),
+            'hadir' => $totalHadir,
+            'terlambat' => $totalTerlambat,
+            'izin' => $totalIzin,
+            'sakit' => $totalSakit,
+            'cuti' => $totalCuti,
+            'alpha' => $alpha,
             'total' => $attendances->count(),
         ];
 
@@ -113,5 +161,35 @@ class DashboardController extends Controller
         $employee->update(['photo' => $path]);
 
         return back()->with('success', 'Foto berhasil diperbarui.');
+    }
+
+    public function changePassword()
+    {
+        return view('portal.password');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $employee = Employee::findOrFail(session('portal_employee_id'));
+
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        if (!$employee->password && $employee->birth_date) {
+            $birthDate = \Carbon\Carbon::parse($employee->birth_date)->format('Y-m-d');
+            if ($request->current_password !== $birthDate) {
+                return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai'])->withInput();
+            }
+        } else {
+            if (!Hash::check($request->current_password, $employee->password)) {
+                return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai'])->withInput();
+            }
+        }
+
+        $employee->update(['password' => Hash::make($request->password)]);
+
+        return redirect()->route('portal.dashboard')->with('success', 'Password berhasil diubah.');
     }
 }

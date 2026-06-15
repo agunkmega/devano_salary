@@ -32,13 +32,22 @@ class AuthController extends Controller
             })
             ->first();
 
-        if (!$employee || !$employee->birth_date) {
-            return back()->withErrors(['identity' => 'NIK/No. Hape atau tanggal lahir salah'])->withInput();
+        if (!$employee) {
+            return back()->withErrors(['identity' => 'NIK/No. Hape atau password salah'])->withInput();
         }
 
-        $birthDate = Carbon::parse($employee->birth_date)->format('Y-m-d');
-        if ($request->password !== $birthDate) {
-            return back()->withErrors(['identity' => 'NIK/No. Hape atau tanggal lahir salah'])->withInput();
+        if ($employee->password) {
+            if (!\Illuminate\Support\Facades\Hash::check($request->password, $employee->password)) {
+                return back()->withErrors(['identity' => 'NIK/No. Hape atau password salah'])->withInput();
+            }
+        } else {
+            if (!$employee->birth_date) {
+                return back()->withErrors(['identity' => 'NIK/No. Hape atau password salah'])->withInput();
+            }
+            $birthDate = Carbon::parse($employee->birth_date)->format('Y-m-d');
+            if ($request->password !== $birthDate) {
+                return back()->withErrors(['identity' => 'NIK/No. Hape atau password salah'])->withInput();
+            }
         }
 
         session(['portal_employee_id' => $employee->id]);

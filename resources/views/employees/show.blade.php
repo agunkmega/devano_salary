@@ -61,6 +61,7 @@
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shift</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->shift->name ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Masuk</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->join_date?->format('d M Y') ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Masa Kerja</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->join_date ? $employee->join_date->diffInMonths(now()) . ' bulan' : '-' }}</dd></div>
+                    <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hari Libur</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->off_days ? implode(', ', array_map(fn($d) => ['monday'=>'Senin','tuesday'=>'Selasa','wednesday'=>'Rabu','thursday'=>'Kamis','friday'=>'Jumat','saturday'=>'Sabtu','sunday'=>'Minggu'][$d] ?? $d, $employee->off_days)) : '-' }}</dd></div>
                 </dl>
             </div>
 

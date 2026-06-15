@@ -123,13 +123,19 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">Terlambat</span>
                     <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->late_penalty) }}</span>
                 </div>
+                @if($payroll->late_penalty_percent > 0)
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Terlambat 8%</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->late_penalty_percent) }}</span>
+                </div>
+                @endif
                 <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Alpha</span>
                     <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->absent_penalty) }}</span>
                 </div>
                 <div class="flex justify-between items-center py-2">
                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Pot. Absensi</span>
-                    <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ $fmt($payroll->late_penalty + $payroll->absent_penalty) }}</span>
+                    <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ $fmt($payroll->late_penalty + $payroll->late_penalty_percent + $payroll->absent_penalty) }}</span>
                 </div>
             </div>
         </div>

@@ -40,6 +40,8 @@ class Employee extends Model
         'bpjs_kesehatan_active',
         'iuran_wajib_amount',
         'photo',
+        'password',
+        'off_days',
         'qr_code',
         'is_active',
         'employee_type',
@@ -48,6 +50,7 @@ class Employee extends Model
         'bpjs_kesehatan_tanggungan',
         'late_penalty_active',
         'station_id',
+        'full_salary_no_attendance',
     ];
 
     protected function casts(): array
@@ -67,8 +70,10 @@ class Employee extends Model
         'bpjs_kesehatan_active' => 'boolean',
         'bpjs_kesehatan_tanggungan' => 'integer',
         'iuran_wajib_amount' => 'decimal:2',
-            'late_penalty_active' => 'boolean',
-        ];
+        'late_penalty_active' => 'boolean',
+        'full_salary_no_attendance' => 'boolean',
+        'off_days' => 'array',
+    ];
     }
 
     public function user()

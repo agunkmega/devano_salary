@@ -171,7 +171,7 @@
         $emp = $payroll->employee;
         $periodLabel = \Carbon\Carbon::createFromFormat('Y-m', $payroll->period)->locale('id')->translatedFormat('F Y');
         $totalIncome = $payroll->base_salary + $payroll->allowance + $payroll->bonus + $payroll->overtime_pay + $payroll->uang_makan_lembur + $payroll->uang_makan_harian;
-        $totalDeductions = $payroll->late_penalty + $payroll->absent_penalty + $payroll->cash_advance_deduction + $payroll->bpjs_deduction + $payroll->tax_amount;
+        $totalDeductions = $payroll->late_penalty + $payroll->late_penalty_percent + $payroll->absent_penalty + $payroll->cash_advance_deduction + $payroll->bpjs_deduction + $payroll->tax_amount;
         $showPaidLeave = ($payroll->paid_leave_days ?? 0) > 0;
     @endphp
     <div class="page">
@@ -240,6 +240,9 @@
             <tbody>
                 @if($payroll->late_penalty > 0)
                 <tr><td>Keterlambatan</td><td>{{ $fmt($payroll->late_penalty) }}</td></tr>
+                @endif
+                @if($payroll->late_penalty_percent > 0)
+                <tr><td>Denda Telat 8%</td><td>{{ $fmt($payroll->late_penalty_percent) }}</td></tr>
                 @endif
                 @if($payroll->absent_penalty > 0)
                 <tr><td>Alpha</td><td>{{ $fmt($payroll->absent_penalty) }}</td></tr>

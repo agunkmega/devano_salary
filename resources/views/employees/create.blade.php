@@ -188,6 +188,22 @@
                     <input type="checkbox" name="late_penalty_active" value="1" id="late_penalty_active" {{ old('late_penalty_active') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                     <label for="late_penalty_active" class="text-sm font-medium text-gray-700 dark:text-gray-300">Potongan Keterlambatan 8% <span class="text-xs text-gray-400">(bulanan)</span></label>
                 </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="full_salary_no_attendance" value="1" id="full_salary_no_attendance" {{ old('full_salary_no_attendance') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="full_salary_no_attendance" class="text-sm font-medium text-gray-700 dark:text-gray-300">Gaji Full Tanpa Absen <span class="text-xs text-gray-400">(abaikan ketidakhadiran)</span></label>
+                </div>
+                <div class="mt-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hari Libur <span class="text-xs text-gray-400">(centang hari yg tidak dihitung kerja)</span></label>
+                    <div class="flex flex-wrap gap-3">
+                        @php $days = ['monday' => 'Senin', 'tuesday' => 'Selasa', 'wednesday' => 'Rabu', 'thursday' => 'Kamis', 'friday' => 'Jumat', 'saturday' => 'Sabtu', 'sunday' => 'Minggu']; $offDays = old('off_days', ['sunday']); @endphp
+                        @foreach($days as $val => $label)
+                        <label class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                            <input type="checkbox" name="off_days[]" value="{{ $val }}" {{ in_array($val, $offDays) ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            {{ $label }}
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
 

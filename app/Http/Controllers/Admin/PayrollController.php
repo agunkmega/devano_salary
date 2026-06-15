@@ -200,10 +200,17 @@ class PayrollController extends Controller
             ->sum('early_leave_minutes');
         $totalLateMinutes = $lateMinutes + $excessBreakMinutes + $earlyLeaveMinutes;
 
+        $lateDays = (int) Attendance::where('employee_id', $employee->id)
+            ->whereBetween('attendance_date', [$startDate, $endDate])
+            ->where('late_minutes', '>', 0)
+            ->count();
+
         $attendanceDays = Attendance::where('employee_id', $employee->id)
             ->whereBetween('attendance_date', [$startDate, $endDate])
             ->whereNotNull('clock_in')
             ->count();
+
+        $offDays = $employee->off_days ?? ['sunday'];
 
         $paidLeaveDays = \App\Models\Leave::where('employee_id', $employee->id)
             ->where('status', 'approved')
@@ -212,7 +219,7 @@ class PayrollController extends Controller
             ->whereDate('end_date', '>=', $startDate)
             ->get()
             ->flatMap(fn($leave) => \Carbon\CarbonPeriod::create($leave->start_date, $leave->end_date)->toArray())
-            ->filter(fn($date) => $date->between($startDate, $endDate) && $date->dayOfWeek !== Carbon::SUNDAY)
+            ->filter(fn($date) => $date->between($startDate, $endDate) && !in_array(strtolower($date->format('l')), $offDays))
             ->unique()
             ->count();
 
@@ -235,7 +242,7 @@ class PayrollController extends Controller
                 $empReligion = $employee->religion;
                 $isHoliday = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
             }
-            if ($cursor->dayOfWeek !== Carbon::SUNDAY && !$isHoliday) {
+            if (!in_array(strtolower($cursor->format('l')), $offDays) && !$isHoliday) {
                 $totalWorkingDays++;
             }
             $cursor->addDay();
@@ -251,9 +258,10 @@ class PayrollController extends Controller
             ->count();
 
         if ($employee->employee_type === 'harian') {
-            $computedBaseSalary = $baseSalary * $effectiveAttendanceDays;
+            $computedBaseSalary = $employee->full_salary_no_attendance ? ($baseSalary * $daysInPeriod) : ($baseSalary * $effectiveAttendanceDays);
             $ratePerMinute = $daysInPeriod > 0 ? ($baseSalary / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
+            $latePenaltyPercent = 0;
             $absentPenalty = 0;
             $absentDays = null;
             $overtimeRate = ($employee->overtime_pay_per_hour ?? 0) > 0
@@ -265,7 +273,8 @@ class PayrollController extends Controller
             $dailyRate = $daysInPeriod > 0 ? ($totalGaji / $daysInPeriod) : 0;
             $ratePerMinute = $daysInPeriod > 0 ? ($totalGaji / $daysInPeriod / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
-            $absentDays = max(0, $totalWorkingDays - $effectiveAttendanceDays);
+            $latePenaltyPercent = $employee->late_penalty_active && $lateDays > 3 ? round($totalGaji * 0.08, 2) : 0;
+            $absentDays = $employee->full_salary_no_attendance ? 0 : max(0, $totalWorkingDays - $effectiveAttendanceDays);
             $absentPenalty = $dailyRate * $absentDays;
             $overtimeRate = ($employee->overtime_pay_per_hour ?? 0) > 0
                 ? (float) $employee->overtime_pay_per_hour
@@ -284,7 +293,7 @@ class PayrollController extends Controller
         $bpjsDeduction = $this->payrollService->calculateBpjsDeduction($employee, $computedBaseSalary);
 
         $grossBeforeTax = $computedBaseSalary + $totalAllowance + $bonus + $overtimePay + $uangMakanLembur;
-        $totalDeductions = $latePenalty + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
+        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
 
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
         $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
@@ -306,6 +315,7 @@ class PayrollController extends Controller
             'overtime_pay' => round($overtimePay, 2),
             'uang_makan_lembur' => round($uangMakanLembur, 2),
             'late_penalty' => round($latePenalty, 2),
+            'late_penalty_percent' => round($latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
             'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
             'bpjs_deduction' => round($bpjsDeduction, 2),

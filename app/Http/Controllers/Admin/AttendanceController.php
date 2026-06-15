@@ -109,6 +109,14 @@ class AttendanceController extends Controller
                     }
                 }
 
+                if ($status === '-') {
+                    $dayName = strtolower($date->format('l'));
+                    $offDays = $emp->off_days ?? ['sunday'];
+                    if (in_array($dayName, $offDays)) {
+                        $status = 'Libur';
+                    }
+                }
+
                 $attendancesData->push([
                     'id' => $att?->id,
                     'employee_id' => $emp->id,

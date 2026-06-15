@@ -133,6 +133,12 @@
                 <span class="text-gray-500">Lembur</span>
                 <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($latestPayroll->overtime_pay, 0, ',', '.') }}</span>
             </div>
+            @if($latestPayroll->late_penalty_percent > 0)
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-400">Pot. Telat 8%</span>
+                <span class="font-medium text-red-500">Rp {{ number_format($latestPayroll->late_penalty_percent, 0, ',', '.') }}</span>
+            </div>
+            @endif
             <div class="flex justify-between">
                 <span class="text-gray-500">Potongan</span>
                 <span class="font-medium text-red-600 dark:text-red-400">Rp {{ number_format($latestPayroll->total_deductions, 0, ',', '.') }}</span>
@@ -252,6 +258,10 @@
                 <span class="font-medium text-gray-900 dark:text-white">{{ $employee->position->name ?? '-' }}</span>
             </div>
             <div class="flex justify-between py-2.5">
+                <span class="text-gray-500">Station</span>
+                <span class="font-medium text-gray-900 dark:text-white">{{ $employee->station->name ?? '-' }}</span>
+            </div>
+            <div class="flex justify-between py-2.5">
                 <span class="text-gray-500">No. Hape</span>
                 <span class="font-medium text-gray-900 dark:text-white">{{ $employee->phone ?? '-' }}</span>
             </div>
@@ -259,6 +269,12 @@
                 <span class="text-gray-500">Tanggal Masuk</span>
                 <span class="font-medium text-gray-900 dark:text-white">{{ $employee->join_date ? $employee->join_date->format('d M Y') : '-' }}</span>
             </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700/50">
+            <a href="{{ route('portal.password') }}" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                Ubah Password
+            </a>
         </div>
     </div>
 </div>

@@ -110,6 +110,7 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255',
             'birth_date' => 'nullable|date',
             'station_id' => 'nullable|exists:stations,id',
+            'off_days' => 'nullable|array',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -118,6 +119,8 @@ class EmployeeController extends Controller
 
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
+        $validated['full_salary_no_attendance'] = $request->boolean('full_salary_no_attendance');
+        $validated['off_days'] = $request->input('off_days', ['sunday']);
 
         $employee = Employee::create($validated);
 
@@ -188,6 +191,7 @@ class EmployeeController extends Controller
             'overtime_pay_per_hour' => 'nullable|numeric|min:0',
             'uang_makan_lembur' => 'nullable|numeric|min:0',
             'late_penalty_active' => 'boolean',
+            'off_days' => 'nullable|array',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -200,6 +204,8 @@ class EmployeeController extends Controller
 
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
+        $validated['full_salary_no_attendance'] = $request->boolean('full_salary_no_attendance');
+        $validated['off_days'] = $request->input('off_days', ['sunday']);
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('photos', 'public');

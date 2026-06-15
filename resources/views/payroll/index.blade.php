@@ -124,7 +124,8 @@
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Tunjangan</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Lembur</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Uang Makan</th>
-                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Absensi</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Telat</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Absen</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Kasbon</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Wajib</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Gaji Bersih</th>
@@ -169,7 +170,8 @@
                         <td class="py-3 px-4 text-right text-gray-900 dark:text-white">{{ $fmt($p->allowance) }}</td>
                         <td class="py-3 px-4 text-right text-gray-900 dark:text-white">{{ $fmt($p->overtime_pay) }}</td>
                         <td class="py-3 px-4 text-right text-gray-900 dark:text-white">{{ $fmt($p->uang_makan_lembur) }}</td>
-                        <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->late_penalty + $p->absent_penalty) }}</td>
+                        <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->late_penalty + $p->late_penalty_percent) }}</td>
+                        <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->absent_penalty) }}</td>
                         <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->cash_advance_deduction) }}</td>
                         <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->bpjs_deduction + $p->tax_amount) }}</td>
                         <td class="py-3 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">{{ $fmt($p->net_salary) }}</td>

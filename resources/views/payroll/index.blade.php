@@ -105,7 +105,7 @@
                                 </ul>
                             </div>
                         </div>
-                        <button type="submit" @click="document.getElementById('generate_date_from').value = document.querySelector('input[name=date_from]').value; document.getElementById('generate_date_to').value = document.querySelector('input[name=date_to]').value" class="w-full px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700">Generate</button>
+                        <button type="submit" @click="window.startGenerate($event); document.getElementById('generate_date_from').value = document.querySelector('input[name=date_from]').value; document.getElementById('generate_date_to').value = document.querySelector('input[name=date_to]').value" class="w-full px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700">Generate</button>
                     </div>
                 </div>
             </div>
@@ -300,7 +300,83 @@
                 this.open = false;
             },
         }));
+        Alpine.data('generateProgress', () => ({
+            show: false,
+            current: 0,
+            total: 0,
+            status: 'idle',
+            polling: null,
+            start(e) {
+                this.show = true;
+                this.current = 0;
+                this.total = 0;
+                this.status = 'processing';
+                const form = e.target.closest('form');
+                if (!form) return;
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(r => r.json()).then(d => {
+                    this.status = 'complete';
+                    setTimeout(() => window.location.reload(), 1200);
+                }).catch(() => {
+                    this.status = 'complete';
+                    window.location.reload();
+                });
+                this.polling = setInterval(() => {
+                    fetch('/admin/payrolls/generation-progress', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r => r.json())
+                        .then(p => {
+                            this.current = p.current;
+                            this.total = p.total;
+                            if (p.status === 'complete') { clearInterval(this.polling); this.polling = null; }
+                        }).catch(() => {});
+                }, 1500);
+            }
+        }));
+        window.startGenerate = function(e) {
+            const el = document.querySelector('[x-data="generateProgress()"]');
+            if (el && el.__x) el.__x.$data.start(e);
+        };
     });
 </script>
 @endpush
+
+<div x-data="generateProgress()">
+    <template x-teleport="body">
+        <div x-show="show" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" style="display: none;">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+                <template x-if="status === 'complete'">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </template>
+                <template x-if="status !== 'complete'">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                </template>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" x-text="status === 'complete' ? 'Generate Selesai' : 'Generate Payroll'"></h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" x-text="status === 'complete' ? 'Payroll berhasil digenerate.' : 'Mohon tunggu, sedang memproses payroll...'"></p>
+                <template x-if="status !== 'complete' && total > 0">
+                    <div class="space-y-2">
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div class="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out" :style="'width: ' + Math.round((current / total) * 100) + '%'"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400" x-text="current + ' / ' + total + ' pegawai'"></p>
+                    </div>
+                </template>
+                <template x-if="status !== 'complete' && total === 0">
+                    <div class="space-y-2">
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div class="h-full bg-blue-600 rounded-full animate-pulse" style="width: 30%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Menyiapkan data...</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+</div>
 @endsection

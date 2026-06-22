@@ -102,6 +102,7 @@ class EmployeeController extends Controller
             'gender' => 'nullable|in:L,P',
             'religion' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'identity_number' => 'nullable|string|max:20',
             'join_date' => 'nullable|date',
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
@@ -111,6 +112,8 @@ class EmployeeController extends Controller
             'birth_date' => 'nullable|date',
             'station_id' => 'nullable|exists:stations,id',
             'off_days' => 'nullable|array',
+            'employment_status' => 'nullable|in:permanent,contract_year,contract_permanent',
+            'contract_end_date' => 'nullable|date|required_if:employment_status,contract_year',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -165,6 +168,7 @@ class EmployeeController extends Controller
             'gender' => 'nullable|in:L,P',
             'religion' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'identity_number' => 'nullable|string|max:20',
             'join_date' => 'nullable|date',
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
@@ -192,6 +196,8 @@ class EmployeeController extends Controller
             'uang_makan_lembur' => 'nullable|numeric|min:0',
             'late_penalty_active' => 'boolean',
             'off_days' => 'nullable|array',
+            'employment_status' => 'nullable|in:permanent,contract_year,contract_permanent',
+            'contract_end_date' => 'nullable|date',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -206,6 +212,10 @@ class EmployeeController extends Controller
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
         $validated['full_salary_no_attendance'] = $request->boolean('full_salary_no_attendance');
         $validated['off_days'] = $request->input('off_days', ['sunday']);
+
+        foreach (['base_salary', 'allowance', 'allowance_absensi', 'allowance_transport', 'allowance_jabatan', 'allowance_insentif', 'iuran_wajib_amount', 'overtime_pay_per_hour', 'uang_makan_lembur'] as $numericField) {
+            $validated[$numericField] = (float) ($validated[$numericField] ?? 0);
+        }
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('photos', 'public');

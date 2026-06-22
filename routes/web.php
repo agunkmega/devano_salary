@@ -58,12 +58,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
 
     Route::resource('payrolls', PayrollController::class);
     Route::post('payrolls/generate-all', [PayrollController::class, 'generateAll'])->name('payrolls.generate-all');
+    Route::get('payrolls/generation-progress', [PayrollController::class, 'generationProgress'])->name('payrolls.generation-progress');
     Route::post('payrolls/generate/{employee}', [PayrollController::class, 'generate'])->name('payrolls.generate');
     Route::patch('payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
     Route::patch('payrolls/{payroll}/regenerate', [PayrollController::class, 'regenerate'])->name('payrolls.regenerate');
     Route::patch('payrolls/{payroll}/pay', [PayrollController::class, 'pay'])->name('payrolls.pay');
     Route::get('payrolls/{payroll}/slip-pdf', [PayrollController::class, 'slipPdf'])->name('payrolls.slip-pdf');
     Route::post('payrolls/{payroll}/send-whatsapp', [PayrollController::class, 'sendWhatsApp'])->name('payrolls.send-whatsapp');
+    Route::post('payrolls/{payroll}/send-email', [PayrollController::class, 'sendEmail'])->name('payrolls.send-email');
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('attendance', [ReportController::class, 'attendance'])->name('attendance');

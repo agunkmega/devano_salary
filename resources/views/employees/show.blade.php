@@ -50,6 +50,7 @@
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jenis Kelamin</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->gender === 'L' ? 'Laki-laki' : ($employee->gender === 'P' ? 'Perempuan' : '-') }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Agama</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->religion ?: '-' }}</dd></div>
                     <div class="sm:col-span-2"><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alamat</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->address ?? '-' }}</dd></div>
+                    <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No. KTP</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->identity_number ?? '-' }}</dd></div>
                 </dl>
             </div>
 
@@ -61,6 +62,19 @@
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shift</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->shift->name ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Masuk</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->join_date?->format('d M Y') ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Masa Kerja</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->join_date ? $employee->join_date->diffInMonths(now()) . ' bulan' : '-' }}</dd></div>
+                    <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status Kontrak</dt><dd class="mt-1 text-sm">
+                        @php $status = $employee->employment_status ?? 'permanent'; @endphp
+                        @if($status === 'permanent')
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">Tetap</span>
+                        @elseif($status === 'contract_year')
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">Kontrak Tahunan</span>
+                        @if($employee->contract_end_date)
+                        <span class="text-xs text-gray-500 ml-2">s/d {{ $employee->contract_end_date->format('d M Y') }}</span>
+                        @endif
+                        @elseif($status === 'contract_permanent')
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">Kontrak Tetap</span>
+                        @endif
+                    </dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hari Libur</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->off_days ? implode(', ', array_map(fn($d) => ['monday'=>'Senin','tuesday'=>'Selasa','wednesday'=>'Rabu','thursday'=>'Kamis','friday'=>'Jumat','saturday'=>'Sabtu','sunday'=>'Minggu'][$d] ?? $d, $employee->off_days)) : '-' }}</dd></div>
                 </dl>
             </div>
@@ -80,14 +94,14 @@
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informasi Gaji</h3>
                 <dl class="space-y-3">
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Gaji Pokok</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->base_salary ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Absensi</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_absensi ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Transport</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_transport ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Jabatan</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_jabatan ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Insentif</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_insentif ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Uang Lembur / Jam</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->overtime_pay_per_hour ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Uang Makan Lembur</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->uang_makan_lembur ?? 0, 0, ',', '.') }}</dd></div>
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between"><dt class="text-sm font-semibold text-gray-900 dark:text-white">Total</dt><dd class="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format(($employee->base_salary ?? 0) + ($employee->allowance_absensi ?? 0) + ($employee->allowance_transport ?? 0) + ($employee->allowance_jabatan ?? 0) + ($employee->allowance_insentif ?? 0), 0, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Gaji Pokok</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->base_salary ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Absensi</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_absensi ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Transport</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_transport ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Jabatan</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_jabatan ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Tunjangan Insentif</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->allowance_insentif ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Uang Lembur / Jam</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->overtime_pay_per_hour ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Uang Makan Lembur</dt><dd class="text-sm font-medium text-gray-900 dark:text-white">Rp {{ number_format($employee->uang_makan_lembur ?? 0, 2, ',', '.') }}</dd></div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between"><dt class="text-sm font-semibold text-gray-900 dark:text-white">Total</dt><dd class="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format(($employee->base_salary ?? 0) + ($employee->allowance_absensi ?? 0) + ($employee->allowance_transport ?? 0) + ($employee->allowance_jabatan ?? 0) + ($employee->allowance_insentif ?? 0), 2, ',', '.') }}</dd></div>
                 </dl>
             </div>
 

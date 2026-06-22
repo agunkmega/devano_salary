@@ -20,6 +20,38 @@
         </div>
     </div>
 
+    @if($todayBirthdays->count() > 0)
+    <div class="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl shadow-sm p-4 sm:p-5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div class="flex-1">
+            <p class="text-sm font-semibold text-white">Selamat Ulang Tahun!</p>
+            <div class="mt-1 space-y-0.5">
+                @foreach($todayBirthdays as $b)
+                <p class="text-sm text-white/90">{{ $b->full_name }}</p>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($thisMonthBirthdays->count() > 0)
+    <div class="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-sm p-4 sm:p-5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="flex-1">
+            <p class="text-sm font-semibold text-white">Ultah Bulan Ini</p>
+            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
+                @foreach($thisMonthBirthdays as $b)
+                <span class="text-sm text-white/80">&#8226; {{ $b->full_name }} ({{ \Carbon\Carbon::parse($b->birth_date)->format('d M') }})</span>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />' label="Total Pegawai" value="{{ $totalEmployees }}" color="blue" />
         <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />' label="Hadir Hari Ini" value="{{ $todayAttendance }}" color="green" />

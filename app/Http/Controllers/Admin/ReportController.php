@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\Payroll;
+use App\Models\Position;
 use App\Models\Station;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -29,6 +30,11 @@ class ReportController extends Controller
             ->when(request('department_id'), function ($q, $deptId) {
                 $q->whereHas('employee', function ($sub) use ($deptId) {
                     $sub->where('department_id', $deptId);
+                });
+            })
+            ->when(request('position_id'), function ($q, $posId) {
+                $q->whereHas('employee', function ($sub) use ($posId) {
+                    $sub->where('position_id', $posId);
                 });
             })
             ->when(request('employee_id'), function ($q, $empId) {
@@ -107,9 +113,10 @@ class ReportController extends Controller
         })->values();
 
         $departments = Department::where('is_active', true)->get();
+        $positions = Position::where('is_active', true)->get();
         $employees = Employee::where('is_active', true)->get();
 
-        return view('reports.attendance', compact('employeeSummaries', 'departments', 'employees', 'summary', 'periodWorkDays'));
+        return view('reports.attendance', compact('employeeSummaries', 'departments', 'positions', 'employees', 'summary', 'periodWorkDays'));
     }
 
     public function attendancePrint(Request $request)
@@ -123,6 +130,12 @@ class ReportController extends Controller
             })
             ->when($request->filled('department_id'), function ($q) use ($request) {
                 $q->whereHas('employee', fn($sub) => $sub->where('department_id', $request->department_id));
+            })
+            ->when($request->filled('position_id'), function ($q) use ($request) {
+                $q->whereHas('employee', fn($sub) => $sub->where('position_id', $request->position_id));
+            })
+            ->when($request->filled('employee_id'), function ($q) use ($request) {
+                $q->where('employee_id', $request->employee_id);
             })
             ->when($request->filled('employee'), function ($q) use ($request) {
                 $q->whereHas('employee', fn($sub) => $sub->where('full_name', 'like', '%' . $request->employee . '%'));
@@ -138,6 +151,12 @@ class ReportController extends Controller
             ->whereDate('start_date', '<=', $request->date_to ?? $attendances->max('attendance_date'));
         if ($request->filled('department_id')) {
             $leaveEmpQuery->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
+        }
+        if ($request->filled('position_id')) {
+            $leaveEmpQuery->whereHas('employee', fn($q) => $q->where('position_id', $request->position_id));
+        }
+        if ($request->filled('employee_id')) {
+            $leaveEmpQuery->where('employee_id', $request->employee_id);
         }
         if ($request->filled('employee')) {
             $leaveEmpQuery->whereHas('employee', fn($q) => $q->where('full_name', 'like', '%' . $request->employee . '%'));
@@ -228,6 +247,11 @@ class ReportController extends Controller
                     $sub->where('department_id', $deptId);
                 });
             })
+            ->when(request('position_id'), function ($q, $posId) {
+                $q->whereHas('employee', function ($sub) use ($posId) {
+                    $sub->where('position_id', $posId);
+                });
+            })
             ->get();
 
         $data = $attendances->map(function ($att) {
@@ -263,6 +287,11 @@ class ReportController extends Controller
             ->when(request('department_id'), function ($q, $deptId) {
                 $q->whereHas('employee', function ($sub) use ($deptId) {
                     $sub->where('department_id', $deptId);
+                });
+            })
+            ->when(request('position_id'), function ($q, $posId) {
+                $q->whereHas('employee', function ($sub) use ($posId) {
+                    $sub->where('position_id', $posId);
                 });
             })
             ->get();

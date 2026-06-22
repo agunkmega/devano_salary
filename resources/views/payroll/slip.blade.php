@@ -170,8 +170,8 @@
         $fmt = fn($v) => 'Rp' . number_format((float) $v, 0, ',', '.');
         $emp = $payroll->employee;
         $periodLabel = \Carbon\Carbon::createFromFormat('Y-m', $payroll->period)->locale('id')->translatedFormat('F Y');
-        $totalIncome = $payroll->base_salary + $payroll->allowance + $payroll->bonus + $payroll->overtime_pay + $payroll->uang_makan_lembur + $payroll->uang_makan_harian;
-        $totalDeductions = $payroll->late_penalty + $payroll->late_penalty_percent + $payroll->absent_penalty + $payroll->cash_advance_deduction + $payroll->bpjs_deduction + $payroll->tax_amount;
+        $totalIncome = $payroll->base_salary + $payroll->allowance + $payroll->bonus + $payroll->other_additions + $payroll->overtime_pay + $payroll->uang_makan_lembur + $payroll->uang_makan_harian;
+        $totalDeductions = $payroll->late_penalty + $payroll->late_penalty_percent + $payroll->absent_penalty + $payroll->cash_advance_deduction + $payroll->bpjs_deduction + $payroll->tax_amount + $payroll->other_deductions;
         $showPaidLeave = ($payroll->paid_leave_days ?? 0) > 0;
     @endphp
     <div class="page">
@@ -230,6 +230,9 @@
                 @if($payroll->bonus > 0)
                 <tr><td>Bonus</td><td>{{ $fmt($payroll->bonus) }}</td></tr>
                 @endif
+                @if($payroll->other_additions > 0)
+                <tr><td>Tambahan Lain-lain</td><td>{{ $fmt($payroll->other_additions) }}</td></tr>
+                @endif
                 <tr class="highlight"><td>Total Pendapatan</td><td>{{ $fmt($totalIncome) }}</td></tr>
             </tbody>
         </table>
@@ -255,6 +258,9 @@
                 @endif
                 @if($payroll->cash_advance_deduction > 0)
                 <tr><td>Kasbon</td><td>{{ $fmt($payroll->cash_advance_deduction) }}</td></tr>
+                @endif
+                @if($payroll->other_deductions > 0)
+                <tr><td>Potongan Lain-lain</td><td>{{ $fmt($payroll->other_deductions) }}</td></tr>
                 @endif
                 @if($totalDeductions > 0)
                 <tr class="highlight"><td>Total Potongan</td><td>{{ $fmt($totalDeductions) }}</td></tr>
@@ -289,6 +295,13 @@
                 </tr>
             </table>
         </div>
+
+        @if($payroll->notes)
+        <div style="margin-top:2px;padding:1.5px 3px;background:#f8fafc;border-radius:1px;border:0.5px solid #e2e8f0;">
+            <div style="font-size:4px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:0.5px;">Catatan</div>
+            <div style="font-size:5px;color:#334155;white-space:pre-wrap;">{{ $payroll->notes }}</div>
+        </div>
+        @endif
 
         <div class="signatures">
             <table>

@@ -76,6 +76,7 @@
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium hidden md:table-cell">Departemen</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium hidden lg:table-cell">Jabatan</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Status</th>
+                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Kontrak</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jenis</th>
                         <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Aksi</th>
                     </tr>
@@ -104,6 +105,16 @@
                             <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $e->is_active ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' }}">
                                 {{ $e->is_active ? 'Aktif' : 'Non-Aktif' }}
                             </span>
+                        </td>
+                        <td class="py-3 px-3">
+                            @php $s = $e->employment_status ?? 'permanent'; @endphp
+                            @if($s === 'permanent')
+                            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">Tetap</span>
+                            @elseif($s === 'contract_year')
+                            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">Kontrak Thn</span>
+                            @elseif($s === 'contract_permanent')
+                            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">Kontrak Tetap</span>
+                            @endif
                         </td>
                         <td class="py-3 px-3">
                             <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ ($e->employee_type ?? 'bulanan') == 'bulanan' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' }}">

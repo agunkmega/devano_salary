@@ -174,6 +174,10 @@ class AttendanceController extends Controller
 
         $employee = Employee::findOrFail($validated['employee_id']);
 
+        if (!$employee->shift_id) {
+            return redirect()->back()->withInput()->with('error', 'Shift pegawai ' . $employee->full_name . ' (NIK: ' . $employee->nik . ') belum ditentukan. Harap atur shift terlebih dahulu.');
+        }
+
         $dateStr = $validated['attendance_date'];
         foreach (['clock_in', 'clock_out', 'break_out', 'break_in', 'overtime_in', 'overtime_out'] as $field) {
             if (!empty($validated[$field])) {

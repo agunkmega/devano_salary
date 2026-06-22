@@ -22,6 +22,7 @@ class Employee extends Model
         'phone',
         'email',
         'address',
+        'identity_number',
         'join_date',
         'status',
         'base_salary',
@@ -51,6 +52,8 @@ class Employee extends Model
         'late_penalty_active',
         'station_id',
         'full_salary_no_attendance',
+        'employment_status',
+        'contract_end_date',
     ];
 
     protected function casts(): array
@@ -73,6 +76,7 @@ class Employee extends Model
         'late_penalty_active' => 'boolean',
         'full_salary_no_attendance' => 'boolean',
         'off_days' => 'array',
+        'contract_end_date' => 'date',
     ];
     }
 

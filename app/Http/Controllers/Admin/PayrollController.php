@@ -11,12 +11,15 @@ use App\Models\Payroll;
 use App\Models\PayrollDetail;
 use App\Models\Setting;
 use App\Models\Station;
+use App\Mail\PayslipMail;
 use App\Services\FlowkirimService;
 use App\Services\PayrollService;
+use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PayrollController extends Controller
 {
@@ -147,26 +150,45 @@ class PayrollController extends Controller
             ->get();
         $generated = 0;
         $skipped = 0;
+        $total = $employees->count();
 
-        foreach ($employees as $employee) {
+        $progressKey = 'payroll_gen_progress_' . auth()->id();
+        Cache::put($progressKey, ['current' => 0, 'total' => $total, 'status' => 'processing'], 600);
+
+        session()->save();
+
+        foreach ($employees as $i => $employee) {
             $existing = Payroll::where('employee_id', $employee->id)
                 ->where('period', $period)
                 ->first();
 
             if ($existing) {
                 $skipped++;
-                continue;
+            } else {
+                $payroll = $this->calculatePayroll($employee, $period, $dateFrom, $dateTo);
+                Payroll::create($payroll);
+                $generated++;
             }
 
-            $payroll = $this->calculatePayroll($employee, $period, $dateFrom, $dateTo);
-            Payroll::create($payroll);
-            $generated++;
+            Cache::put($progressKey, ['current' => $i + 1, 'total' => $total, 'status' => 'processing'], 600);
         }
+
+        Cache::put($progressKey, ['current' => $total, 'total' => $total, 'status' => 'complete'], 60);
 
         $this->logActivity('payroll', 'Create', 'Generate all payroll periode ' . $period, 'Payroll');
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'generated' => $generated, 'skipped' => $skipped]);
+        }
+
         return redirect()->route('admin.payrolls.index', ['date_from' => $dateFrom, 'date_to' => $dateTo])
             ->with('success', "Payroll generated for {$generated} employees. {$skipped} skipped (already exist).");
+    }
+
+    public function generationProgress()
+    {
+        $progress = Cache::get('payroll_gen_progress_' . auth()->id(), ['current' => 0, 'total' => 0, 'status' => 'idle']);
+        return response()->json($progress);
     }
 
     private function calculatePayroll(Employee $employee, string $period, ?string $dateFrom = null, ?string $dateTo = null, float $bonus = 0, ?string $notes = null): array
@@ -345,14 +367,18 @@ class PayrollController extends Controller
         $validated = $request->validate([
             'uang_makan_harian' => 'nullable|numeric|min:0',
             'bonus' => 'nullable|numeric|min:0',
+            'other_additions' => 'nullable|numeric|min:0',
+            'other_deductions' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
         $uangMakanHarian = (float) ($validated['uang_makan_harian'] ?? 0);
         $bonus = (float) ($validated['bonus'] ?? 0);
+        $otherAdditions = (float) ($validated['other_additions'] ?? 0);
+        $otherDeductions = (float) ($validated['other_deductions'] ?? 0);
 
-        $grossBeforeTax = $payroll->base_salary + $payroll->allowance + $bonus + $payroll->overtime_pay + $payroll->uang_makan_lembur + $uangMakanHarian;
-        $totalDeductions = $payroll->late_penalty + $payroll->absent_penalty + $payroll->cash_advance_deduction + $payroll->bpjs_deduction;
+        $grossBeforeTax = $payroll->base_salary + $payroll->allowance + $bonus + $otherAdditions + $payroll->overtime_pay + $payroll->uang_makan_lembur + $uangMakanHarian;
+        $totalDeductions = $payroll->late_penalty + $payroll->absent_penalty + $otherDeductions + $payroll->cash_advance_deduction + $payroll->bpjs_deduction;
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
         $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
         $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;
@@ -363,6 +389,8 @@ class PayrollController extends Controller
         $payroll->update([
             'uang_makan_harian' => $uangMakanHarian,
             'bonus' => $bonus,
+            'other_additions' => $otherAdditions,
+            'other_deductions' => $otherDeductions,
             'tax_amount' => round($taxAmount, 2),
             'total_deductions' => round($totalDeductions, 2),
             'net_salary' => round($netSalary, 2),
@@ -411,6 +439,8 @@ class PayrollController extends Controller
         $period = $payroll->period;
         $bonus = (float) ($payroll->bonus ?? 0);
         $uangMakanHarian = (float) ($payroll->uang_makan_harian ?? 0);
+        $otherAdditions = (float) ($payroll->other_additions ?? 0);
+        $otherDeductions = (float) ($payroll->other_deductions ?? 0);
 
         [$year, $month] = explode('-', $period);
         $dateFrom = request('date_from', Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d'));
@@ -420,9 +450,11 @@ class PayrollController extends Controller
 
         $data = $this->calculatePayroll($employee, $period, $dateFrom, $dateTo, $bonus, $payroll->notes);
         $data['uang_makan_harian'] = $uangMakanHarian;
+        $data['other_additions'] = $otherAdditions;
+        $data['other_deductions'] = $otherDeductions;
 
-        $grossBeforeTax = $data['base_salary'] + $data['allowance'] + $data['bonus'] + $data['overtime_pay'] + $data['uang_makan_lembur'] + $uangMakanHarian;
-        $totalDeductions = $data['late_penalty'] + $data['absent_penalty'] + $data['cash_advance_deduction'] + $data['bpjs_deduction'];
+        $grossBeforeTax = $data['base_salary'] + $data['allowance'] + $data['bonus'] + $data['other_additions'] + $data['overtime_pay'] + $data['uang_makan_lembur'] + $uangMakanHarian;
+        $totalDeductions = $data['late_penalty'] + $data['absent_penalty'] + $otherDeductions + $data['cash_advance_deduction'] + $data['bpjs_deduction'];
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
         $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
         $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;
@@ -464,6 +496,21 @@ class PayrollController extends Controller
 
         $error = $result['error'] ?? ($result['text_status']['body']['message'] ?? 'Gagal mengirim WhatsApp');
         return redirect()->back()->with('error', $error);
+    }
+
+    public function sendEmail($id)
+    {
+        $payroll = Payroll::with('employee')->findOrFail($id);
+
+        if (!$payroll->employee?->email) {
+            return redirect()->back()->with('error', 'Email pegawai tidak ditemukan.');
+        }
+
+        Mail::to($payroll->employee->email)->send(new PayslipMail($payroll));
+
+        $this->logActivity('payroll', 'Send Email', 'Mengirim slip gaji email ke ' . $payroll->employee->full_name, 'Payroll', $payroll->id);
+
+        return redirect()->back()->with('success', 'Slip gaji berhasil dikirim ke email ' . $payroll->employee->email);
     }
 
     public function slipPdf($id)

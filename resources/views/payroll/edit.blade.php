@@ -53,7 +53,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Uang Makan Harian <span class="text-xs text-gray-400">(isi manual)</span></label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
-                        <input type="number" name="uang_makan_harian" value="{{ old('uang_makan_harian', $payroll->uang_makan_harian ?? '0') }}" min="0" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('uang_makan_harian') border-red-500 @enderror" placeholder="0">
+                        <input type="number" step="0.01" name="uang_makan_harian" value="{{ old('uang_makan_harian', $payroll->uang_makan_harian ?? '0') }}" min="0" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('uang_makan_harian') border-red-500 @enderror" placeholder="0">
                     </div>
                     @error('uang_makan_harian') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
@@ -62,9 +62,27 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bonus</label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
-                        <input type="number" name="bonus" value="{{ old('bonus', $payroll->bonus ?? '0') }}" min="0" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('bonus') border-red-500 @enderror" placeholder="0">
+                        <input type="number" step="0.01" name="bonus" value="{{ old('bonus', $payroll->bonus ?? '0') }}" min="0" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('bonus') border-red-500 @enderror" placeholder="0">
                     </div>
                     @error('bonus') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tambahan Lain-lain</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="number" step="0.01" name="other_additions" value="{{ old('other_additions', $payroll->other_additions ?? '0') }}" min="0" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('other_additions') border-red-500 @enderror" placeholder="0">
+                    </div>
+                    @error('other_additions') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Potongan Lain-lain</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="number" step="0.01" name="other_deductions" value="{{ old('other_deductions', $payroll->other_deductions ?? '0') }}" min="0" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('other_deductions') border-red-500 @enderror" placeholder="0">
+                    </div>
+                    @error('other_deductions') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
 
                 <div>

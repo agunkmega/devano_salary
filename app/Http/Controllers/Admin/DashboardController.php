@@ -61,6 +61,18 @@ class DashboardController extends Controller
             $q->where('is_active', true);
         }])->get();
 
+        $todayBirthdays = Employee::where('is_active', true)
+            ->whereRaw('DAYOFMONTH(birth_date) = ?', [$today->day])
+            ->whereRaw('MONTH(birth_date) = ?', [$today->month])
+            ->get(['id', 'full_name', 'birth_date', 'photo']);
+
+        $thisMonthBirthdays = Employee::where('is_active', true)
+            ->whereRaw('MONTH(birth_date) = ?', [$today->month])
+            ->whereRaw('DAYOFMONTH(birth_date) >= ?', [$today->day])
+            ->orderByRaw('DAYOFMONTH(birth_date)')
+            ->take(10)
+            ->get(['id', 'full_name', 'birth_date', 'photo']);
+
         return view('dashboard.index', compact(
             'totalEmployees',
             'todayAttendance',
@@ -71,7 +83,9 @@ class DashboardController extends Controller
             'chartData',
             'recentAttendances',
             'cashAdvanceSummary',
-            'departmentStats'
+            'departmentStats',
+            'todayBirthdays',
+            'thisMonthBirthdays'
         ));
     }
 

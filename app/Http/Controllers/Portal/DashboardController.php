@@ -138,10 +138,15 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $today = Carbon::today();
+        $isBirthday = $employee->birth_date
+            && $today->day === (int) Carbon::parse($employee->birth_date)->format('d')
+            && $today->month === (int) Carbon::parse($employee->birth_date)->format('m');
+
         return view('portal.dashboard', compact(
             'employee', 'attendanceSummary', 'latestPayroll',
             'recentLeaves', 'leaveTypes', 'cashAdvances', 'dateFrom', 'dateTo',
-            'payrolls', 'selectedPeriod', 'leaveBalances'
+            'payrolls', 'selectedPeriod', 'leaveBalances', 'isBirthday'
         ));
     }
 

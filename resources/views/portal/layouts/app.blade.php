@@ -29,6 +29,11 @@
     </main>
 
     @if(session()->has('portal_employee_id'))
+    @php
+        $deptHeadDept = \App\Models\Department::where('department_head_id', session('portal_employee_id'))->first();
+        $isDeptHead = $deptHeadDept ? true : false;
+        $pendingCount = $isDeptHead ? \App\Models\Leave::where('status', 'pending')->whereHas('employee', fn($q) => $q->where('department_id', $deptHeadDept->id))->where('employee_id', '!=', session('portal_employee_id'))->count() : 0;
+    @endphp
     <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
         <div class="max-w-lg mx-auto px-2 h-16 flex items-center justify-around">
             <a href="{{ route('portal.dashboard') }}" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.dashboard') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
@@ -39,6 +44,15 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span class="text-[10px] font-medium">Cuti</span>
             </a>
+            @if($isDeptHead)
+            <a href="{{ route('portal.leave-approval.index') }}" class="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.leave-approval.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-[10px] font-medium">Setujui</span>
+                @if($pendingCount > 0)
+                <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">{{ $pendingCount > 9 ? '9+' : $pendingCount }}</span>
+                @endif
+            </a>
+            @endif
             <a href="{{ route('portal.cash-advance.create') }}" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.cash-advance.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span class="text-[10px] font-medium">Kasbon</span>

@@ -127,7 +127,12 @@
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Telat</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Absen</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Kasbon</th>
-                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pot. Wajib</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Kes. (Kr)</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Kes. (Pr)</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Ket. (Kr)</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Ket. (Pr)</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">Iuran Bul.</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pajak</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Gaji Bersih</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Status</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Aksi</th>
@@ -147,7 +152,7 @@
                         $periodRange = $periodStart->format('d M') . ' - ' . $periodEnd->format('d M Y');
                         $statusMap = ['draft' => 'Draft', 'pending' => 'Pending', 'approved' => 'Disetujui', 'paid' => 'Dibayar'];
                         $fmt = function($v) { return 'Rp ' . number_format((float) $v, 0, ',', '.'); };
-                    @endphp
+                     @endphp
                     <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="py-3 px-4">
                             <div class="flex items-center gap-2">
@@ -173,7 +178,12 @@
                         <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->late_penalty + $p->late_penalty_percent) }}</td>
                         <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->absent_penalty) }}</td>
                         <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->cash_advance_deduction) }}</td>
-                        <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->bpjs_deduction + $p->tax_amount) }}</td>
+                        <td class="py-3 px-4 text-right text-purple-600 dark:text-purple-400">{{ $fmt($p->bpjs_kesehatan_deduction) }}</td>
+                        <td class="py-3 px-4 text-right text-pink-600 dark:text-pink-400">{{ $fmt($p->bpjs_kesehatan_company) }}</td>
+                        <td class="py-3 px-4 text-right text-blue-600 dark:text-blue-400">{{ $fmt($p->bpjs_ketenagakerjaan_deduction) }}</td>
+                        <td class="py-3 px-4 text-right text-cyan-600 dark:text-cyan-400">{{ $fmt($p->bpjs_ketenagakerjaan_company) }}</td>
+                        <td class="py-3 px-4 text-right text-orange-600 dark:text-orange-400">{{ $fmt($p->iuran_bulanan_deduction) }}</td>
+                        <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->tax_amount) }}</td>
                         <td class="py-3 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">{{ $fmt($p->net_salary) }}</td>
                         <td class="py-3 px-4">
                             <span class="text-xs font-medium px-2.5 py-1 rounded-full @switch($p->status)
@@ -237,7 +247,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="13" class="py-12 text-center">
+                        <td colspan="19" class="py-12 text-center">
                             <p class="text-sm text-gray-500 dark:text-gray-400">Tidak ada data payroll</p>
                         </td>
                     </tr>

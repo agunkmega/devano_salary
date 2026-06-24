@@ -61,10 +61,16 @@
                 </dd>
             </div>
             @endif
-            @if($leave->status === 'rejected' && $leave->notes)
+            @if($leave->status === 'rejected' && ($leave->notes || $leave->rejection_reason))
             <div class="sm:col-span-2">
                 <dt class="text-xs font-medium text-red-500 uppercase tracking-wider">Alasan Ditolak</dt>
-                <dd class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $leave->notes }}</dd>
+                <dd class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $leave->rejection_reason ?? $leave->notes }}</dd>
+            </div>
+            @endif
+            @if($leave->headApprover)
+            <div>
+                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Disetujui Kepala Dept.</dt>
+                <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $leave->headApprover->full_name }}</dd>
             </div>
             @endif
             @if($leave->approver)

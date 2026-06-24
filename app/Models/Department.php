@@ -11,6 +11,7 @@ class Department extends Model
         'code',
         'description',
         'is_active',
+        'department_head_id',
     ];
 
     protected function casts(): array
@@ -28,5 +29,10 @@ class Department extends Model
     public function employees()
     {
         return $this->hasMany(Employee::class);
+    }
+
+    public function departmentHead()
+    {
+        return $this->belongsTo(Employee::class, 'department_head_id');
     }
 }

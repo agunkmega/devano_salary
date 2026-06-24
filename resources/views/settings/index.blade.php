@@ -10,6 +10,7 @@
         <button @click="activeTab = 'payroll'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all" :class="activeTab === 'payroll' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">Payroll</button>
         <button @click="activeTab = 'attendance'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all" :class="activeTab === 'attendance' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">Absensi</button>
         <button @click="activeTab = 'database'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all" :class="activeTab === 'database' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">Database</button>
+        <button @click="activeTab = 'email'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all" :class="activeTab === 'email' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">Email</button>
     </div>
 
     <div x-show="activeTab === 'general'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
@@ -95,10 +96,38 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">BPJS Kesehatan (Rp)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">BPJS Ket. Full — Porsi Perusahaan (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="text" inputmode="decimal" name="settings[bpjs_ket_full_company]" value="{{ $settings->get('payroll')?->firstWhere('key', 'bpjs_ket_full_company')?->value ?? '0' }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">BPJS Ket. Partial — Porsi Karyawan (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="text" inputmode="decimal" name="settings[bpjs_ket_partial_employee]" value="{{ $settings->get('payroll')?->firstWhere('key', 'bpjs_ket_partial_employee')?->value ?? '0' }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">BPJS Ket. Partial — Porsi Perusahaan (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="text" inputmode="decimal" name="settings[bpjs_ket_partial_company]" value="{{ $settings->get('payroll')?->firstWhere('key', 'bpjs_ket_partial_company')?->value ?? '10000' }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">BPJS Kesehatan — Porsi Karyawan (Rp)</label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
                         <input type="text" inputmode="decimal" name="settings[bpjs_kesehatan_rate]" value="{{ $settings->get('payroll')?->firstWhere('key', 'bpjs_kesehatan_rate')?->value ?? '0' }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">BPJS Kesehatan — Porsi Perusahaan (Rp)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="text" inputmode="decimal" name="settings[bpjs_kesehatan_company]" value="{{ $settings->get('payroll')?->firstWhere('key', 'bpjs_kesehatan_company')?->value ?? '26500' }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div>
@@ -192,6 +221,53 @@
             </div>
             @endif
         </div>
+    </div>
+
+    <div x-show="activeTab === 'email'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+        <form method="POST" action="{{ route('admin.settings.update') }}" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6">
+            @csrf
+            @method('PUT')
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Pengaturan Email (SMTP)</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Konfigurasi SMTP untuk mengirim slip gaji via email.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">SMTP Host</label>
+                    <input type="text" name="settings[mail_host]" value="{{ $settings->get('email')?->firstWhere('key', 'mail_host')?->value ?? 'mail.devanosilver.com' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">SMTP Port</label>
+                    <input type="text" name="settings[mail_port]" value="{{ $settings->get('email')?->firstWhere('key', 'mail_port')?->value ?? '465' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">SMTP Username</label>
+                    <input type="text" name="settings[mail_username]" value="{{ $settings->get('email')?->firstWhere('key', 'mail_username')?->value ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">SMTP Password</label>
+                    <input type="password" name="settings[mail_password]" value="{{ $settings->get('email')?->firstWhere('key', 'mail_password')?->value ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Enkripsi</label>
+                    <select name="settings[mail_encryption]" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
+                        @php $encVal = $settings->get('email')?->firstWhere('key', 'mail_encryption')?->value ?? 'ssl'; @endphp
+                        <option value="ssl" {{ $encVal == 'ssl' ? 'selected' : '' }}>SSL</option>
+                        <option value="tls" {{ $encVal == 'tls' ? 'selected' : '' }}>TLS</option>
+                        <option value="" {{ $encVal == '' ? 'selected' : '' }}>Tanpa Enkripsi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat Email Pengirim</label>
+                    <input type="email" name="settings[mail_from_address]" value="{{ $settings->get('email')?->firstWhere('key', 'mail_from_address')?->value ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Pengirim</label>
+                    <input type="text" name="settings[mail_from_name]" value="{{ $settings->get('email')?->firstWhere('key', 'mail_from_name')?->value ?? config('app.name') }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">Simpan</button>
+            </div>
+        </form>
     </div>
 </div>
 

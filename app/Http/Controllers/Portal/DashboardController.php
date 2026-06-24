@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\CashAdvance;
@@ -143,10 +144,20 @@ class DashboardController extends Controller
             && $today->day === (int) Carbon::parse($employee->birth_date)->format('d')
             && $today->month === (int) Carbon::parse($employee->birth_date)->format('m');
 
+        $deptHeadDept = Department::where('department_head_id', $employee->id)->first();
+        $pendingHeadCount = 0;
+        if ($deptHeadDept) {
+            $pendingHeadCount = Leave::where('status', 'pending')
+                ->where('employee_id', '!=', $employee->id)
+                ->whereHas('employee', fn($q) => $q->where('department_id', $deptHeadDept->id))
+                ->count();
+        }
+
         return view('portal.dashboard', compact(
             'employee', 'attendanceSummary', 'latestPayroll',
             'recentLeaves', 'leaveTypes', 'cashAdvances', 'dateFrom', 'dateTo',
-            'payrolls', 'selectedPeriod', 'leaveBalances', 'isBirthday'
+            'payrolls', 'selectedPeriod', 'leaveBalances', 'isBirthday',
+            'pendingHeadCount'
         ));
     }
 

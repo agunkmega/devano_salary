@@ -25,8 +25,10 @@ class PayslipMail extends Mailable
     public function envelope(): Envelope
     {
         $periodLabel = \Carbon\Carbon::createFromFormat('Y-m', $this->payroll->period)->locale('id')->translatedFormat('F Y');
+        $companyName = \App\Models\Setting::where('key', 'company_name')->value('value') ?? config('app.name');
         return new Envelope(
             subject: "Slip Gaji {$periodLabel} - {$this->payroll->employee?->full_name}",
+            from: new \Illuminate\Mail\Mailables\Address(config('mail.from.address'), $companyName),
         );
     }
 

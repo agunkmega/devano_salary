@@ -250,8 +250,20 @@
                 @if($payroll->absent_penalty > 0)
                 <tr><td>Alpha</td><td>{{ $fmt($payroll->absent_penalty) }}</td></tr>
                 @endif
-                @if($payroll->bpjs_deduction > 0)
-                <tr><td>BPJS</td><td>{{ $fmt($payroll->bpjs_deduction) }}</td></tr>
+                @if($payroll->bpjs_kesehatan_deduction > 0)
+                <tr><td>BPJS Kesehatan (potongan)</td><td>{{ $fmt($payroll->bpjs_kesehatan_deduction) }}</td></tr>
+                @endif
+                @if($payroll->bpjs_kesehatan_company > 0)
+                <tr><td>BPJS Kesehatan (perusahaan)</td><td>{{ $fmt($payroll->bpjs_kesehatan_company) }}</td></tr>
+                @endif
+                @if($payroll->bpjs_ketenagakerjaan_deduction > 0)
+                <tr><td>BPJS Ketenagakerjaan (potongan)</td><td>{{ $fmt($payroll->bpjs_ketenagakerjaan_deduction) }}</td></tr>
+                @endif
+                @if($payroll->bpjs_ketenagakerjaan_company > 0)
+                <tr><td>BPJS Ketenagakerjaan (perusahaan)</td><td>{{ $fmt($payroll->bpjs_ketenagakerjaan_company) }}</td></tr>
+                @endif
+                @if($payroll->iuran_bulanan_deduction > 0)
+                <tr><td>Iuran Bulanan</td><td>{{ $fmt($payroll->iuran_bulanan_deduction) }}</td></tr>
                 @endif
                 @if($payroll->tax_amount > 0)
                 <tr><td>PPh 21</td><td>{{ $fmt($payroll->tax_amount) }}</td></tr>

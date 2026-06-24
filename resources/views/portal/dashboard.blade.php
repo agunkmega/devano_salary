@@ -48,6 +48,20 @@
     </div>
     @endif
 
+    @if($pendingHeadCount > 0)
+    <a href="{{ route('portal.leave-approval.index') }}" class="block bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl shadow-sm p-4">
+        <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-white">{{ $pendingHeadCount }} pengajuan cuti menunggu persetujuan</p>
+                <p class="text-xs text-white/80 mt-0.5">Klik untuk menyetujui atau menolak</p>
+            </div>
+        </div>
+    </a>
+    @endif
+
     {{-- Period Selector --}}
     @if($payrolls->count() > 1)
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-3">
@@ -127,43 +141,147 @@
 
     {{-- Latest Salary --}}
     @if($latestPayroll)
+    @php
+        $p = $latestPayroll;
+        $totalIncome = $p->base_salary + $p->allowance + $p->bonus + $p->other_additions + $p->overtime_pay + $p->uang_makan_lembur + $p->uang_makan_harian;
+        $totalDeductions = $p->late_penalty + $p->late_penalty_percent + $p->absent_penalty + $p->cash_advance_deduction + $p->bpjs_deduction + $p->tax_amount + $p->other_deductions;
+    @endphp
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
         <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Slip Gaji</h3>
-            <span class="text-[10px] font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{{ \Carbon\Carbon::createFromFormat('Y-m', $latestPayroll->period)->locale('id')->isoFormat('MMMM YYYY') }}</span>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Slip Gaji Detail</h3>
+            <span class="text-[10px] font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{{ \Carbon\Carbon::createFromFormat('Y-m', $p->period)->locale('id')->isoFormat('MMMM YYYY') }}</span>
         </div>
-        <div class="space-y-2.5 text-sm">
+        <div class="space-y-3 text-sm">
+            {{-- Income --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Pendapatan</p>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Gaji Pokok</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->base_salary, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Tunjangan</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->allowance, 0, ',', '.') }}</span>
+                    </div>
+                    @if($p->overtime_pay > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Lembur</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->overtime_pay, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->uang_makan_lembur > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Uang Makan Lembur</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->uang_makan_lembur, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->uang_makan_harian > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Uang Makan Harian</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->uang_makan_harian, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->bonus > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Bonus</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->bonus, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->other_additions > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Tambahan Lain-lain</span>
+                        <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($p->other_additions, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    <div class="flex justify-between pt-1.5 border-t border-gray-100 dark:border-gray-700">
+                        <span class="font-semibold text-gray-900 dark:text-white">Total Pendapatan</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">Rp {{ number_format($totalIncome, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Deductions --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Potongan</p>
+                <div class="space-y-1.5">
+                    @if($p->late_penalty > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Keterlambatan</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->late_penalty, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->late_penalty_percent > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Denda Telat 8%</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->late_penalty_percent, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->absent_penalty > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Alpha</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->absent_penalty, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->bpjs_kesehatan_deduction > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">BPJS Kesehatan</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->bpjs_kesehatan_deduction, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->bpjs_ketenagakerjaan_deduction > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">BPJS Ketenagakerjaan</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->iuran_bulanan_deduction > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Iuran Bulanan</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->iuran_bulanan_deduction, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->tax_amount > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">PPh 21</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->tax_amount, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->cash_advance_deduction > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Kasbon</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->cash_advance_deduction, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($p->other_deductions > 0)
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Potongan Lain-lain</span>
+                        <span class="font-medium text-red-500">Rp {{ number_format($p->other_deductions, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    @if($totalDeductions > 0)
+                    <div class="flex justify-between pt-1.5 border-t border-gray-100 dark:border-gray-700">
+                        <span class="font-semibold text-gray-900 dark:text-white">Total Potongan</span>
+                        <span class="font-semibold text-red-600 dark:text-red-400">Rp {{ number_format($totalDeductions, 0, ',', '.') }}</span>
+                    </div>
+                    @else
+                    <div class="flex justify-between">
+                        <span class="text-gray-400 italic">Tidak ada potongan</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <hr class="border-gray-200 dark:border-gray-600">
             <div class="flex justify-between">
-                <span class="text-gray-500">Gaji Pokok</span>
-                <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($latestPayroll->base_salary, 0, ',', '.') }}</span>
+                <span class="font-bold text-gray-900 dark:text-white text-sm">Gaji Bersih</span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-base">Rp {{ number_format($p->net_salary, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Tunjangan</span>
-                <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($latestPayroll->allowance, 0, ',', '.') }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Lembur</span>
-                <span class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($latestPayroll->overtime_pay, 0, ',', '.') }}</span>
-            </div>
-            @if($latestPayroll->late_penalty_percent > 0)
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-400">Pot. Telat 8%</span>
-                <span class="font-medium text-red-500">Rp {{ number_format($latestPayroll->late_penalty_percent, 0, ',', '.') }}</span>
-            </div>
-            @endif
-            <div class="flex justify-between">
-                <span class="text-gray-500">Potongan</span>
-                <span class="font-medium text-red-600 dark:text-red-400">Rp {{ number_format($latestPayroll->total_deductions, 0, ',', '.') }}</span>
-            </div>
-            <hr class="border-gray-100 dark:border-gray-700">
-            <div class="flex justify-between">
-                <span class="font-semibold text-gray-900 dark:text-white">Gaji Bersih</span>
-                <span class="font-bold text-emerald-600 dark:text-emerald-400 text-base">Rp {{ number_format($latestPayroll->net_salary, 0, ',', '.') }}</span>
-            </div>
-            @if($latestPayroll->notes)
-            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+
+            @if($p->notes)
+            <div class="mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
                 <p class="text-[10px] font-medium text-gray-400 mb-1">Catatan</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ $latestPayroll->notes }}</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{{ $p->notes }}</p>
             </div>
             @endif
         </div>

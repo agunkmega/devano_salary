@@ -26,6 +26,21 @@ class AppServiceProvider extends ServiceProvider
             if ($appName) {
                 config(['app.name' => $appName]);
             }
+
+            $mailSettings = Cache::remember('mail_settings', 3600, function () {
+                return Setting::where('group', 'email')->get()->keyBy('key');
+            });
+            if ($mailSettings->isNotEmpty()) {
+                $overrides = [];
+                if ($mailSettings->has('mail_host')) $overrides['mailers.smtp.host'] = $mailSettings->get('mail_host')->value;
+                if ($mailSettings->has('mail_port')) $overrides['mailers.smtp.port'] = (int) $mailSettings->get('mail_port')->value;
+                if ($mailSettings->has('mail_username')) $overrides['mailers.smtp.username'] = $mailSettings->get('mail_username')->value;
+                if ($mailSettings->has('mail_password')) $overrides['mailers.smtp.password'] = $mailSettings->get('mail_password')->value;
+                if ($mailSettings->has('mail_encryption')) $overrides['mailers.smtp.encryption'] = $mailSettings->get('mail_encryption')->value ?: null;
+                if ($mailSettings->has('mail_from_address')) $overrides['mail.from.address'] = $mailSettings->get('mail_from_address')->value;
+                if ($mailSettings->has('mail_from_name')) $overrides['mail.from.name'] = $mailSettings->get('mail_from_name')->value;
+                config($overrides);
+            }
         } catch (\Exception $e) {
             //
         }

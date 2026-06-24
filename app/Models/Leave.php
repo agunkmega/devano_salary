@@ -15,9 +15,11 @@ class Leave extends Model
         'reason',
         'status',
         'approved_by',
+        'approved_by_head',
         'approval_date',
         'attachment',
         'notes',
+        'rejection_reason',
     ];
 
     protected function casts(): array
@@ -43,5 +45,10 @@ class Leave extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function headApprover()
+    {
+        return $this->belongsTo(Employee::class, 'approved_by_head');
     }
 }

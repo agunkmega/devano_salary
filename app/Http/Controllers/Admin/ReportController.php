@@ -11,6 +11,7 @@ use App\Models\LeaveType;
 use App\Models\Payroll;
 use App\Models\Position;
 use App\Models\Station;
+use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -476,6 +477,11 @@ class ReportController extends Controller
             'total_deductions' => $all->sum('total_deductions'),
             'total_net_salary' => $all->sum('net_salary'),
             'total_bpjs' => $all->sum('bpjs_deduction'),
+            'total_bpjs_kesehatan' => $all->sum('bpjs_kesehatan_deduction'),
+            'total_bpjs_kesehatan_company' => $all->sum('bpjs_kesehatan_company'),
+            'total_bpjs_ketenagakerjaan' => $all->sum('bpjs_ketenagakerjaan_deduction'),
+            'total_bpjs_ketenagakerjaan_company' => $all->sum('bpjs_ketenagakerjaan_company'),
+            'total_iuran_bulanan' => $all->sum('iuran_bulanan_deduction'),
             'total_tax' => $all->sum('tax_amount'),
             'total_cash_advance' => $all->sum('cash_advance_deduction'),
         ];
@@ -520,6 +526,102 @@ class ReportController extends Controller
         $period = $request->period;
 
         return view('reports.payroll-print', compact('payrolls', 'period'));
+    }
+
+    public function payrollPrintDetail(Request $request)
+    {
+        $query = Payroll::with(['employee.position', 'employee.department']);
+
+        if ($request->filled('period')) {
+            $query->where('period', $request->period);
+        }
+        if ($request->filled('department_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
+        }
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('employee_type')) {
+            $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+        }
+        if ($request->filled('station_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
+        }
+        if ($request->filled('bank_name')) {
+            $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+        }
+
+        $payrolls = $query->orderBy('period', 'desc')->get();
+        $period = $request->period;
+
+        return view('reports.payroll-print-detail', compact('payrolls', 'period'));
+    }
+
+    public function payrollExcelDetail(Request $request)
+    {
+        $query = Payroll::with(['employee.position', 'employee.department']);
+
+        if ($request->filled('period')) {
+            $query->where('period', $request->period);
+        }
+        if ($request->filled('department_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
+        }
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('employee_type')) {
+            $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+        }
+        if ($request->filled('station_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
+        }
+        if ($request->filled('bank_name')) {
+            $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+        }
+
+        $payrolls = $query->orderBy('period', 'desc')->get();
+
+        $data = $payrolls->map(function ($p) {
+            return [
+                'Period' => $p->period,
+                'NIK' => $p->employee?->nik ?? '-',
+                'Nama' => $p->employee?->full_name ?? '-',
+                'Jabatan' => $p->employee?->position?->name ?? $p->employee?->department?->name ?? '-',
+                'Jenis' => ($p->employee?->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
+                'Bank' => $p->employee?->bank_name ?? '-',
+                'No Rek' => $p->employee?->bank_account ?? '-',
+                'Nama Rek' => $p->employee?->bank_holder ?? '-',
+                'Gaji Pokok' => $p->base_salary,
+                'Tunjangan' => $p->allowance,
+                'Lembur' => $p->overtime_pay,
+                'Uang Makan' => $p->uang_makan_lembur + $p->uang_makan_harian,
+                'BPJS Kes (Kr)' => $p->bpjs_kesehatan_deduction,
+                'BPJS Kes (Pr)' => $p->bpjs_kesehatan_company,
+                'BPJS Ket (Kr)' => $p->bpjs_ketenagakerjaan_deduction,
+                'BPJS Ket (Pr)' => $p->bpjs_ketenagakerjaan_company,
+                'Iuran Bulanan' => $p->iuran_bulanan_deduction,
+                'Total Potongan' => $p->total_deductions,
+                'Gaji Bersih' => $p->net_salary,
+                'Status' => $p->status,
+            ];
+        });
+
+        $headings = ['Period', 'NIK', 'Nama', 'Jabatan', 'Jenis', 'Bank', 'No Rek', 'Nama Rek', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket (Kr)', 'BPJS Ket (Pr)', 'Iuran Bulanan', 'Total Potongan', 'Gaji Bersih', 'Status'];
+
+        return Excel::download(new class($data, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            private $data;
+            private $headings;
+            public function __construct($data, $headings) { $this->data = $data; $this->headings = $headings; }
+            public function array(): array { return $this->data->toArray(); }
+            public function headings(): array { return $this->headings; }
+        }, 'payroll-detail-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function leaveBalance(Request $request)
@@ -571,6 +673,65 @@ class ReportController extends Controller
         $departments = Department::where('is_active', true)->get();
 
         return view('reports.leave-balance', compact('balances', 'departments'));
+    }
+
+    public function bpjs()
+    {
+        $query = $this->bpjsQuery();
+
+        $payrolls = $query->paginate(100);
+        $periods = Payroll::select('period')->distinct()->orderBy('period', 'desc')->pluck('period');
+        $departments = Department::where('is_active', true)->get();
+        $employees = Employee::where('is_active', true)->get();
+        $stations = Station::where('is_active', true)->get();
+
+        return view('reports.bpjs', compact('payrolls', 'periods', 'departments', 'employees', 'stations'));
+    }
+
+    public function bpjsPrint()
+    {
+        $payrolls = $this->bpjsQuery()->get();
+        return view('reports.bpjs-print', compact('payrolls'));
+    }
+
+    public function bpjsPdf()
+    {
+        $payrolls = $this->bpjsQuery()->get();
+        $pdf = Pdf::loadView('reports.bpjs-print', compact('payrolls'));
+        return $pdf->download('laporan-bpjs-' . now()->format('Ymd') . '.pdf');
+    }
+
+    private function bpjsQuery()
+    {
+        return Payroll::with(['employee.position', 'employee.department'])
+            ->select([
+                'payrolls.*',
+                'employees.identity_number',
+                'employees.full_name',
+            ])
+            ->join('employees', 'payrolls.employee_id', '=', 'employees.id')
+            ->where(function ($q) {
+                $q->where('payrolls.bpjs_kesehatan_deduction', '>', 0)
+                  ->orWhere('payrolls.bpjs_kesehatan_company', '>', 0)
+                  ->orWhere('payrolls.bpjs_ketenagakerjaan_deduction', '>', 0)
+                  ->orWhere('payrolls.bpjs_ketenagakerjaan_company', '>', 0);
+            })
+            ->when(request('period'), function ($q, $period) {
+                $q->where('payrolls.period', $period);
+            })
+            ->when(request('department_id'), function ($q, $deptId) {
+                $q->where('employees.department_id', $deptId);
+            })
+            ->when(request('employee_id'), function ($q, $empId) {
+                $q->where('payrolls.employee_id', $empId);
+            })
+            ->when(request('bpjs_ket_type'), function ($q, $type) {
+                $q->where('employees.bpjs_ketenagakerjaan_type', $type);
+            })
+            ->when(request('station_id'), function ($q, $stationId) {
+                $q->where('employees.station_id', $stationId);
+            })
+            ->orderBy('employees.full_name');
     }
 
     private function makeDummyAtt(string $dateStr, string $dayName, string $status): \stdClass

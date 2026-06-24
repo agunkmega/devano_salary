@@ -158,8 +158,24 @@
             </h3>
             <div class="space-y-3">
                 <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">BPJS</span>
-                    <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->bpjs_deduction) }}</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">BPJS Kesehatan (potongan)</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->bpjs_kesehatan_deduction) }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">BPJS Kesehatan (perusahaan)</span>
+                    <span class="text-sm font-medium text-pink-600 dark:text-pink-400">{{ $fmt($payroll->bpjs_kesehatan_company) }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">BPJS Ketenagakerjaan (potongan)</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->bpjs_ketenagakerjaan_deduction) }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">BPJS Ketenagakerjaan (perusahaan)</span>
+                    <span class="text-sm font-medium text-cyan-600 dark:text-cyan-400">{{ $fmt($payroll->bpjs_ketenagakerjaan_company) }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Iuran Bulanan</span>
+                    <span class="text-sm font-medium text-red-600 dark:text-red-400">{{ $fmt($payroll->iuran_bulanan_deduction) }}</span>
                 </div>
                 <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Kasbon</span>

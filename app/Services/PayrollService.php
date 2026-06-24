@@ -103,10 +103,10 @@ class PayrollService
         $uangMakanLembur = $overtimeMealDays * (float) ($employee->uang_makan_lembur ?? 0);
 
         $cashAdvanceDeduction = $this->calculateCashAdvanceDeduction($employee->id);
-        $bpjsDeduction = $this->calculateBpjsDeduction($employee, $computedBaseSalary);
+        $bpjsBreakdown = $this->calculateBpjsDeduction($employee, $computedBaseSalary);
 
         $grossSalary = $computedBaseSalary + $totalAllowance + $overtimePay + $uangMakanLembur;
-        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
+        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsBreakdown['total'];
         $netSalary = $grossSalary - $totalDeductions;
         $taxAmount = $this->calculateTax($netSalary);
 
@@ -123,7 +123,12 @@ class PayrollService
             'late_penalty_percent' => round($latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
             'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
-            'bpjs_deduction' => round($bpjsDeduction, 2),
+            'bpjs_deduction' => $bpjsBreakdown['total'],
+            'bpjs_kesehatan_deduction' => $bpjsBreakdown['bpjs_kesehatan_deduction'],
+            'bpjs_kesehatan_company' => $bpjsBreakdown['bpjs_kesehatan_company'],
+            'bpjs_ketenagakerjaan_deduction' => $bpjsBreakdown['bpjs_ketenagakerjaan_deduction'],
+            'bpjs_ketenagakerjaan_company' => $bpjsBreakdown['bpjs_ketenagakerjaan_company'],
+            'iuran_bulanan_deduction' => $bpjsBreakdown['iuran_bulanan_deduction'],
             'tax_amount' => round($taxAmount, 2),
             'total_deductions' => round($totalDeductions, 2),
             'net_salary' => round(max(0, $netSalary), 2),
@@ -164,25 +169,40 @@ class PayrollService
         return (float) $activeAdvance->installment_amount;
     }
 
-    public function calculateBpjsDeduction(Employee $employee, ?float $baseSalary = null): float
+    public function calculateBpjsDeduction(Employee $employee, ?float $baseSalary = null): array
     {
-        $total = 0;
-
-        if ($employee->bpjs_ketenagakerjaan_type === 'full') {
-            $total += (float) (Setting::where('key', 'bpjs_ketenagakerjaan_full_rate')->value('value') ?? 0);
-        } elseif ($employee->bpjs_ketenagakerjaan_type === 'partial') {
-            $total += (float) (Setting::where('key', 'bpjs_ketenagakerjaan_partial_rate')->value('value') ?? 0);
-        }
-
+        $bpjsKes = 0;
+        $bpjsKesCompany = 0;
         if ($employee->bpjs_kesehatan_active) {
-            $total += (float) (Setting::where('key', 'bpjs_kesehatan_rate')->value('value') ?? 0) * (1 + (int) ($employee->bpjs_kesehatan_tanggungan ?? 0));
+            $bpjsKes = (float) (Setting::where('key', 'bpjs_kesehatan_rate')->value('value') ?? 0) * (1 + (int) ($employee->bpjs_kesehatan_tanggungan ?? 0));
+            $bpjsKesCompany = (float) (Setting::where('key', 'bpjs_kesehatan_company')->value('value') ?? 0) * (1 + (int) ($employee->bpjs_kesehatan_tanggungan ?? 0));
         }
 
+        $bpjsKetEmployee = 0;
+        $bpjsKetCompany = 0;
+        if ($employee->bpjs_ketenagakerjaan_type === 'full') {
+            $bpjsKetEmployee = (float) (Setting::where('key', 'bpjs_ketenagakerjaan_full_rate')->value('value') ?? 0);
+            $bpjsKetCompany = (float) (Setting::where('key', 'bpjs_ket_full_company')->value('value') ?? 0);
+        } elseif ($employee->bpjs_ketenagakerjaan_type === 'partial') {
+            $bpjsKetEmployee = (float) (Setting::where('key', 'bpjs_ket_partial_employee')->value('value') ?? 0);
+            $bpjsKetCompany = (float) (Setting::where('key', 'bpjs_ket_partial_company')->value('value') ?? 0);
+        }
+
+        $iuranBulanan = 0;
         if ($employee->iuran_wajib_amount > 0) {
-            $total += (float) $employee->iuran_wajib_amount;
+            $iuranBulanan = (float) $employee->iuran_wajib_amount;
         }
 
-        return $total;
+        $employeeTotal = $bpjsKes + $bpjsKetEmployee + $iuranBulanan;
+
+        return [
+            'bpjs_kesehatan_deduction' => round($bpjsKes, 2),
+            'bpjs_kesehatan_company' => round($bpjsKesCompany, 2),
+            'bpjs_ketenagakerjaan_deduction' => round($bpjsKetEmployee, 2),
+            'bpjs_ketenagakerjaan_company' => round($bpjsKetCompany, 2),
+            'iuran_bulanan_deduction' => round($iuranBulanan, 2),
+            'total' => round($employeeTotal, 2),
+        ];
     }
 
     public function calculateLatePenalty($employeeId, $period): float

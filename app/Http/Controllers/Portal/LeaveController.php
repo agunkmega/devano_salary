@@ -39,7 +39,7 @@ class LeaveController extends Controller
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'total_days' => $totalDays,
-            'reason' => $request->description,
+            'reason' => $request->description ?: '-',
             'status' => 'pending',
         ];
 
@@ -49,7 +49,7 @@ class LeaveController extends Controller
 
         Leave::create($data);
 
-        $employee = Employee::find(session('portal_employee_id'));
+        $employee = Employee::with('department')->find(session('portal_employee_id'));
         $leaveType = LeaveType::find($request->leave_type_id);
         $admins = User::whereIn('role', [User::ROLE_SUPER_ADMIN, User::ROLE_HR])->get();
         foreach ($admins as $admin) {
@@ -61,6 +61,20 @@ class LeaveController extends Controller
                 'url' => route('admin.leaves.index', ['status' => 'pending']),
                 'icon' => 'calendar',
             ]);
+        }
+
+        if ($employee?->department?->department_head_id) {
+            $head = Employee::find($employee->department->department_head_id);
+            if ($head && $head->user_id) {
+                Notification::create([
+                    'user_id' => $head->user_id,
+                    'title' => 'Pengajuan Cuti Baru',
+                    'message' => $employee->full_name . ' mengajukan ' . ($leaveType?->name ?? 'cuti') . ' ' . $totalDays . ' hari',
+                    'type' => 'leave',
+                    'url' => route('portal.leave-approval.index'),
+                    'icon' => 'calendar',
+                ]);
+            }
         }
 
         return redirect()->route('portal.dashboard')

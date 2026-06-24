@@ -131,7 +131,7 @@ class LeaveController extends Controller
 
     public function show(Leave $leave)
     {
-        $leave->load(['employee.user', 'employee.department', 'employee.position', 'leaveType', 'approver']);
+        $leave->load(['employee.user', 'employee.department', 'employee.position', 'leaveType', 'approver', 'headApprover']);
 
         return view('leaves.show', compact('leave'));
     }
@@ -259,6 +259,23 @@ class LeaveController extends Controller
 
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave cancelled successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $leave = Leave::findOrFail($id);
+
+        if (!in_array(auth()->user()->role, ['super_admin', 'hr'])) {
+            return redirect()->route('admin.leaves.index')
+                ->with('error', 'You do not have permission to delete leaves.');
+        }
+
+        $leave->delete();
+
+        $this->logActivity('leave', 'Delete', 'Menghapus cuti ' . $leave->employee?->full_name, 'Leave', $leave->id);
+
+        return redirect()->route('admin.leaves.index')
+            ->with('success', 'Leave deleted successfully.');
     }
 
     public function myLeaves()

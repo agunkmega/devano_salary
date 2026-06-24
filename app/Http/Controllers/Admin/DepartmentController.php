@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
@@ -11,6 +12,7 @@ class DepartmentController extends Controller
     public function index()
     {
         $departments = Department::withCount('employees')
+            ->with('departmentHead')
             ->when(request('search'), function ($q, $search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('code', 'like', "%{$search}%");
@@ -18,7 +20,11 @@ class DepartmentController extends Controller
             ->latest()
             ->paginate(15);
 
-        return view('departments.index', compact('departments'));
+        $employees = Employee::where('is_active', true)
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'nik']);
+
+        return view('departments.index', compact('departments', 'employees'));
     }
 
     public function create()
@@ -38,7 +44,10 @@ class DepartmentController extends Controller
             'code' => 'required|string|max:50|unique:departments,code',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'department_head_id' => 'nullable|exists:employees,id',
         ]);
+
+        $validated['department_head_id'] = !empty($validated['department_head_id']) ? $validated['department_head_id'] : null;
 
         Department::create($validated);
 
@@ -53,7 +62,10 @@ class DepartmentController extends Controller
             'code' => 'required|string|max:50|unique:departments,code,' . $department->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'department_head_id' => 'nullable|exists:employees,id',
         ]);
+
+        $validated['department_head_id'] = !empty($validated['department_head_id']) ? $validated['department_head_id'] : null;
 
         $department->update($validated);
 

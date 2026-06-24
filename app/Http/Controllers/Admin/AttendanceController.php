@@ -64,9 +64,8 @@ class AttendanceController extends Controller
             $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
                 ->whereDate('date', '>=', $dateFrom)
                 ->whereDate('date', '<=', $dateTo)
-                ->get(['date', 'religion'])
+                ->get(['date', 'name', 'religion'])
                 ->groupBy(fn($h) => $h->date->format('Y-m-d'))
-                ->map(fn($items) => $items->pluck('religion')->toArray())
                 ->toArray();
 
             $period = \Carbon\CarbonPeriod::create($dateFrom, $dateTo);
@@ -98,13 +97,18 @@ class AttendanceController extends Controller
                     }
                 }
 
+                $holidayName = null;
                 if ($status === '-') {
                     $dateStr = $date->format('Y-m-d');
                     if (isset($holidaysByDate[$dateStr])) {
                         $empReligion = $emp->religion;
-                        $isHolidayForEmployee = collect($holidaysByDate[$dateStr])->contains(fn($religion) => empty($religion) || $religion === $empReligion);
-                        if ($isHolidayForEmployee) {
-                            $status = 'Libur';
+                        foreach ($holidaysByDate[$dateStr] as $holiday) {
+                            $holidayRel = $holiday['religion'];
+                            if (empty($holidayRel) || $holidayRel === $empReligion) {
+                                $status = 'Libur';
+                                $holidayName = $holiday['name'];
+                                break;
+                            }
                         }
                     }
                 }
@@ -132,6 +136,7 @@ class AttendanceController extends Controller
                     'overtime_out' => $att?->overtime_out?->format('H:i'),
                     'status' => $status,
                     'leave_type_name' => $leaveTypeName,
+                    'holiday_name' => $holidayName,
                     'late_minutes' => $att?->late_minutes,
                     'early_leave_minutes' => $att?->early_leave_minutes,
                     'excess_break_minutes' => $att?->excess_break_minutes,
@@ -142,8 +147,8 @@ class AttendanceController extends Controller
                     'ignore_excess_break' => $att?->ignore_excess_break ?? false,
                 ]);
             }
-        }
-        }
+            }
+            }
 
         $leaveTypes = \App\Models\LeaveType::where('is_active', true)->get(['id', 'name', 'code']);
         return view('attendances.index', compact('attendancesData', 'employees', 'departments', 'dateFrom', 'dateTo', 'leaveTypes'));

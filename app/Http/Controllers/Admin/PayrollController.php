@@ -39,7 +39,7 @@ class PayrollController extends Controller
         $periodFrom = substr($dateFrom, 0, 7);
         $periodTo = substr($dateTo, 0, 7);
 
-        $payrolls = Payroll::with(['employee.user', 'employee.department'])
+        $queryBase = Payroll::with(['employee.user', 'employee.department'])
             ->when(request('period'), function ($q, $period) {
                 $q->where('period', $period);
             }, function ($q) use ($periodTo) {
@@ -65,9 +65,17 @@ class PayrollController extends Controller
                 $q->whereHas('employee', function ($sub) use ($stationId) {
                     $sub->where('station_id', $stationId);
                 });
-            })
-            ->latest()
-            ->paginate(20);
+            });
+
+        $payrolls = (clone $queryBase)->latest()->paginate(20);
+
+        $summary = (clone $queryBase)->selectRaw('
+            COALESCE(SUM(bpjs_kesehatan_deduction),0) as total_bpjs_kesehatan,
+            COALESCE(SUM(bpjs_kesehatan_company),0) as total_bpjs_kesehatan_company,
+            COALESCE(SUM(bpjs_ketenagakerjaan_deduction),0) as total_bpjs_ketenagakerjaan,
+            COALESCE(SUM(bpjs_ketenagakerjaan_company),0) as total_bpjs_ketenagakerjaan_company,
+            COALESCE(SUM(iuran_bulanan_deduction),0) as total_iuran_bulanan
+        ')->first();
 
         $periods = Payroll::select('period')->distinct()->orderBy('period', 'desc')->pluck('period');
 
@@ -90,7 +98,7 @@ class PayrollController extends Controller
         $employees = Employee::where('is_active', true)->get(['id', 'full_name']);
         $stations = Station::where('is_active', true)->get();
 
-        return view('payroll.index', compact('payrolls', 'periods', 'periodsData', 'departments', 'employees', 'stations', 'dateFrom', 'dateTo'));
+        return view('payroll.index', compact('payrolls', 'summary', 'periods', 'periodsData', 'departments', 'employees', 'stations', 'dateFrom', 'dateTo'));
     }
 
     public function create()
@@ -312,10 +320,10 @@ class PayrollController extends Controller
             ->where('remaining_amount', '>', 0)
             ->sum('installment_amount');
 
-        $bpjsDeduction = $this->payrollService->calculateBpjsDeduction($employee, $computedBaseSalary);
+        $bpjsBreakdown = $this->payrollService->calculateBpjsDeduction($employee, $computedBaseSalary);
 
         $grossBeforeTax = $computedBaseSalary + $totalAllowance + $bonus + $overtimePay + $uangMakanLembur;
-        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsDeduction;
+        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsBreakdown['total'];
 
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
         $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
@@ -340,7 +348,12 @@ class PayrollController extends Controller
             'late_penalty_percent' => round($latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
             'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
-            'bpjs_deduction' => round($bpjsDeduction, 2),
+            'bpjs_deduction' => $bpjsBreakdown['total'],
+            'bpjs_kesehatan_deduction' => $bpjsBreakdown['bpjs_kesehatan_deduction'],
+            'bpjs_kesehatan_company' => $bpjsBreakdown['bpjs_kesehatan_company'],
+            'bpjs_ketenagakerjaan_deduction' => $bpjsBreakdown['bpjs_ketenagakerjaan_deduction'],
+            'bpjs_ketenagakerjaan_company' => $bpjsBreakdown['bpjs_ketenagakerjaan_company'],
+            'iuran_bulanan_deduction' => $bpjsBreakdown['iuran_bulanan_deduction'],
             'tax_amount' => round($taxAmount, 2),
             'total_deductions' => round($totalDeductions, 2),
             'net_salary' => round($netSalary, 2),

@@ -34,7 +34,10 @@
                         </button>
                     </div>
                 </div>
-                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400" x-text="dept.description || 'Tidak ada deskripsi'"></p>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400" x-text="dept.description || 'Tidak ada deskripsi'"></p>
+                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500" x-show="dept.department_head">
+                    Kepala: <span class="font-medium" x-text="dept.department_head.full_name"></span>
+                </p>
             </div>
         </template>
     </div>
@@ -58,6 +61,28 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
                         <textarea x-model="form.description" name="description" rows="3" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kepala Departemen</label>
+                        <input type="hidden" name="department_head_id" x-model="form.department_head_id">
+                        <button type="button" @click="headOpen = !headOpen" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-left focus:ring-2 focus:ring-blue-500 flex items-center justify-between">
+                            <span :class="form.department_head_id ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'" x-text="headLabel"></span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div x-show="headOpen" @click.outside="headOpen = false" x-cloak class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 overflow-hidden">
+                            <div class="p-2">
+                                <input type="text" x-model="headSearch" placeholder="Cari karyawan..." class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="overflow-y-auto max-h-44">
+                                <template x-for="emp in headFiltered" :key="emp.id">
+                                    <button type="button" @click="selectHead(emp)" class="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" :class="form.department_head_id == emp.id ? 'bg-blue-50 dark:bg-blue-900/30' : ''">
+                                        <span x-text="emp.full_name"></span>
+                                        <span class="text-gray-400 dark:text-gray-500" x-text="'(' + emp.nik + ')'"></span>
+                                    </button>
+                                </template>
+                                <p x-show="headFiltered.length === 0" class="px-3 py-4 text-sm text-gray-400 text-center">Karyawan tidak ditemukan</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
@@ -92,13 +117,41 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('departmentManager', () => ({
             departments: @json($departments->items()),
+            headEmployees: @json($employees),
             modalOpen: false,
             deleteModal: false,
             editing: null,
             deleting: null,
-            form: { name: '', code: '', description: '' },
-            openCreateModal() { this.editing = null; this.form = { name: '', code: '', description: '' }; this.modalOpen = true; },
-            openEditModal(dept) { this.editing = dept; this.form = { name: dept.name, code: dept.code, description: dept.description || '' }; this.modalOpen = true; },
+            form: { name: '', code: '', description: '', department_head_id: '' },
+            headOpen: false,
+            headSearch: '',
+            get headFiltered() {
+                return this.headEmployees.filter(e => e.full_name.toLowerCase().includes(this.headSearch.toLowerCase()) || e.nik.includes(this.headSearch));
+            },
+            get headLabel() {
+                if (!this.form.department_head_id) return '— Pilih —';
+                const emp = this.headEmployees.find(e => e.id == this.form.department_head_id);
+                return emp ? emp.full_name + ' (' + emp.nik + ')' : '— Pilih —';
+            },
+            selectHead(emp) {
+                this.form.department_head_id = emp.id;
+                this.headOpen = false;
+                this.headSearch = '';
+            },
+            openCreateModal() {
+                this.editing = null;
+                this.form = { name: '', code: '', description: '', department_head_id: '' };
+                this.headOpen = false;
+                this.headSearch = '';
+                this.modalOpen = true;
+            },
+            openEditModal(dept) {
+                this.editing = dept;
+                this.form = { name: dept.name, code: dept.code, description: dept.description || '', department_head_id: dept.department_head_id || '' };
+                this.headOpen = false;
+                this.headSearch = '';
+                this.modalOpen = true;
+            },
             confirmDelete(dept) { this.deleting = dept; this.deleteModal = true; },
             generateCode() { if (!this.editing && this.form.name) { this.form.code = this.form.name.substring(0, 3).toUpperCase(); } },
             init() {}

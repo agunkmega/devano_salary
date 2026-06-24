@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DashboardController as PortalDashboardController;
 use App\Http\Controllers\Portal\LeaveController as PortalLeaveController;
+use App\Http\Controllers\Portal\LeaveApprovalController as PortalLeaveApprovalController;
 use App\Http\Controllers\Portal\CashAdvanceController as PortalCashAdvanceController;
 
 Route::redirect('/', '/admin/dashboard');
@@ -45,7 +46,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::get('attendances/history', [AttendanceController::class, 'history'])->name('attendances.history');
 
     Route::resource('leave-types', LeaveTypeController::class)->except(['show']);
-    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave'])->except(['destroy']);
+    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
     Route::patch('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::patch('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
     Route::patch('leaves/{leave}/cancel', [LeaveController::class, 'cancel'])->name('leaves.cancel');
@@ -78,7 +79,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::get('attendance-print', [ReportController::class, 'attendancePrint'])->name('attendance-print');
         Route::get('payroll', [ReportController::class, 'payroll'])->name('payroll');
         Route::get('payroll-print', [ReportController::class, 'payrollPrint'])->name('payroll-print');
+        Route::get('payroll-print-detail', [ReportController::class, 'payrollPrintDetail'])->name('payroll-print-detail');
+        Route::get('payroll-excel-detail', [ReportController::class, 'payrollExcelDetail'])->name('payroll-excel-detail');
         Route::get('leave-balance', [ReportController::class, 'leaveBalance'])->name('leave-balance');
+        Route::get('bpjs', [ReportController::class, 'bpjs'])->name('bpjs');
+        Route::get('bpjs-print', [ReportController::class, 'bpjsPrint'])->name('bpjs-print');
+        Route::get('bpjs-pdf', [ReportController::class, 'bpjsPdf'])->name('bpjs-pdf');
     });
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
@@ -107,6 +113,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('dashboard', [PortalDashboardController::class, 'index'])->name('dashboard');
         Route::get('leave/create', [PortalLeaveController::class, 'create'])->name('leave.create');
         Route::post('leave', [PortalLeaveController::class, 'store'])->name('leave.store');
+        Route::get('leave-approvals', [PortalLeaveApprovalController::class, 'index'])->name('leave-approval.index');
+        Route::patch('leave-approvals/{leave}/approve', [PortalLeaveApprovalController::class, 'approve'])->name('leave-approval.approve');
+        Route::patch('leave-approvals/{leave}/reject', [PortalLeaveApprovalController::class, 'reject'])->name('leave-approval.reject');
         Route::get('cash-advance/create', [PortalCashAdvanceController::class, 'create'])->name('cash-advance.create');
         Route::post('cash-advance', [PortalCashAdvanceController::class, 'store'])->name('cash-advance.store');
         Route::post('photo', [PortalDashboardController::class, 'updatePhoto'])->name('photo.update');

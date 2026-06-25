@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('departments', function (Blueprint $table) {
-            $table->foreignId('department_head_id')->nullable()->constrained('employees')->nullOnDelete()->after('is_active');
-        });
+        if (!Schema::hasColumn('departments', 'department_head_id')) {
+            Schema::table('departments', function (Blueprint $table) {
+                $table->foreignId('department_head_id')->nullable()->constrained('employees')->nullOnDelete()->after('is_active');
+            });
+        }
     }
 
     public function down(): void

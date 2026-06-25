@@ -22,14 +22,4 @@ return new class(1) extends Migration
             $table->dropColumn('ignore_late');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('attendances', function (Blueprint $table) {
-            //
-        });
-    }
 };

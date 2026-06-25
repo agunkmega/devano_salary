@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leaves', function (Blueprint $table) {
-            $table->foreignId('approved_by_head')->nullable()->constrained('employees')->nullOnDelete()->after('approved_by');
-        });
+        if (!Schema::hasColumn('leaves', 'approved_by_head')) {
+            Schema::table('leaves', function (Blueprint $table) {
+                $table->foreignId('approved_by_head')->nullable()->constrained('employees')->nullOnDelete()->after('approved_by');
+            });
+        }
     }
 
     public function down(): void

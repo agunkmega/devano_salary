@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\NationalHolidayController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\FingerSpotController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DashboardController as PortalDashboardController;
 use App\Http\Controllers\Portal\LeaveController as PortalLeaveController;
@@ -102,6 +103,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     Route::resource('national-holidays', NationalHolidayController::class);
+
+    Route::get('fingerspot', [FingerSpotController::class, 'index'])->name('fingerspot.index');
+    Route::get('fingerspot/machines', [FingerSpotController::class, 'machines'])->name('fingerspot.machines');
+    Route::post('fingerspot/fetch', [FingerSpotController::class, 'fetch'])->name('fingerspot.fetch');
+    Route::post('fingerspot/import', [FingerSpotController::class, 'import'])->name('fingerspot.import');
+    Route::get('fingerspot/export', [FingerSpotController::class, 'exportExcel'])->name('fingerspot.export');
 });
 
 Route::prefix('portal')->name('portal.')->group(function () {

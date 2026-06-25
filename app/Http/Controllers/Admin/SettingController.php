@@ -104,6 +104,12 @@ class SettingController extends Controller
 
     private function inferGroup(string $key): string
     {
+        if (str_starts_with($key, 'fingerspot_')) {
+            return 'fingerspot';
+        }
+        if (str_starts_with($key, 'mail_')) {
+            return 'email';
+        }
         $payrollKeys = ['bpjs_', 'tax_', 'iuran_wajib', 'overtime_', 'late_penalty'];
         foreach ($payrollKeys as $prefix) {
             if (str_starts_with($key, $prefix)) {

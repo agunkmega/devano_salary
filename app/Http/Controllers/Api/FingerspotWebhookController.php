@@ -52,6 +52,15 @@ class FingerspotWebhookController extends Controller
 
         $shiftId = $employee->shift?->id;
 
+        // Fallback jika karyawan tidak punya shift
+        if (!$shiftId) {
+            $defaultShift = \App\Models\Shift::where('name', 'like', '%pagi%')
+                ->orWhere('code', 'like', '%pagi%')
+                ->orderBy('id')
+                ->first() ?? \App\Models\Shift::orderBy('id')->first();
+            $shiftId = $defaultShift?->id;
+        }
+
         try {
             $scanTime = Carbon::parse($scan);
         } catch (\Exception $e) {
@@ -61,31 +70,49 @@ class FingerspotWebhookController extends Controller
 
         $dateStr = $scanTime->format('Y-m-d');
 
-        $attendance = Attendance::firstOrNew(
-            ['employee_id' => $employee->id, 'attendance_date' => $dateStr],
-            ['shift_id' => $shiftId, 'status' => 'hadir', 'notes' => 'webhook']
-        );
+        // Cek apakah sudah ada record di hari yang sama
+        $existing = Attendance::where('employee_id', $employee->id)
+            ->where('attendance_date', $dateStr)
+            ->first();
 
-        $field = match (true) {
-            is_null($attendance->clock_in)    => 'clock_in',
-            is_null($attendance->break_out)   => 'break_out',
-            is_null($attendance->break_in)    => 'break_in',
-            is_null($attendance->clock_out)   => 'clock_out',
-            is_null($attendance->overtime_in) => 'overtime_in',
-            default                           => 'overtime_out',
-        };
+        if ($existing) {
+            // Cek apakah waktu scan ini sudah pernah direkam (dalam 1 menit)
+            foreach (['clock_in', 'break_out', 'break_in', 'clock_out', 'overtime_in', 'overtime_out'] as $f) {
+                if ($existing->$f && $scanTime->diffInMinutes(Carbon::parse($existing->$f)) < 1) {
+                    Log::info("Duplicate scan ignored for {$employee->nik} at $scan (within 1min of $f)");
+                    return response()->json(['status' => 'ignored', 'reason' => 'duplicate_scan']);
+                }
+            }
 
-        $attendance->$field = $scanTime;
+            // Cari field kosong berikutnya
+            $field = match (true) {
+                is_null($existing->clock_in)    => 'clock_in',
+                is_null($existing->break_out)   => 'break_out',
+                is_null($existing->break_in)    => 'break_in',
+                is_null($existing->clock_out)   => 'clock_out',
+                is_null($existing->overtime_in) => 'overtime_in',
+                default                           => 'overtime_out',
+            };
+
+            $existing->$field = $scanTime;
+            $existing->save();
+
+            Log::info("Updated $field for {$employee->nik} on $dateStr");
+            return response()->json(['status' => 'updated', 'field' => $field, 'attendance_id' => $existing->id]);
+        }
+
+        // Record baru
+        $attendance = new Attendance();
+        $attendance->employee_id = $employee->id;
+        $attendance->attendance_date = $dateStr;
+        $attendance->shift_id = $shiftId;
+        $attendance->status = 'hadir';
+        $attendance->notes = 'webhook';
+        $attendance->clock_in = $scanTime;
         $attendance->save();
 
-        $action = $attendance->wasRecentlyCreated ? 'Created' : 'Updated';
-        Log::info("$action $field for {$employee->nik} on $dateStr");
-
-        return response()->json([
-            'status' => strtolower($action),
-            'attendance_id' => $attendance->id,
-            'field' => $field,
-        ]);
+        Log::info("Created clock_in for {$employee->nik} on $dateStr");
+        return response()->json(['status' => 'created', 'field' => 'clock_in', 'attendance_id' => $attendance->id]);
     }
 
     protected function handleGetUserInfo(array $payload): \Illuminate\Http\JsonResponse

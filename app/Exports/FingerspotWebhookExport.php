@@ -5,10 +5,10 @@ namespace App\Exports;
 use App\Models\Attendance;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+    use Maatwebsite\Excel\Concerns\FromCollection;
+    use Maatwebsite\Excel\Concerns\WithHeadings;
+    use Maatwebsite\Excel\Concerns\WithMapping;
+    use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
 class FingerspotWebhookExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
 {

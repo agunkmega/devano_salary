@@ -7,14 +7,20 @@
 <div x-data="employeeForm()" class="max-w-4xl mx-auto">
     <form action="{{ route('admin.employees.update', $employee->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @php
-            $prevUrl = url()->previous();
-            $query = parse_url($prevUrl, PHP_URL_QUERY);
-            parse_str($query ?? '', $prevParams);
-            $prevPage = $prevParams['page'] ?? 1;
+            // Gunakan filter dari URL (dikirim dari tombol edit di halaman index)
+            $filter = request()->input('filter', []);
         @endphp
         @csrf
         @method('PUT')
-        <input type="hidden" name="prev_page" value="{{ $prevPage }}">
+        @foreach($filter as $fk => $fv)
+            @if(is_array($fv))
+                @foreach($fv as $fvv)
+                    <input type="hidden" name="prev_filter[{{ $fk }}][]" value="{{ $fvv }}">
+                @endforeach
+            @else
+                <input type="hidden" name="prev_filter[{{ $fk }}]" value="{{ $fv }}">
+            @endif
+        @endforeach
 
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">

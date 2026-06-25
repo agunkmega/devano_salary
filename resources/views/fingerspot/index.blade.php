@@ -52,6 +52,7 @@
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                     <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium w-10">No</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Waktu Masuk</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">NIK</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Nama</th>
@@ -65,8 +66,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($recent as $a)
+                    @foreach($recent as $i => $a)
                     <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td class="py-3 px-3 text-gray-500 dark:text-gray-400 text-xs text-center">{{ $i + 1 }}</td>
                         <td class="py-3 px-3 text-gray-500 dark:text-gray-400 text-xs">{{ $a->created_at->format('d M H:i') }}</td>
                         <td class="py-3 px-3 text-gray-900 dark:text-white font-mono text-xs">{{ $a->employee->nik ?? '-' }}</td>
                         <td class="py-3 px-3 text-gray-900 dark:text-white">{{ $a->employee->full_name ?? '-' }}</td>

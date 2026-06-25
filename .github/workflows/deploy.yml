@@ -1,0 +1,16 @@
+name: Deploy to aaPanel
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to aaPanel
+        uses: tunnaduong/aapanel-deploy-action@v1
+        with:
+          panel_url: ${{ secrets.AAPANEL_URL }}
+          webhook_key: ${{ secrets.AAPANEL_WEBHOOK_KEY }}

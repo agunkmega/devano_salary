@@ -36,7 +36,12 @@
                     </select>
                     @error('leave_type_id') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Pengajuan <span class="text-red-500">*</span></label>
+                        <input type="date" name="submission_date" value="{{ old('submission_date', $leave->submission_date?->format('Y-m-d') ?? date('Y-m-d')) }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('submission_date') border-red-500 @enderror">
+                        @error('submission_date') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tanggal Mulai <span class="text-red-500">*</span></label>
                         <input type="date" name="start_date" x-model="startDate" @change="calcDays" value="{{ old('start_date', $leave->start_date->format('Y-m-d')) }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('start_date') border-red-500 @enderror">

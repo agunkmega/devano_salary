@@ -11,6 +11,7 @@ class Leave extends Model
         'leave_type_id',
         'start_date',
         'end_date',
+        'submission_date',
         'total_days',
         'reason',
         'status',
@@ -27,6 +28,7 @@ class Leave extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'submission_date' => 'date',
             'approval_date' => 'datetime',
             'total_days' => 'integer',
         ];

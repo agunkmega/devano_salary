@@ -29,30 +29,65 @@ class FingerspotWebhookController extends Controller
             return response()->json(['status' => 'ignored', 'reason' => 'unexpected_type']);
         }
 
-        $data = $payload['data'] ?? [];
-        $pin = $data['pin'] ?? null;
-        $scan = $data['scan'] ?? null;
         $cloudId = $payload['cloud_id'] ?? null;
-
         if ($cloudId) {
             cache()->put('fingerspot_cloud_id', $cloudId, now()->addDays(30));
         }
 
-        if (!$pin || !$scan) {
+        $records = $this->extractRecords($payload);
+
+        if (empty($records)) {
             Log::warning('Fingerspot webhook missing pin or scan', $payload);
             return response()->json(['status' => 'ignored', 'reason' => 'missing_data']);
+        }
+
+        $results = [];
+        foreach ($records as $rec) {
+            $results[] = $this->processScan($rec);
+        }
+
+        return response()->json(['status' => 'ok', 'results' => $results]);
+    }
+
+    protected function extractRecords(array $payload): array
+    {
+        $data = $payload['data'] ?? [];
+
+        if (is_array($data)) {
+            if (isset($data['pin']) || isset($data['scan'])) {
+                return [$data];
+            }
+            if (array_is_list($data)) {
+                return $data;
+            }
+        }
+
+        if (isset($payload['pin']) || isset($payload['scan'])) {
+            return [$payload];
+        }
+
+        return [];
+    }
+
+    protected function processScan(array $data): array
+    {
+        $pin = $data['pin'] ?? null;
+        $scan = $data['scan'] ?? null;
+
+        if (!$pin || !$scan) {
+            Log::warning('Fingerspot webhook missing pin or scan in record', $data);
+            return ['status' => 'ignored', 'reason' => 'missing_data', 'data' => $data];
         }
 
         $employee = Employee::with('shift')->where('nik', $pin)->first();
 
         if (!$employee) {
             Log::warning("Fingerspot webhook: no employee found with NIK $pin");
-            return response()->json(['status' => 'ignored', 'reason' => 'employee_not_found']);
+            return ['status' => 'ignored', 'reason' => 'employee_not_found', 'pin' => $pin];
         }
 
         $shiftId = $employee->shift?->id;
 
-        // Fallback jika karyawan tidak punya shift
         if (!$shiftId) {
             $defaultShift = \App\Models\Shift::where('name', 'like', '%pagi%')
                 ->orWhere('code', 'like', '%pagi%')
@@ -65,26 +100,23 @@ class FingerspotWebhookController extends Controller
             $scanTime = Carbon::parse($scan);
         } catch (\Exception $e) {
             Log::error("Fingerspot webhook: invalid scan date $scan");
-            return response()->json(['status' => 'error', 'reason' => 'invalid_date']);
+            return ['status' => 'error', 'reason' => 'invalid_date', 'pin' => $pin];
         }
 
         $dateStr = $scanTime->format('Y-m-d');
 
-        // Cek apakah sudah ada record di hari yang sama
         $existing = Attendance::where('employee_id', $employee->id)
             ->where('attendance_date', $dateStr)
             ->first();
 
         if ($existing) {
-            // Cek apakah waktu scan ini sudah pernah direkam (dalam 1 menit)
             foreach (['clock_in', 'break_out', 'break_in', 'clock_out', 'overtime_in', 'overtime_out'] as $f) {
                 if ($existing->$f && $scanTime->diffInMinutes(Carbon::parse($existing->$f)) < 1) {
                     Log::info("Duplicate scan ignored for {$employee->nik} at $scan (within 1min of $f)");
-                    return response()->json(['status' => 'ignored', 'reason' => 'duplicate_scan']);
+                    return ['status' => 'ignored', 'reason' => 'duplicate_scan', 'field' => $f];
                 }
             }
 
-            // Cari field kosong berikutnya
             $field = match (true) {
                 is_null($existing->clock_in)    => 'clock_in',
                 is_null($existing->break_out)   => 'break_out',
@@ -98,10 +130,9 @@ class FingerspotWebhookController extends Controller
             $existing->save();
 
             Log::info("Updated $field for {$employee->nik} on $dateStr");
-            return response()->json(['status' => 'updated', 'field' => $field, 'attendance_id' => $existing->id]);
+            return ['status' => 'updated', 'field' => $field, 'attendance_id' => $existing->id];
         }
 
-        // Record baru
         $attendance = new Attendance();
         $attendance->employee_id = $employee->id;
         $attendance->attendance_date = $dateStr;
@@ -112,7 +143,7 @@ class FingerspotWebhookController extends Controller
         $attendance->save();
 
         Log::info("Created clock_in for {$employee->nik} on $dateStr");
-        return response()->json(['status' => 'created', 'field' => 'clock_in', 'attendance_id' => $attendance->id]);
+        return ['status' => 'created', 'field' => 'clock_in', 'attendance_id' => $attendance->id];
     }
 
     protected function handleGetUserInfo(array $payload): \Illuminate\Http\JsonResponse

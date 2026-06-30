@@ -4,7 +4,7 @@
 @section('page-subtitle', 'Overview & statistics')
 
 @section('page-content')
-<div x-data="dashboard()" x-init="init()" class="space-y-8">
+<div class="space-y-8">
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Selamat datang, {{ auth()->user()->name ?? 'User' }}!</h2>
@@ -12,11 +12,13 @@
         </div>
         <div class="hidden sm:flex items-center gap-2">
             <span class="text-sm text-gray-500 dark:text-gray-400">Periode:</span>
-            <select x-model="period" class="text-sm border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                <option value="this-month">Bulan Ini</option>
-                <option value="last-month">Bulan Lalu</option>
-                <option value="this-year">Tahun Ini</option>
-            </select>
+            <form method="GET" id="period-form">
+                <select name="period" onchange="document.getElementById('period-form').submit()" class="text-sm border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                    <option value="this-month" {{ request('period', 'this-month') == 'this-month' ? 'selected' : '' }}>Bulan Ini</option>
+                    <option value="last-month" {{ request('period') == 'last-month' ? 'selected' : '' }}>Bulan Lalu</option>
+                    <option value="this-year" {{ request('period') == 'this-year' ? 'selected' : '' }}>Tahun Ini</option>
+                </select>
+            </form>
         </div>
     </div>
 

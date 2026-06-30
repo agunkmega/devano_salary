@@ -15,11 +15,23 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $totalEmployees = Employee::where('is_active', true)->count();
 
         $today = Carbon::today();
+
+        $period = $request->input('period', 'this-month');
+        $periodStart = match ($period) {
+            'last-month' => (new Carbon('first day of last month'))->startOfDay(),
+            'this-year' => Carbon::today()->startOfYear(),
+            default => Carbon::today()->startOfMonth(),
+        };
+        $periodEnd = match ($period) {
+            'last-month' => (new Carbon('last day of last month'))->endOfDay(),
+            'this-year' => Carbon::today()->endOfYear(),
+            default => Carbon::today()->endOfDay(),
+        };
 
         $todayAttendance = Attendance::where('attendance_date', $today)
             ->where('status', 'hadir')
@@ -37,8 +49,7 @@ class DashboardController extends Controller
         $absentToday = $totalEmployees - Attendance::where('attendance_date', $today)->count();
 
         $monthlyPayroll = Payroll::where('status', 'paid')
-            ->whereMonth('period', $today->month)
-            ->whereYear('period', $today->year)
+            ->whereBetween('period', [$periodStart->format('Y-m'), $periodEnd->format('Y-m')])
             ->sum('net_salary');
 
         $chartData = $this->getMonthlyChartData();

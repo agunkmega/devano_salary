@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy to aaPanel
 
 on:
   push:
@@ -9,15 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: hrm.devanosilver.com
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: 22
-          script: |
-            cd /www/wwwroot/hrm.devanosilver.com
-            git pull origin master 2>&1
-            php artisan migrate
-            chown -R www:www .
+      - name: Trigger aaPanel webhook
+        run: |
+          curl -s -k -L "http://hrm.devanosilver.com:7800/hook?access_key=${{ secrets.AAPANEL_WEBHOOK_KEY }}" \
+            --connect-timeout 15 --max-time 60

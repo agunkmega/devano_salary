@@ -38,6 +38,7 @@ class LeaveController extends Controller
             'leave_type_id' => $request->leave_type_id,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+            'submission_date' => Carbon::today()->format('Y-m-d'),
             'total_days' => $totalDays,
             'reason' => $request->description ?: '-',
             'status' => 'pending',

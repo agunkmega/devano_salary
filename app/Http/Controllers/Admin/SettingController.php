@@ -146,7 +146,7 @@ class SettingController extends Controller
 
             $output = null;
             $returnCode = null;
-            exec($cmd, $output, $returnCode);
+            \exec($cmd, $output, $returnCode);
 
             if ($returnCode !== 0 || !file_exists($filepath) || filesize($filepath) === 0) {
                 throw new \Exception('mysqldump gagal: ' . implode("\n", $output));

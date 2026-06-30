@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Process;
 
 class SettingController extends Controller
 {
@@ -133,24 +134,26 @@ class SettingController extends Controller
             $username = $db['username'];
             $password = $db['password'];
 
-            $cmd = sprintf(
-                '"%s" --host=%s --port=%s --user=%s --password=%s --routines --single-transaction %s > "%s" 2>&1',
-                'D:\FlyEnv-Data\env\mysql\bin\mysqldump.exe',
-                escapeshellarg($host),
-                escapeshellarg($port),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                $filepath
-            );
+            $cmd = [
+                'mysqldump',
+                "--host=$host",
+                "--port=$port",
+                "--user=$username",
+                "--password=$password",
+                '--routines',
+                '--single-transaction',
+                $database,
+            ];
 
-            $output = null;
-            $returnCode = null;
-            \exec($cmd, $output, $returnCode);
+            $process = new Process($cmd);
+            $process->setTimeout(120);
+            $process->run();
 
-            if ($returnCode !== 0 || !file_exists($filepath) || filesize($filepath) === 0) {
-                throw new \Exception('mysqldump gagal: ' . implode("\n", $output));
+            if (!$process->isSuccessful()) {
+                throw new \Exception('mysqldump gagal: ' . $process->getErrorOutput());
             }
+
+            file_put_contents($filepath, $process->getOutput());
 
             $this->logActivity('system', 'Backup', 'Backup database: ' . $filename);
 

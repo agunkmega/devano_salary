@@ -332,7 +332,7 @@
                     <span class="text-xs font-medium {{ $lb->remaining > 0 ? 'text-emerald-600' : 'text-red-500' }}">{{ $lb->remaining }} / {{ $lb->max }} hari</span>
                 </div>
                 <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full {{ $lb->remaining > 0 ? 'bg-blue-500' : 'bg-red-400' }}" style="width: {{ ($lb->remaining / $lb->max) * 100 }}%"></div>
+                    <div class="h-full rounded-full {{ $lb->remaining > 0 ? 'bg-blue-500' : 'bg-red-400' }}" style="width: {{ $lb->max > 0 ? ($lb->remaining / $lb->max) * 100 : 0 }}%"></div>
                 </div>
             </div>
             @endforeach

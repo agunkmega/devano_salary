@@ -111,7 +111,7 @@ class FingerspotWebhookController extends Controller
 
         if ($existing) {
             foreach (['clock_in', 'break_out', 'break_in', 'clock_out', 'overtime_in', 'overtime_out'] as $f) {
-                if ($existing->$f && $scanTime->diffInMinutes(Carbon::parse($existing->$f)) < 1) {
+                if ($existing->$f && abs($scanTime->diffInMinutes(Carbon::parse($existing->$f))) < 1) {
                     Log::info("Duplicate scan ignored for {$employee->nik} at $scan (within 1min of $f)");
                     return ['status' => 'ignored', 'reason' => 'duplicate_scan', 'field' => $f];
                 }

@@ -134,8 +134,13 @@ class SettingController extends Controller
             $username = $db['username'];
             $password = $db['password'];
 
+            $mysqldump = $this->findMysqldump();
+            if (!$mysqldump) {
+                throw new \Exception('mysqldump tidak ditemukan. Coba gunakan PHP-based backup.');
+            }
+
             $cmd = [
-                'mysqldump',
+                $mysqldump,
                 "--host=$host",
                 "--port=$port",
                 "--user=$username",
@@ -163,6 +168,21 @@ class SettingController extends Controller
             return redirect()->route('admin.settings.index', ['tab' => 'database'])
                 ->with('error', 'Backup gagal: ' . $e->getMessage());
         }
+    }
+
+    private function findMysqldump(): ?string
+    {
+        $candidates = ['mysqldump', 'mariadb-dump', '/www/server/mysql/bin/mysqldump', '/usr/bin/mysqldump', '/usr/local/bin/mysqldump'];
+        foreach ($candidates as $cmd) {
+            if (str_contains($cmd, '/')) {
+                if (file_exists($cmd)) return $cmd;
+            } else {
+                $test = new Process([$cmd, '--version']);
+                $test->run();
+                if ($test->isSuccessful()) return $cmd;
+            }
+        }
+        return null;
     }
 
     public function downloadBackup($filename)

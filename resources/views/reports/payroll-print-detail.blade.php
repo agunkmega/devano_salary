@@ -21,7 +21,7 @@
             font-size: 6px;
             font-weight: 600;
             color: #fff;
-            background: #1e293b;
+            background: #2563eb;
             text-transform: uppercase;
             white-space: nowrap;
         }
@@ -34,8 +34,8 @@
         tr:nth-child(even) td { background: #f8fafc; }
         .totals td {
             font-weight: 700;
-            background: #f1f5f9;
-            border-top: 2px solid #1e293b;
+            background: #eff6ff;
+            border-top: 2px solid #2563eb;
             padding: 3px 4px;
         }
         .badge {

@@ -21,7 +21,7 @@
             font-size: 8px;
             font-weight: 600;
             color: #fff;
-            background: #1e293b;
+            background: #2563eb;
             text-transform: uppercase;
         }
         th:last-child, td:last-child { text-align: right; }
@@ -32,8 +32,8 @@
         tr:nth-child(even) td { background: #f8fafc; }
         .totals td {
             font-weight: 700;
-            background: #f1f5f9;
-            border-top: 2px solid #1e293b;
+            background: #eff6ff;
+            border-top: 2px solid #2563eb;
             padding: 4px 6px;
         }
         .badge {

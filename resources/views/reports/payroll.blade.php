@@ -103,6 +103,10 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">Gaji Bersih</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">Rp {{ number_format($summary['total_gaji'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Gaji</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
             <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">Rp {{ number_format($summary['total_bpjs_kesehatan'], 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Kes. (Karyawan)</p>
         </div>
@@ -169,6 +173,7 @@
                             <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Kes. (Pr)</th>
                             <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Ket. (Kr)</th>
                             <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Ket. (Pr)</th>
+                            <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Total Gaji</th>
                             <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium text-xs">Iuran Bul.</th>
                             <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Gaji Bersih</th>
                             <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Status</th>
@@ -194,6 +199,8 @@
                             <td class="py-3 px-3 text-right text-pink-600 dark:text-pink-400">Rp {{ number_format($p->bpjs_kesehatan_company, 0, ',', '.') }}</td>
                             <td class="py-3 px-3 text-right text-blue-600 dark:text-blue-400">Rp {{ number_format($p->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</td>
                             <td class="py-3 px-3 text-right text-cyan-600 dark:text-cyan-400">Rp {{ number_format($p->bpjs_ketenagakerjaan_company, 0, ',', '.') }}</td>
+                            @php $totalGajiReport = $p->net_salary + $p->iuran_bulanan_deduction; @endphp
+                            <td class="py-3 px-3 text-right font-semibold text-gray-900 dark:text-white border-l-2 border-gray-200 dark:border-gray-700">Rp {{ number_format($totalGajiReport, 0, ',', '.') }}</td>
                             <td class="py-3 px-3 text-right text-orange-600 dark:text-orange-400">Rp {{ number_format($p->iuran_bulanan_deduction, 0, ',', '.') }}</td>
                             <td class="py-3 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($p->net_salary, 0, ',', '.') }}</td>
                             <td class="py-3 px-3 text-center">
@@ -209,7 +216,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="18" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data payroll</td></tr>
+                        <tr><td colspan="19" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data payroll</td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -73,6 +73,7 @@
                 <th class="right">BPJS Kes (Pr)</th>
                 <th class="right">BPJS Ket (Kr)</th>
                 <th class="right">BPJS Ket (Pr)</th>
+                <th class="right">Total Gaji</th>
                 <th class="right">Iuran</th>
                 <th class="right">Gaji Bersih</th>
                 <th class="right">Status</th>
@@ -83,10 +84,11 @@
                 $totalGajiPokok = 0; $totalTunjangan = 0; $totalLembur = 0;
                 $totalUMakan = 0; $totalPotongan = 0; $totalBPJSKKr = 0;
                 $totalBPJSKPr = 0; $totalBPJSKetKr = 0; $totalBPJSKetPr = 0;
-                $totalIuran = 0; $totalGaji = 0;
+                $totalGajiKotor = 0; $totalIuran = 0; $totalGajiBersih = 0;
             @endphp
             @forelse($payrolls as $i => $p)
             @php
+                $gajiKotor = $p->net_salary + $p->iuran_bulanan_deduction;
                 $totalGajiPokok += $p->base_salary;
                 $totalTunjangan += $p->allowance;
                 $totalLembur += $p->overtime_pay;
@@ -96,8 +98,9 @@
                 $totalBPJSKPr += $p->bpjs_kesehatan_company;
                 $totalBPJSKetKr += $p->bpjs_ketenagakerjaan_deduction;
                 $totalBPJSKetPr += $p->bpjs_ketenagakerjaan_company;
+                $totalGajiKotor += $gajiKotor;
                 $totalIuran += $p->iuran_bulanan_deduction;
-                $totalGaji += $p->net_salary;
+                $totalGajiBersih += $p->net_salary;
             @endphp
             <tr>
                 <td>{{ $i + 1 }}</td>
@@ -116,6 +119,7 @@
                 <td class="right">Rp {{ number_format($p->bpjs_kesehatan_company, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_ketenagakerjaan_company, 0, ',', '.') }}</td>
+                <td class="right" style="font-weight:600;">Rp {{ number_format($gajiKotor, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->iuran_bulanan_deduction, 0, ',', '.') }}</td>
                 <td class="right" style="font-weight:600;">Rp {{ number_format($p->net_salary, 0, ',', '.') }}</td>
                 <td class="right">
@@ -127,7 +131,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="19" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
+            <tr><td colspan="20" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
             @endforelse
             <tr class="totals">
                 <td colspan="7" style="text-align:right;">Total</td>
@@ -140,8 +144,9 @@
                 <td class="right">Rp {{ number_format($totalBPJSKPr, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKetKr, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKetPr, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalGajiKotor, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalIuran, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($totalGaji, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalGajiBersih, 0, ',', '.') }}</td>
                 <td></td>
             </tr>
         </tbody>

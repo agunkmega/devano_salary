@@ -476,6 +476,7 @@ class ReportController extends Controller
             'total_overtime' => $all->sum('overtime_pay'),
             'total_deductions' => $all->sum('total_deductions'),
             'total_net_salary' => $all->sum('net_salary'),
+            'total_gaji' => $all->sum('net_salary') + $all->sum('iuran_bulanan_deduction'),
             'total_bpjs' => $all->sum('bpjs_deduction'),
             'total_bpjs_kesehatan' => $all->sum('bpjs_kesehatan_deduction'),
             'total_bpjs_kesehatan_company' => $all->sum('bpjs_kesehatan_company'),

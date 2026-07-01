@@ -131,6 +131,7 @@
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Kes. (Pr)</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Ket. (Kr)</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">BPJS Ket. (Pr)</th>
+                        <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Total Gaji</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium text-xs">Iuran Bul.</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pajak</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Gaji Bersih</th>
@@ -182,6 +183,10 @@
                         <td class="py-3 px-4 text-right text-pink-600 dark:text-pink-400">{{ $fmt($p->bpjs_kesehatan_company) }}</td>
                         <td class="py-3 px-4 text-right text-blue-600 dark:text-blue-400">{{ $fmt($p->bpjs_ketenagakerjaan_deduction) }}</td>
                         <td class="py-3 px-4 text-right text-cyan-600 dark:text-cyan-400">{{ $fmt($p->bpjs_ketenagakerjaan_company) }}</td>
+                        @php
+                            $totalGaji = $p->net_salary + $p->iuran_bulanan_deduction;
+                        @endphp
+                        <td class="py-3 px-4 text-right font-semibold text-gray-900 dark:text-white border-l-2 border-gray-200 dark:border-gray-700">{{ $fmt($totalGaji) }}</td>
                         <td class="py-3 px-4 text-right text-orange-600 dark:text-orange-400">{{ $fmt($p->iuran_bulanan_deduction) }}</td>
                         <td class="py-3 px-4 text-right text-red-600 dark:text-red-400">{{ $fmt($p->tax_amount) }}</td>
                         <td class="py-3 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">{{ $fmt($p->net_salary) }}</td>
@@ -247,7 +252,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="19" class="py-12 text-center">
+                        <td colspan="20" class="py-12 text-center">
                             <p class="text-sm text-gray-500 dark:text-gray-400">Tidak ada data payroll</p>
                         </td>
                     </tr>

@@ -257,6 +257,13 @@ class AttendanceController extends Controller
         $emp = $attendance->employee;
         $this->logActivity('attendance', 'Update', 'Mengubah absensi ' . ($emp->full_name ?? '') . ' tanggal ' . $attendance->attendance_date->format('Y-m-d'), 'Attendance', $attendance->id);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance updated successfully.',
+            ]);
+        }
+
         return redirect()->to(route('admin.attendances.index') . '?' . http_build_query(request()->only(['date_from', 'date_to', 'department_id', 'employee'])))
             ->with('success', 'Attendance updated successfully.');
     }

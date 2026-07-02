@@ -245,10 +245,14 @@ class SettingController extends Controller
         foreach ($candidates as $cmd) {
             if (str_contains($cmd, '/')) {
                 if (file_exists($cmd)) return $cmd;
-            } else {
-                $test = new Process([$cmd, '--version']);
-                $test->run();
-                if ($test->isSuccessful()) return $cmd;
+            } elseif (function_exists('proc_open')) {
+                try {
+                    $test = new Process([$cmd, '--version']);
+                    $test->run();
+                    if ($test->isSuccessful()) return $cmd;
+                } catch (\Exception $e) {
+                    continue;
+                }
             }
         }
         return null;

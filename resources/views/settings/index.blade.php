@@ -4,6 +4,12 @@
 @section('page-subtitle', 'Konfigurasi aplikasi')
 
 @section('page-content')
+@if(session('success'))
+<div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">{{ session('error') }}</div>
+@endif
 <div x-data="settings()" x-init="init()" class="max-w-4xl mx-auto space-y-6">
     <div class="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
         <button @click="activeTab = 'general'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all" :class="activeTab === 'general' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">Umum</button>

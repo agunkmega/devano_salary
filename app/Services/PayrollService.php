@@ -74,6 +74,8 @@ class PayrollService
         $effectiveAttendanceDays = $attendanceDays + $paidLeaveDays;
 
         if ($employee->employee_type === 'harian') {
+            $holidayDays = $this->getHolidayDays($period, $startDate, $endDate, $employee, $attendanceDays);
+            $effectiveAttendanceDays += $holidayDays;
             $computedBaseSalary = $employee->full_salary_no_attendance ? ($baseSalary * $daysInPeriod) : ($baseSalary * $effectiveAttendanceDays);
             $ratePerMinute = $daysInPeriod > 0 ? ($baseSalary / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;
@@ -302,6 +304,35 @@ class PayrollService
                 $count++;
             }
             $cursor->addDay();
+        }
+        return $count;
+    }
+
+    private function getHolidayDays(string $period, Carbon $startDate, Carbon $endDate, Employee $employee, int $attendanceDays): int
+    {
+        $holidays = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->get(['date', 'religion']);
+
+        $religion = $employee->religion;
+        $attendanceDates = \App\Models\Attendance::where('employee_id', $employee->id)
+            ->whereYear('attendance_date', explode('-', $period)[0])
+            ->whereMonth('attendance_date', explode('-', $period)[1])
+            ->whereNotNull('clock_in')
+            ->pluck('attendance_date')
+            ->map(fn($d) => $d instanceof Carbon ? $d->format('Y-m-d') : Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
+
+        $count = 0;
+        $offDays = array_map('strtolower', $employee->off_days ?? ['sunday']);
+        foreach ($holidays as $h) {
+            $dateStr = $h->date instanceof Carbon ? $h->date->format('Y-m-d') : Carbon::parse($h->date)->format('Y-m-d');
+            if (empty($h->religion) || $h->religion === $religion) {
+                if (!in_array($dateStr, $attendanceDates) && !in_array(strtolower(Carbon::parse($dateStr)->format('l')), $offDays)) {
+                    $count++;
+                }
+            }
         }
         return $count;
     }

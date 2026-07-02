@@ -255,6 +255,13 @@ class PayrollController extends Controller
 
         $effectiveAttendanceDays = $attendanceDays + $paidLeaveDays;
 
+        $attendanceDateStrings = Attendance::where('employee_id', $employee->id)
+            ->whereBetween('attendance_date', [$startDate, $endDate])
+            ->whereNotNull('clock_in')
+            ->pluck('attendance_date')
+            ->map(fn($d) => $d instanceof Carbon ? $d->format('Y-m-d') : Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
+
         $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
             ->whereDate('date', '>=', $startDate)
             ->whereDate('date', '<=', $endDate)
@@ -262,6 +269,14 @@ class PayrollController extends Controller
             ->groupBy(fn($h) => $h->date->format('Y-m-d'))
             ->map(fn($items) => $items->pluck('religion')->toArray())
             ->toArray();
+
+        $holidayDays = 0;
+        foreach ($holidaysByDate as $dateStr => $religions) {
+            $isApplicable = collect($religions)->contains(fn($r) => empty($r) || $r === $employee->religion);
+            if ($isApplicable && !in_array($dateStr, $attendanceDateStrings) && !in_array(strtolower(Carbon::parse($dateStr)->format('l')), $offDays)) {
+                $holidayDays++;
+            }
+        }
 
         $totalWorkingDays = 0;
         $cursor = $startDate->copy()->startOfDay();
@@ -288,6 +303,7 @@ class PayrollController extends Controller
             ->count();
 
         if ($employee->employee_type === 'harian') {
+            $effectiveAttendanceDays += $holidayDays;
             $computedBaseSalary = $employee->full_salary_no_attendance ? ($baseSalary * $daysInPeriod) : ($baseSalary * $effectiveAttendanceDays);
             $ratePerMinute = $daysInPeriod > 0 ? ($baseSalary / 9 / 60) : 0;
             $latePenalty = $ratePerMinute * $totalLateMinutes;

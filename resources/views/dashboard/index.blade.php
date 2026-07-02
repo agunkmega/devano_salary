@@ -199,28 +199,87 @@
             renderChart() {
                 if (this.chart) this.chart.destroy();
                 const ctx = this.$refs.chart.getContext('2d');
+                const isDark = document.documentElement.classList.contains('dark');
                 const data = this.view === 'daily' ? this.dailyData : this.monthlyData;
                 const labelKey = this.view === 'daily' ? 'date' : 'month';
+                const colors = {
+                    hadir: { solid: '#10b981', gradient: (c) => { const g = c.createLinearGradient(0,0,0,300); g.addColorStop(0,'#34d399'); g.addColorStop(1,'#10b981'); return g; } },
+                    terlambat: { solid: '#f59e0b', gradient: (c) => { const g = c.createLinearGradient(0,0,0,300); g.addColorStop(0,'#fbbf24'); g.addColorStop(1,'#f59e0b'); return g; } },
+                    izin: { solid: '#3b82f6', gradient: (c) => { const g = c.createLinearGradient(0,0,0,300); g.addColorStop(0,'#60a5fa'); g.addColorStop(1,'#3b82f6'); return g; } },
+                    sakit: { solid: '#8b5cf6', gradient: (c) => { const g = c.createLinearGradient(0,0,0,300); g.addColorStop(0,'#a78bfa'); g.addColorStop(1,'#8b5cf6'); return g; } },
+                    cuti: { solid: '#6366f1', gradient: (c) => { const g = c.createLinearGradient(0,0,0,300); g.addColorStop(0,'#818cf8'); g.addColorStop(1,'#6366f1'); return g; } },
+                    alpha: { solid: '#ef4444', gradient: (c) => { const g = c.createLinearGradient(0,0,0,300); g.addColorStop(0,'#f87171'); g.addColorStop(1,'#ef4444'); return g; } },
+                };
+                const datasets = ['Hadir','Terlambat','Izin','Sakit','Cuti','Alpha'].map((label, i) => {
+                    const key = Object.keys(colors)[i];
+                    return {
+                        label,
+                        data: data.map(d => d[key]),
+                        backgroundColor: (c) => colors[key].gradient(c.chart.ctx),
+                        borderColor: colors[key].solid,
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        hoverBorderWidth: 2,
+                        hoverBorderColor: colors[key].solid,
+                    };
+                });
                 this.chart = new Chart(ctx, {
                     type: 'bar',
-                    data: {
-                        labels: data.map(d => d[labelKey]),
-                        datasets: [
-                            { label: 'Hadir', data: data.map(d => d.hadir), backgroundColor: '#10b981', borderRadius: 4 },
-                            { label: 'Terlambat', data: data.map(d => d.terlambat), backgroundColor: '#f59e0b', borderRadius: 4 },
-                            { label: 'Izin', data: data.map(d => d.izin), backgroundColor: '#3b82f6', borderRadius: 4 },
-                            { label: 'Sakit', data: data.map(d => d.sakit), backgroundColor: '#8b5cf6', borderRadius: 4 },
-                            { label: 'Cuti', data: data.map(d => d.cuti), backgroundColor: '#6366f1', borderRadius: 4 },
-                            { label: 'Alpha', data: data.map(d => d.alpha), backgroundColor: '#ef4444', borderRadius: 4 },
-                        ]
-                    },
+                    data: { labels: data.map(d => d[labelKey]), datasets },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16, font: { size: 11 } } } },
+                        animation: { duration: 600, easing: 'easeOutQuart' },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 10,
+                                    boxHeight: 10,
+                                    borderRadius: 3,
+                                    padding: 16,
+                                    font: { size: 11, family: "'Inter','Figtree',sans-serif" },
+                                    color: isDark ? '#cbd5e1' : '#64748b',
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: isDark ? '#1e293b' : '#fff',
+                                titleColor: isDark ? '#f1f5f9' : '#1e293b',
+                                bodyColor: isDark ? '#cbd5e1' : '#475569',
+                                borderColor: isDark ? '#334155' : '#e2e8f0',
+                                borderWidth: 1,
+                                cornerRadius: 12,
+                                padding: 12,
+                                boxPadding: 6,
+                                usePointStyle: true,
+                                bodyFont: { size: 12, family: "'Inter','Figtree',sans-serif" },
+                                titleFont: { size: 12, weight: '600', family: "'Inter','Figtree',sans-serif" },
+                            }
+                        },
                         scales: {
-                            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#e5e7eb' } }
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    font: { size: 10, family: "'Inter','Figtree',sans-serif" },
+                                    color: isDark ? '#94a3b8' : '#94a3b8',
+                                    maxRotation: this.view === 'daily' ? 45 : 0,
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    font: { size: 10, family: "'Inter','Figtree',sans-serif" },
+                                    color: isDark ? '#94a3b8' : '#94a3b8',
+                                },
+                                grid: {
+                                    color: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.2)',
+                                    drawBorder: false,
+                                }
+                            }
                         }
                     }
                 });

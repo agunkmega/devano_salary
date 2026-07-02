@@ -68,9 +68,9 @@
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Grafik Kehadiran Bulanan</h3>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
                 <table class="w-full text-sm">
-                    <thead>
+                    <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                         <tr class="border-b border-gray-200 dark:border-gray-700">
                             <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Bulan</th>
                             <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Hadir</th>
@@ -133,9 +133,9 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Absensi Terbaru</h3>
                 <a href="{{ route('admin.attendances.index') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Lihat Semua</a>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
                 <table class="w-full text-sm">
-                    <thead>
+                    <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                         <tr class="border-b border-gray-200 dark:border-gray-700">
                             <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Nama</th>
                             <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Masuk</th>

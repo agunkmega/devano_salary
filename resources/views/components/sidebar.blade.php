@@ -63,10 +63,11 @@ function userCanSee($itemRoles, $userRole) {
 
 <aside
     x-data="{ mobileOpen: false }"
+    @toggle-sidebar.window="mobileOpen = !mobileOpen"
     class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col"
     :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
 >
-    <div class="flex items-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center gap-3">
             @php
                 $logoPath = \App\Models\Setting::where('key', 'app_logo')?->value('value');
@@ -80,6 +81,9 @@ function userCanSee($itemRoles, $userRole) {
             @endif
             <span class="text-lg font-bold text-gray-900 dark:text-white">{{ config('app.name') }}</span>
         </div>
+        <button @click="mobileOpen = false" class="lg:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
@@ -114,7 +118,7 @@ function userCanSee($itemRoles, $userRole) {
 </aside>
 
 <template x-teleport="body">
-    <div x-show="mobileOpen" class="fixed inset-0 z-20 bg-black/50 lg:hidden" @click="$el.closest('aside').__x.$data.mobileOpen = false"></div>
+    <div x-show="mobileOpen" class="fixed inset-0 z-20 bg-black/50 lg:hidden" @click="mobileOpen = false"></div>
 </template>
 
 @push('scripts')

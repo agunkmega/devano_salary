@@ -58,10 +58,10 @@
                 <button onclick="window.print()" class="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition-colors">Print</button>
             </div>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
             <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-gray-50 dark:bg-gray-800/50">
+                <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
+                    <tr>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Tanggal</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pegawai</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Departemen</th>

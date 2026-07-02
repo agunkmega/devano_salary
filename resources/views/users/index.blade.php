@@ -34,10 +34,10 @@
             </a>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
             <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">User</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Email</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Role</th>

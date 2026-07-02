@@ -5,9 +5,9 @@
 
 @section('page-content')
 <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
         <table class="w-full text-sm">
-            <thead>
+            <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                 <tr class="border-b border-gray-200 dark:border-gray-700">
                     <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Tanggal</th>
                     <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">File</th>

@@ -53,6 +53,7 @@ class DashboardController extends Controller
             ->sum('net_salary');
 
         $chartData = $this->getMonthlyChartData();
+        $dailyChartData = $this->getDailyChartData();
 
         $recentAttendances = Attendance::with('employee.user')
             ->latest()
@@ -92,6 +93,7 @@ class DashboardController extends Controller
             'absentToday',
             'monthlyPayroll',
             'chartData',
+            'dailyChartData',
             'recentAttendances',
             'cashAdvanceSummary',
             'departmentStats',
@@ -127,6 +129,36 @@ class DashboardController extends Controller
                 'sakit' => (int) ($attendances->sakit ?? 0),
                 'cuti' => (int) ($attendances->cuti ?? 0),
                 'alpha' => (int) ($attendances->alpha ?? 0),
+            ];
+        }
+
+        return $data;
+    }
+
+    private function getDailyChartData()
+    {
+        $data = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $day = Carbon::today()->subDays($i);
+            $att = Attendance::where('attendance_date', $day)
+                ->selectRaw("
+                    COUNT(CASE WHEN status = 'hadir' THEN 1 END) as hadir,
+                    COUNT(CASE WHEN status = 'terlambat' THEN 1 END) as terlambat,
+                    COUNT(CASE WHEN status = 'izin' THEN 1 END) as izin,
+                    COUNT(CASE WHEN status = 'sakit' THEN 1 END) as sakit,
+                    COUNT(CASE WHEN status = 'cuti' THEN 1 END) as cuti,
+                    COUNT(CASE WHEN status = 'alpha' THEN 1 END) as alpha
+                ")
+                ->first();
+
+            $data[] = [
+                'date' => $day->format('d M'),
+                'hadir' => (int) ($att->hadir ?? 0),
+                'terlambat' => (int) ($att->terlambat ?? 0),
+                'izin' => (int) ($att->izin ?? 0),
+                'sakit' => (int) ($att->sakit ?? 0),
+                'cuti' => (int) ($att->cuti ?? 0),
+                'alpha' => (int) ($att->alpha ?? 0),
             ];
         }
 

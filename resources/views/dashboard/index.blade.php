@@ -3,6 +3,10 @@
 @section('page-title', 'Dashboard')
 @section('page-subtitle', 'Overview & statistics')
 
+@push('head')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+@endpush
+
 @section('page-content')
 <div class="space-y-8">
     <div class="flex items-center justify-between">
@@ -63,38 +67,17 @@
         <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' label="Total Gaji Bulanan" value="Rp {{ number_format($monthlyPayroll, 0, ',', '.') }}" color="indigo" />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div x-data="chartView()" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Grafik Kehadiran Bulanan</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Grafik Kehadiran</h3>
+                <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <button @click="switchView('daily')" class="px-4 py-1.5 text-sm font-medium transition-colors" :class="view === 'daily' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">Harian</button>
+                    <button @click="switchView('monthly')" class="px-4 py-1.5 text-sm font-medium transition-colors" :class="view === 'monthly' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">Bulanan</button>
+                </div>
             </div>
-            <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
-                <table class="w-full text-sm">
-                    <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
-                        <tr class="border-b border-gray-200 dark:border-gray-700">
-                            <th class="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Bulan</th>
-                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Hadir</th>
-                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Terlambat</th>
-                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Izin</th>
-                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Sakit</th>
-                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Cuti</th>
-                            <th class="text-center py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Alpha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($chartData as $item)
-                        <tr class="border-b border-gray-100 dark:border-gray-700/50">
-                            <td class="py-3 px-2 text-gray-900 dark:text-white font-medium">{{ $item['month'] }}</td>
-                            <td class="py-3 px-2 text-center text-emerald-600 dark:text-emerald-400">{{ $item['hadir'] }}</td>
-                            <td class="py-3 px-2 text-center text-orange-600 dark:text-orange-400">{{ $item['terlambat'] }}</td>
-                            <td class="py-3 px-2 text-center text-blue-600 dark:text-blue-400">{{ $item['izin'] }}</td>
-                            <td class="py-3 px-2 text-center text-purple-600 dark:text-purple-400">{{ $item['sakit'] }}</td>
-                            <td class="py-3 px-2 text-center text-indigo-600 dark:text-indigo-400">{{ $item['cuti'] }}</td>
-                            <td class="py-3 px-2 text-center text-red-600 dark:text-red-400">{{ $item['alpha'] }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            <div class="relative" style="height:300px">
+                <canvas x-ref="chart"></canvas>
             </div>
         </div>
 
@@ -197,3 +180,52 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('chartView', () => ({
+            view: 'daily',
+            chart: null,
+            dailyData: @json($dailyChartData),
+            monthlyData: @json($chartData),
+            init() {
+                this.$nextTick(() => this.renderChart());
+            },
+            switchView(v) {
+                this.view = v;
+                this.$nextTick(() => this.renderChart());
+            },
+            renderChart() {
+                if (this.chart) this.chart.destroy();
+                const ctx = this.$refs.chart.getContext('2d');
+                const data = this.view === 'daily' ? this.dailyData : this.monthlyData;
+                const labelKey = this.view === 'daily' ? 'date' : 'month';
+                this.chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d[labelKey]),
+                        datasets: [
+                            { label: 'Hadir', data: data.map(d => d.hadir), backgroundColor: '#10b981', borderRadius: 4 },
+                            { label: 'Terlambat', data: data.map(d => d.terlambat), backgroundColor: '#f59e0b', borderRadius: 4 },
+                            { label: 'Izin', data: data.map(d => d.izin), backgroundColor: '#3b82f6', borderRadius: 4 },
+                            { label: 'Sakit', data: data.map(d => d.sakit), backgroundColor: '#8b5cf6', borderRadius: 4 },
+                            { label: 'Cuti', data: data.map(d => d.cuti), backgroundColor: '#6366f1', borderRadius: 4 },
+                            { label: 'Alpha', data: data.map(d => d.alpha), backgroundColor: '#ef4444', borderRadius: 4 },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16, font: { size: 11 } } } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#e5e7eb' } }
+                        }
+                    }
+                });
+            }
+        }));
+    });
+</script>
+@endpush

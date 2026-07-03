@@ -12,6 +12,11 @@
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Form Pengajuan Kasbon</h3>
 
             <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tanggal Pengajuan</label>
+                <input type="date" name="submission_date" value="{{ old('submission_date', date('Y-m-d')) }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pegawai <span class="text-red-500">*</span></label>
                 <div x-data="employeeSearch()" class="relative">
                     <input type="text" x-model="search" @focus="open = true" @input="open = true" @click.outside="open = false" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 @error('employee_id') border-red-500 @enderror" placeholder="Ketik nama pegawai...">

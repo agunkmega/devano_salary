@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\CashAdvance;
+use App\Models\CashAdvancePayment;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Payroll;
@@ -133,6 +134,8 @@ class PayrollController extends Controller
 
         $payrollModel = Payroll::create($payroll);
 
+        $this->recordCashAdvancePayments($payrollModel);
+
         $this->logActivity('payroll', 'Create', 'Generate payroll ' . $employee->full_name . ' periode ' . $validated['period'], 'Payroll', $payrollModel->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
@@ -174,7 +177,8 @@ class PayrollController extends Controller
                 $skipped++;
             } else {
                 $payroll = $this->calculatePayroll($employee, $period, $dateFrom, $dateTo);
-                Payroll::create($payroll);
+                $payrollModel = Payroll::create($payroll);
+                $this->recordCashAdvancePayments($payrollModel);
                 $generated++;
             }
 
@@ -481,6 +485,8 @@ class PayrollController extends Controller
 
         $newPayroll = Payroll::create($data);
 
+        $this->recordCashAdvancePayments($newPayroll);
+
         $this->logActivity('payroll', 'Update', 'Regenerate payroll ' . $payroll->employee?->full_name, 'Payroll', $newPayroll->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
@@ -524,6 +530,35 @@ class PayrollController extends Controller
         $this->logActivity('payroll', 'Send Email', 'Mengirim slip gaji email ke ' . $payroll->employee->full_name, 'Payroll', $payroll->id);
 
         return redirect()->back()->with('success', 'Slip gaji berhasil dikirim ke email ' . $payroll->employee->email);
+    }
+
+    private function recordCashAdvancePayments(Payroll $payroll): void
+    {
+        if ($payroll->cash_advance_deduction <= 0) return;
+
+        $advances = CashAdvance::where('employee_id', $payroll->employee_id)
+            ->where('status', 'approved')
+            ->where('remaining_amount', '>', 0)
+            ->get();
+
+        foreach ($advances as $advance) {
+            $deductAmount = min((float) $advance->installment_amount, (float) $advance->remaining_amount);
+            if ($deductAmount <= 0) continue;
+
+            CashAdvancePayment::create([
+                'cash_advance_id' => $advance->id,
+                'payroll_id' => $payroll->id,
+                'amount' => $deductAmount,
+                'payment_date' => $payroll->created_at ?? now(),
+                'payment_number' => 'CAP-' . strtoupper(uniqid()),
+            ]);
+
+            $advance->decrement('remaining_amount', $deductAmount);
+
+            if ($advance->remaining_amount <= 0) {
+                $advance->update(['status' => 'paid']);
+            }
+        }
     }
 
     public function slipPdf($id)

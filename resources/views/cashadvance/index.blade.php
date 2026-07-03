@@ -17,6 +17,7 @@
             <table class="w-full text-sm">
                 <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                     <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Tgl. Pengajuan</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pegawai</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Jenis</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Jumlah</th>
@@ -29,6 +30,7 @@
                 <tbody>
                     <template x-for="ca in cashAdvances" :key="ca.id">
                         <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                            <td class="py-3 px-4 text-gray-600 dark:text-gray-400 text-xs" x-text="ca.submission_date"></td>
                             <td class="py-3 px-4">
                                 <div class="flex items-center gap-2">
                                     <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs font-semibold text-indigo-600 dark:text-indigo-400" x-text="ca.initials"></div>

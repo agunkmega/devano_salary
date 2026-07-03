@@ -8,6 +8,7 @@ class CashAdvance extends Model
 {
     protected $fillable = [
         'employee_id',
+        'submission_date',
         'type',
         'amount',
         'installment_count',
@@ -27,6 +28,7 @@ class CashAdvance extends Model
             'installment_count' => 'integer',
             'installment_amount' => 'decimal:2',
             'remaining_amount' => 'decimal:2',
+            'submission_date' => 'date',
             'approval_date' => 'datetime',
         ];
     }

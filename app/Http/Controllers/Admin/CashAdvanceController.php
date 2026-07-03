@@ -57,6 +57,7 @@ class CashAdvanceController extends Controller
                 'installments' => $ca->installment_count,
                 'remaining' => 'Rp ' . number_format($ca->remaining_amount, 0, ',', '.'),
                 'status' => $statusMap[$ca->status] ?? ucfirst($ca->status),
+                'submission_date' => $ca->submission_date ? $ca->submission_date->format('d M Y') : '-',
             ];
         });
 
@@ -74,6 +75,7 @@ class CashAdvanceController extends Controller
     {
         $validated = $request->validate([
             'employee_id' => 'required|exists:employees,id',
+            'submission_date' => 'nullable|date',
             'tunai_amount' => 'nullable|numeric|min:0',
             'tunai_installment_count' => 'nullable|integer|min:1|max:24',
             'tunai_purpose' => 'nullable|string',
@@ -97,10 +99,13 @@ class CashAdvanceController extends Controller
             return back()->withErrors(['nontunai_installment_count' => 'Jumlah cicilan non tunai wajib diisi.'])->withInput();
         }
 
+        $submissionDate = $validated['submission_date'] ?? now()->format('Y-m-d');
+
         if ($tunaiAmount > 0) {
             $tunaiInstallments = (int) $validated['tunai_installment_count'];
             CashAdvance::create([
                 'employee_id' => $validated['employee_id'],
+                'submission_date' => $submissionDate,
                 'type' => 'tunai',
                 'amount' => $tunaiAmount,
                 'installment_count' => $tunaiInstallments,
@@ -115,6 +120,7 @@ class CashAdvanceController extends Controller
             $nontunaiInstallments = (int) $validated['nontunai_installment_count'];
             CashAdvance::create([
                 'employee_id' => $validated['employee_id'],
+                'submission_date' => $submissionDate,
                 'type' => 'nontunai',
                 'amount' => $nontunaiAmount,
                 'installment_count' => $nontunaiInstallments,

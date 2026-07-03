@@ -31,6 +31,7 @@ class CashAdvanceController extends Controller
 
         CashAdvance::create([
             'employee_id' => session('portal_employee_id'),
+            'submission_date' => now()->format('Y-m-d'),
             'amount' => $amount,
             'installment_count' => $installments,
             'installment_amount' => $installmentAmount,

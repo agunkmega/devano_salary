@@ -253,6 +253,41 @@ class CashAdvanceController extends Controller
             ->with('success', 'Cash advance rejected successfully.');
     }
 
+    public function history(CashAdvance $cashAdvance)
+    {
+        $cashAdvance->load(['employee', 'payments.payroll']);
+
+        $transactions = collect();
+
+        $transactions->push([
+            'date' => $cashAdvance->submission_date ?? $cashAdvance->created_at,
+            'description' => 'Pengajuan kasbon ' . ($cashAdvance->type === 'nontunai' ? 'non tunai' : 'tunai'),
+            'debit' => (float) $cashAdvance->amount,
+            'credit' => 0,
+        ]);
+
+        foreach ($cashAdvance->payments as $payment) {
+            $periodLabel = $payment->payroll ? ' periode ' . $payment->payroll->period : '';
+            $transactions->push([
+                'date' => $payment->payment_date ?? $payment->created_at,
+                'description' => 'Potong gaji' . $periodLabel . ($payment->notes ? ' (' . $payment->notes . ')' : ''),
+                'debit' => 0,
+                'credit' => (float) $payment->amount,
+            ]);
+        }
+
+        $transactions = $transactions->sortBy('date')->values();
+
+        $runningBalance = 0;
+        $transactions = $transactions->map(function ($t) use (&$runningBalance) {
+            $runningBalance += $t['debit'] - $t['credit'];
+            $t['balance'] = $runningBalance;
+            return $t;
+        });
+
+        return view('cashadvance.history', compact('cashAdvance', 'transactions'));
+    }
+
     public function pay(Request $request, $id)
     {
         $cashAdvance = CashAdvance::findOrFail($id);

@@ -77,6 +77,7 @@
                                             <button @click="openRejectModal(ca)" class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 transition-colors">Tolak</button>
                                         </div>
                                     </template>
+                                    <a :href="`/admin/cash-advances/${ca.id}/history`" class="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 transition-colors">Histori</a>
                                     <a :href="`/admin/cash-advances/${ca.id}/edit`" class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-200 transition-colors">Edit</a>
                                     <form :action="`/admin/cash-advances/${ca.id}`" method="POST" class="inline" onsubmit="return confirm('Hapus kasbon ini?')">
                                         @csrf

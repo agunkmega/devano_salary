@@ -154,20 +154,19 @@ class CashAdvanceController extends Controller
             'submission_date' => 'nullable|date',
             'amount' => 'required|numeric|min:0',
             'installment_count' => 'required|integer|min:1|max:24',
+            'remaining_amount' => 'required|numeric|min:0',
             'purpose' => 'nullable|string',
             'status' => 'required|in:pending,approved,rejected,paid',
         ]);
 
         $installmentAmount = (float) $validated['amount'] / (int) $validated['installment_count'];
-        $oldAmount = (float) $cashAdvance->amount;
-        $diffAmount = (float) $validated['amount'] - $oldAmount;
 
         $cashAdvance->update([
             'submission_date' => $validated['submission_date'] ?? $cashAdvance->submission_date,
             'amount' => $validated['amount'],
             'installment_count' => $validated['installment_count'],
             'installment_amount' => $installmentAmount,
-            'remaining_amount' => max(0, (float) $cashAdvance->remaining_amount + $diffAmount),
+            'remaining_amount' => $validated['remaining_amount'],
             'purpose' => $validated['purpose'] ?? '',
             'status' => $validated['status'],
         ]);

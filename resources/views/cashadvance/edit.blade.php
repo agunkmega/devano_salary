@@ -52,6 +52,14 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sisa Pinjaman (biarkan 0 jika sudah lunas)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                        <input type="number" name="remaining_amount" value="{{ old('remaining_amount', $cashAdvance->remaining_amount) }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="0">
+                    </div>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
                     <select name="status" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
                         @foreach(['pending' => 'Pending', 'approved' => 'Disetujui', 'rejected' => 'Ditolak', 'paid' => 'Lunas'] as $val => $label)

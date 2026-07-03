@@ -53,7 +53,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::patch('leaves/{leave}/cancel', [LeaveController::class, 'cancel'])->name('leaves.cancel');
     Route::get('my-leaves', [LeaveController::class, 'myLeaves'])->name('leaves.my-leaves');
 
-    Route::resource('cash-advances', CashAdvanceController::class)->except(['destroy']);
+    Route::resource('cash-advances', CashAdvanceController::class);
     Route::patch('cash-advances/{cashAdvance}/approve', [CashAdvanceController::class, 'approve'])->name('cash-advances.approve');
     Route::patch('cash-advances/{cashAdvance}/reject', [CashAdvanceController::class, 'reject'])->name('cash-advances.reject');
     Route::post('cash-advances/{cashAdvance}/pay', [CashAdvanceController::class, 'pay'])->name('cash-advances.pay');

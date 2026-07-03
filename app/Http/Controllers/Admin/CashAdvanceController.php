@@ -178,6 +178,17 @@ class CashAdvanceController extends Controller
             ->with('success', 'Cash advance updated successfully.');
     }
 
+    public function destroy(CashAdvance $cashAdvance)
+    {
+        $employeeName = $cashAdvance->employee?->full_name ?? 'Unknown';
+        $cashAdvance->delete();
+
+        $this->logActivity('cash_advance', 'Delete', 'Menghapus kasbon ' . $employeeName, 'CashAdvance');
+
+        return redirect()->route('admin.cash-advances.index')
+            ->with('success', 'Cash advance deleted successfully.');
+    }
+
     public function approve($id)
     {
         $cashAdvance = CashAdvance::findOrFail($id);

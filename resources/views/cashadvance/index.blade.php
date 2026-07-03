@@ -64,6 +64,11 @@
                                         </div>
                                     </template>
                                     <a :href="`/admin/cash-advances/${ca.id}/edit`" class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-200 transition-colors">Edit</a>
+                                    <form :action="`/admin/cash-advances/${ca.id}`" method="POST" class="inline" onsubmit="return confirm('Hapus kasbon ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 transition-colors">Hapus</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

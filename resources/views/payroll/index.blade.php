@@ -117,7 +117,7 @@
             <table class="w-full text-sm" style="min-width:1800px;white-space:nowrap">
                 <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                     <tr class="border-b border-gray-200 dark:border-gray-700">
-                        <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Pegawai</th>
+                        <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium sticky left-0 z-20 bg-white dark:bg-gray-800 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]" style="min-width:200px">Pegawai</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Tipe</th>
                         <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Periode</th>
                         <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Gaji Pokok</th>
@@ -155,7 +155,7 @@
                         $fmt = function($v) { return 'Rp ' . number_format((float) $v, 0, ',', '.'); };
                      @endphp
                     <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="py-3 px-4">
+                        <td class="py-3 px-4 sticky left-0 z-10 bg-white dark:bg-gray-800 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]" style="min-width:200px">
                             <div class="flex items-center gap-2">
                                 <div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-semibold text-blue-600 dark:text-blue-400">{{ $initials }}</div>
                                 <span class="text-gray-900 dark:text-white font-medium">{{ $name }}</span>

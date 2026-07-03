@@ -11,11 +11,11 @@
     </div>
 
     <form method="GET" action="{{ route('portal.attendance.history') }}" class="flex items-center gap-2">
-        <select name="month" onchange="this.form.submit()" class="flex-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500">
-            <option value="">Semua Bulan</option>
-            @foreach($months as $m)
-            <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
-                {{ \Carbon\Carbon::createFromFormat('Y-m', $m)->locale('id')->isoFormat('MMMM YYYY') }}
+        <select name="period" onchange="this.form.submit()" class="flex-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            <option value="">Semua Periode</option>
+            @foreach($periods as $p)
+            <option value="{{ $p }}" {{ request('period') == $p ? 'selected' : '' }}>
+                {{ \Carbon\Carbon::createFromFormat('Y-m', $p)->locale('id')->isoFormat('MMMM YYYY') }}
             </option>
             @endforeach
         </select>

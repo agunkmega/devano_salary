@@ -169,20 +169,32 @@ class DashboardController extends Controller
             ->where('employee_id', $employee->id)
             ->orderBy('attendance_date', 'desc');
 
-        if ($request->filled('month')) {
-            $query->whereYear('attendance_date', substr($request->month, 0, 4))
-                ->whereMonth('attendance_date', substr($request->month, 5, 2));
+        if ($request->filled('period')) {
+            [$year, $month] = explode('-', $request->period);
+            $month = (int) $month;
+            $year = (int) $year;
+            $prevMonth = $month > 1 ? $month - 1 : 12;
+            $prevYear = $month > 1 ? $year : $year - 1;
+            $dateFrom = Carbon::create($prevYear, $prevMonth, 26)->startOfDay();
+            $dateTo = Carbon::create($year, $month, 25)->endOfDay();
+            $query->whereDate('attendance_date', '>=', $dateFrom)
+                ->whereDate('attendance_date', '<=', $dateTo);
         }
 
         $attendances = $query->paginate(30);
 
-        $months = Attendance::where('employee_id', $employee->id)
-            ->selectRaw("DATE_FORMAT(attendance_date, '%Y-%m') as period")
-            ->distinct()
-            ->orderBy('period', 'desc')
-            ->pluck('period');
+        $rawDates = Attendance::where('employee_id', $employee->id)
+            ->pluck('attendance_date');
 
-        return view('portal.attendance-history', compact('employee', 'attendances', 'months'));
+        $periods = collect($rawDates)->map(function ($date) {
+            $d = Carbon::parse($date);
+            if ($d->day >= 26) {
+                return $d->copy()->addMonth()->format('Y-m');
+            }
+            return $d->format('Y-m');
+        })->unique()->sort()->reverse()->values();
+
+        return view('portal.attendance-history', compact('employee', 'attendances', 'periods'));
     }
 
     public function updatePhoto(Request $request)

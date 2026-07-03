@@ -134,8 +134,6 @@ class PayrollController extends Controller
 
         $payrollModel = Payroll::create($payroll);
 
-        $this->recordCashAdvancePayments($payrollModel);
-
         $this->logActivity('payroll', 'Create', 'Generate payroll ' . $employee->full_name . ' periode ' . $validated['period'], 'Payroll', $payrollModel->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
@@ -177,8 +175,7 @@ class PayrollController extends Controller
                 $skipped++;
             } else {
                 $payroll = $this->calculatePayroll($employee, $period, $dateFrom, $dateTo);
-                $payrollModel = Payroll::create($payroll);
-                $this->recordCashAdvancePayments($payrollModel);
+                Payroll::create($payroll);
                 $generated++;
             }
 
@@ -428,6 +425,8 @@ class PayrollController extends Controller
             'approval_date' => now(),
         ]);
 
+        $this->recordCashAdvancePayments($payroll);
+
         $this->logActivity('payroll', 'Approve', 'Menyetujui payroll ' . $payroll->employee?->full_name, 'Payroll', $payroll->id);
 
         return redirect()->route('admin.payrolls.index', ['date_from' => request('date_from'), 'date_to' => request('date_to')])
@@ -484,8 +483,6 @@ class PayrollController extends Controller
         $data['net_salary'] = round($netSalary, 2);
 
         $newPayroll = Payroll::create($data);
-
-        $this->recordCashAdvancePayments($newPayroll);
 
         $this->logActivity('payroll', 'Update', 'Regenerate payroll ' . $payroll->employee?->full_name, 'Payroll', $newPayroll->id);
 

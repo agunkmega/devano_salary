@@ -135,29 +135,33 @@ class SettingController extends Controller
             $password = $db['password'];
 
             $mysqldump = $this->findMysqldump();
-            if ($mysqldump) {
-                $cmd = [
-                    $mysqldump,
-                    "--host=$host",
-                    "--port=$port",
-                    "--user=$username",
-                    "--password=$password",
-                    '--routines',
-                    '--single-transaction',
-                    $database,
-                ];
+            if ($mysqldump && function_exists('proc_open')) {
+                try {
+                    $cmd = [
+                        $mysqldump,
+                        "--host=$host",
+                        "--port=$port",
+                        "--user=$username",
+                        "--password=$password",
+                        '--routines',
+                        '--single-transaction',
+                        $database,
+                    ];
 
-                $process = new Process($cmd);
-                $process->setTimeout(120);
-                $process->run();
+                    $process = new Process($cmd);
+                    $process->setTimeout(120);
+                    $process->run();
 
-                if ($process->isSuccessful()) {
-                    file_put_contents($filepath, $process->getOutput());
+                    if ($process->isSuccessful()) {
+                        file_put_contents($filepath, $process->getOutput());
 
-                    $this->logActivity('system', 'Backup', 'Backup database: ' . $filename);
+                        $this->logActivity('system', 'Backup', 'Backup database: ' . $filename);
 
-                    return redirect()->route('admin.settings.index', ['tab' => 'database'])
-                        ->with('success', 'Backup database berhasil: ' . $filename);
+                        return redirect()->route('admin.settings.index', ['tab' => 'database'])
+                            ->with('success', 'Backup database berhasil: ' . $filename);
+                    }
+                } catch (\Exception $e) {
+                    // fallback to PHP backup
                 }
             }
 

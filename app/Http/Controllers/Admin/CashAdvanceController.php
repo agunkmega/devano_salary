@@ -29,7 +29,7 @@ class CashAdvanceController extends Controller
                 $q->where('employee_id', $empId);
             })
             ->latest()
-            ->paginate(20);
+            ->paginate(50);
 
         $employees = Employee::where('is_active', true)->get();
 

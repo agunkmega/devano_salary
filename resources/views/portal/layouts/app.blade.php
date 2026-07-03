@@ -6,7 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} - Portal Karyawan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>[x-cloak] { display: none !important; }
+        .dark input[type="date"] { color-scheme: dark; }
+        .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    </style>
 </head>
 <body x-data="portalApp()" x-init="init()" class="bg-gray-50 dark:bg-gray-950 font-sans antialiased pb-20">
 

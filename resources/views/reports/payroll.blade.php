@@ -158,7 +158,7 @@
             <table class="w-full text-sm" style="min-width:1800px;white-space:nowrap">
                     <thead class="sticky top-0 z-10 bg-white dark:bg-gray-800">
                         <tr class="border-b border-gray-200 dark:border-gray-700">
-                            <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Nama</th>
+                            <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium sticky left-0 z-20 bg-white dark:bg-gray-800 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]" style="min-width:180px">Nama</th>
                             <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jabatan</th>
                             <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jenis</th>
                             <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Bank</th>
@@ -182,7 +182,7 @@
                     <tbody>
                         @forelse($payrolls as $p)
                         <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                            <td class="py-3 px-3 text-gray-900 dark:text-white font-medium">{{ $p->employee->full_name ?? '-' }}</td>
+                            <td class="py-3 px-3 text-gray-900 dark:text-white font-medium sticky left-0 z-10 bg-white dark:bg-gray-800 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]" style="min-width:180px">{{ $p->employee->full_name ?? '-' }}</td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400">{{ $p->employee->position->name ?? $p->employee->department->name ?? '-' }}</td>
                             <td class="py-3 px-3 text-center">
                                 <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' }}">{{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span>

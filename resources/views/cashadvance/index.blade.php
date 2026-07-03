@@ -5,12 +5,26 @@
 
 @section('page-content')
 <div x-data="cashAdvanceList()" x-init="init()" class="space-y-6">
-    <div class="flex justify-end">
-        <a href="{{ route('admin.cash-advances.create') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+    <form method="GET" action="{{ route('admin.cash-advances.index') }}" class="flex flex-wrap items-center gap-3">
+        <div class="flex-1 min-w-[200px]">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pegawai..." class="w-full px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+            <select name="status" class="px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
+                <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Semua Status</option>
+                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Disetujui</option>
+                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Lunas</option>
+            </select>
+        </div>
+        <button type="submit" class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">Filter</button>
+        <a href="{{ route('admin.cash-advances.index') }}" class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Reset</a>
+        <a href="{{ route('admin.cash-advances.create') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Ajukan Kasbon
         </a>
-    </div>
+    </form>
 
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">

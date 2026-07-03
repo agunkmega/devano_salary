@@ -18,15 +18,21 @@ class CashAdvanceController extends Controller
     {
         $cashAdvances = CashAdvance::with(['employee.user', 'employee.department'])
             ->when(request('status'), function ($q, $status) {
-                $q->where('status', $status);
+                if ($status !== 'all') {
+                    $q->where('status', $status);
+                }
+            }, function ($q) {
+                $q->where('status', '!=', 'paid');
             })
             ->when(request('department_id'), function ($q, $deptId) {
                 $q->whereHas('employee', function ($sub) use ($deptId) {
                     $sub->where('department_id', $deptId);
                 });
             })
-            ->when(request('employee_id'), function ($q, $empId) {
-                $q->where('employee_id', $empId);
+            ->when(request('search'), function ($q, $search) {
+                $q->whereHas('employee', function ($sub) use ($search) {
+                    $sub->where('full_name', 'like', "%{$search}%");
+                });
             })
             ->latest()
             ->paginate(50);

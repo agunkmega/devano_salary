@@ -161,6 +161,30 @@ class DashboardController extends Controller
         ));
     }
 
+    public function attendanceHistory(Request $request)
+    {
+        $employee = Employee::findOrFail(session('portal_employee_id'));
+
+        $query = Attendance::with('shift')
+            ->where('employee_id', $employee->id)
+            ->orderBy('attendance_date', 'desc');
+
+        if ($request->filled('month')) {
+            $query->whereYear('attendance_date', substr($request->month, 0, 4))
+                ->whereMonth('attendance_date', substr($request->month, 5, 2));
+        }
+
+        $attendances = $query->paginate(30);
+
+        $months = Attendance::where('employee_id', $employee->id)
+            ->selectRaw("DATE_FORMAT(attendance_date, '%Y-%m') as period")
+            ->distinct()
+            ->orderBy('period', 'desc')
+            ->pluck('period');
+
+        return view('portal.attendance-history', compact('employee', 'attendances', 'months'));
+    }
+
     public function updatePhoto(Request $request)
     {
         $employee = Employee::findOrFail(session('portal_employee_id'));

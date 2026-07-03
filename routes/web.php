@@ -129,6 +129,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('photo', [PortalDashboardController::class, 'updatePhoto'])->name('photo.update');
         Route::get('password', [PortalDashboardController::class, 'changePassword'])->name('password');
         Route::post('password', [PortalDashboardController::class, 'updatePassword'])->name('password.update');
+        Route::get('attendance-history', [PortalDashboardController::class, 'attendanceHistory'])->name('attendance.history');
     });
 });
 

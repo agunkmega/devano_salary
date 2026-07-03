@@ -52,19 +52,19 @@
                                 }" x-text="ca.status"></span>
                             </td>
                             <td class="py-3 px-4 text-right">
-                                <template x-if="ca.status === 'Pending'">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <form :action="`/admin/cash-advances/${ca.id}/approve`" method="POST" class="inline" @submit="$event.target.querySelector('button').disabled = true">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 transition-colors">Setujui</button>
-                                        </form>
-                                        <button @click="openRejectModal(ca)" class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 transition-colors">Tolak</button>
-                                    </div>
-                                </template>
-                                <template x-if="ca.status !== 'Pending'">
-                                    <span class="text-xs text-gray-400">-</span>
-                                </template>
+                                <div class="flex items-center justify-end gap-1">
+                                    <template x-if="ca.status === 'Pending'">
+                                        <div class="flex items-center gap-1">
+                                            <form :action="`/admin/cash-advances/${ca.id}/approve`" method="POST" class="inline" @submit="$event.target.querySelector('button').disabled = true">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 transition-colors">Setujui</button>
+                                            </form>
+                                            <button @click="openRejectModal(ca)" class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 transition-colors">Tolak</button>
+                                        </div>
+                                    </template>
+                                    <a :href="`/admin/cash-advances/${ca.id}/edit`" class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-200 transition-colors">Edit</a>
+                                </div>
                             </td>
                         </tr>
                     </template>

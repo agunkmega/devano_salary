@@ -142,6 +142,42 @@ class CashAdvanceController extends Controller
         return view('cashadvance.show', compact('cashAdvance'));
     }
 
+    public function edit(CashAdvance $cashAdvance)
+    {
+        $cashAdvance->load('employee');
+        return view('cashadvance.edit', compact('cashAdvance'));
+    }
+
+    public function update(Request $request, CashAdvance $cashAdvance)
+    {
+        $validated = $request->validate([
+            'submission_date' => 'nullable|date',
+            'amount' => 'required|numeric|min:0',
+            'installment_count' => 'required|integer|min:1|max:24',
+            'purpose' => 'nullable|string',
+            'status' => 'required|in:pending,approved,rejected,paid',
+        ]);
+
+        $installmentAmount = (float) $validated['amount'] / (int) $validated['installment_count'];
+        $oldAmount = (float) $cashAdvance->amount;
+        $diffAmount = (float) $validated['amount'] - $oldAmount;
+
+        $cashAdvance->update([
+            'submission_date' => $validated['submission_date'] ?? $cashAdvance->submission_date,
+            'amount' => $validated['amount'],
+            'installment_count' => $validated['installment_count'],
+            'installment_amount' => $installmentAmount,
+            'remaining_amount' => max(0, (float) $cashAdvance->remaining_amount + $diffAmount),
+            'purpose' => $validated['purpose'] ?? '',
+            'status' => $validated['status'],
+        ]);
+
+        $this->logActivity('cash_advance', 'Update', 'Mengubah kasbon ' . $cashAdvance->employee?->full_name, 'CashAdvance', $cashAdvance->id);
+
+        return redirect()->route('admin.cash-advances.index')
+            ->with('success', 'Cash advance updated successfully.');
+    }
+
     public function approve($id)
     {
         $cashAdvance = CashAdvance::findOrFail($id);

@@ -119,9 +119,9 @@ class FingerspotWebhookController extends Controller
 
             $field = match (true) {
                 is_null($existing->clock_in)    => 'clock_in',
-                is_null($existing->clock_out)   => 'clock_out',
                 is_null($existing->break_out)   => 'break_out',
                 is_null($existing->break_in)    => 'break_in',
+                is_null($existing->clock_out)   => 'clock_out',
                 is_null($existing->overtime_in) => 'overtime_in',
                 default                           => 'overtime_out',
             };

@@ -78,11 +78,11 @@
                         ];
                     @endphp
                     @foreach($detailFields as $field => $meta)
-                    <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-                        <svg class="w-4 h-4 {{ $att->$field ? 'text-blue-500' : 'text-gray-300 dark:text-gray-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $meta['icon'] }}"/></svg>
+                    <div class="bg-gray-100 dark:bg-gray-700/60 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+                        <svg class="w-4 h-4 {{ $att->$field ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $meta['icon'] }}"/></svg>
                         <div>
-                            <p class="text-[10px] text-gray-400">{{ $meta['label'] }}</p>
-                            <p class="text-sm font-semibold {{ $att->$field ? 'text-gray-900 dark:text-white' : 'text-gray-300 dark:text-gray-600' }}">
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400">{{ $meta['label'] }}</p>
+                            <p class="text-sm font-semibold {{ $att->$field ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-400' }}">
                                 {{ $att->$field ? $att->$field->format('H:i') : '-' }}
                             </p>
                         </div>

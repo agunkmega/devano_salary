@@ -12,4 +12,4 @@ jobs:
       - name: Trigger aaPanel webhook
         run: |
           curl -s -k -L "https://hrm.devanosilver.com:7800/hook?access_key=${{ secrets.AAPANEL_WEBHOOK_KEY }}" \
-            --connect-timeout 15 --max-time 60
+            --connect-timeout 15 --max-time 180

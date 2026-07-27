@@ -138,7 +138,7 @@
             <p class="text-[11px] font-semibold text-gray-900 dark:text-white">Kasbon</p>
         </a>
         <a href="{{ route('portal.attendance.history') }}" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
-            <div class="w-11 h-11 mx-auto mb-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-sm">
+            <div class="w-11 h-11 mx-auto mb-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-sm">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             </div>
             <p class="text-[11px] font-semibold text-gray-900 dark:text-white">Riwayat Absensi</p>

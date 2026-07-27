@@ -11,5 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Trigger aaPanel webhook
         run: |
-          curl -s -k -L "http://hrm.devanosilver.com:7800/hook?access_key=${{ secrets.AAPANEL_WEBHOOK_KEY }}" \
+          curl -s -k -L "https://hrm.devanosilver.com:7800/hook?access_key=${{ secrets.AAPANEL_WEBHOOK_KEY }}" \
             --connect-timeout 15 --max-time 60

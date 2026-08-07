@@ -12,31 +12,41 @@ use Illuminate\Support\Facades\DB;
 
 class PayrollService
 {
-    public function getTotalMinutes($employeeId, $period, $column): int
+    public function getPeriodRange(string $period): array
     {
         [$year, $month] = explode('-', $period);
+        $month = (int) $month;
+        $year = (int) $year;
+        $prevMonth = $month > 1 ? $month - 1 : 12;
+        $prevYear = $month > 1 ? $year : $year - 1;
+        $start = Carbon::create($prevYear, $prevMonth, 26)->startOfDay();
+        $end = Carbon::create($year, $month, 25)->endOfDay();
+        return [$start, $end];
+    }
+
+    public function getTotalMinutes($employeeId, $period, $column): int
+    {
+        [$start, $end] = $this->getPeriodRange($period);
         return (int) Attendance::where('employee_id', $employeeId)
-            ->whereYear('attendance_date', $year)
-            ->whereMonth('attendance_date', $month)
+            ->whereBetween('attendance_date', [$start, $end])
             ->sum($column);
     }
 
     public function getAttendanceDays($employeeId, $period): int
     {
-        [$year, $month] = explode('-', $period);
+        [$start, $end] = $this->getPeriodRange($period);
         return Attendance::where('employee_id', $employeeId)
-            ->whereYear('attendance_date', $year)
-            ->whereMonth('attendance_date', $month)
+            ->whereBetween('attendance_date', [$start, $end])
             ->whereNotNull('clock_in')
             ->count();
     }
 
     public function calculatePayroll(Employee $employee, $period): array
     {
-        [$year, $month] = explode('-', $period);
-        $startDate = Carbon::createFromDate($year, $month, 1);
-        $endDate = $startDate->copy()->endOfMonth();
-        $daysInPeriod = $startDate->daysInMonth;
+        [$start, $end] = $this->getPeriodRange($period);
+        $startDate = $start->copy()->startOfDay();
+        $endDate = $end->copy()->endOfDay();
+        $daysInPeriod = $startDate->diffInDays($endDate->copy()->endOfDay()) + 1;
 
         $baseSalary = (float) ($employee->base_salary ?? 0);
         $totalAllowance = (float) ($employee->allowance ?? 0)
@@ -53,8 +63,7 @@ class PayrollService
         $attendanceDays = $this->getAttendanceDays($employee->id, $period);
 
         $lateDays = Attendance::where('employee_id', $employee->id)
-            ->whereYear('attendance_date', $year)
-            ->whereMonth('attendance_date', $month)
+            ->whereBetween('attendance_date', [$startDate, $endDate])
             ->where('late_minutes', '>', 0)
             ->count();
 
@@ -94,10 +103,8 @@ class PayrollService
 
         $overtimePay = $this->calculateOvertimePay($employee->id, $period, $employee);
 
-        [$year, $month] = explode('-', $period);
         $overtimeMealDays = Attendance::where('employee_id', $employee->id)
-            ->whereYear('attendance_date', $year)
-            ->whereMonth('attendance_date', $month)
+            ->whereBetween('attendance_date', [$startDate, $endDate])
             ->where('overtime_minutes', '>', 149)
             ->count();
         $uangMakanLembur = $overtimeMealDays * (float) ($employee->uang_makan_lembur ?? 0);
@@ -140,7 +147,7 @@ class PayrollService
 
     public function calculateOvertimePay($employeeId, $period, $employee = null): float
     {
-        [$year, $month] = explode('-', $period);
+        [$start, $end] = $this->getPeriodRange($period);
 
         $employeeRate = (float) ($employee->overtime_pay_per_hour ?? 0);
         if ($employeeRate <= 0) {
@@ -148,8 +155,7 @@ class PayrollService
         }
 
         $totalOvertimeMinutes = Attendance::where('employee_id', $employeeId)
-            ->whereYear('attendance_date', $year)
-            ->whereMonth('attendance_date', $month)
+            ->whereBetween('attendance_date', [$start, $end])
             ->sum('overtime_minutes');
 
         return ($totalOvertimeMinutes / 60) * $employeeRate;
@@ -207,12 +213,11 @@ class PayrollService
 
     public function calculateLatePenalty($employeeId, $period): float
     {
-        [$year, $month] = explode('-', $period);
+        [$start, $end] = $this->getPeriodRange($period);
         $ratePerMinute = (float) Setting::where('key', 'late_penalty_per_minute')->value('value') ?? 2000;
 
         $totalLateMinutes = Attendance::where('employee_id', $employeeId)
-            ->whereYear('attendance_date', $year)
-            ->whereMonth('attendance_date', $month)
+            ->whereBetween('attendance_date', [$start, $end])
             ->sum('late_minutes');
 
         return $totalLateMinutes * $ratePerMinute;

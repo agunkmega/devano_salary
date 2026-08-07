@@ -208,9 +208,13 @@ class PayrollController extends Controller
             $daysInPeriod = Carbon::parse($dateFrom)->startOfDay()->diffInDays(Carbon::parse($dateTo)->startOfDay()) + 1;
         } else {
             [$year, $month] = explode('-', $period);
-            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-            $endDate = $startDate->copy()->endOfMonth();
-            $daysInPeriod = $startDate->daysInMonth;
+            $month = (int) $month;
+            $year = (int) $year;
+            $prevMonth = $month > 1 ? $month - 1 : 12;
+            $prevYear = $month > 1 ? $year : $year - 1;
+            $startDate = Carbon::create($prevYear, $prevMonth, 26)->startOfDay();
+            $endDate = Carbon::create($year, $month, 25)->endOfDay();
+            $daysInPeriod = $startDate->diffInDays($endDate->copy()->endOfDay()) + 1;
         }
 
         $baseSalary = (float) ($employee->base_salary ?? 0);
@@ -459,8 +463,12 @@ class PayrollController extends Controller
         $otherDeductions = (float) ($payroll->other_deductions ?? 0);
 
         [$year, $month] = explode('-', $period);
-        $dateFrom = request('date_from', Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d'));
-        $dateTo = request('date_to', Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d'));
+        $month = (int) $month;
+        $year = (int) $year;
+        $prevMonth = $month > 1 ? $month - 1 : 12;
+        $prevYear = $month > 1 ? $year : $year - 1;
+        $dateFrom = request('date_from', Carbon::create($prevYear, $prevMonth, 26)->format('Y-m-d'));
+        $dateTo = request('date_to', Carbon::create($year, $month, 25)->format('Y-m-d'));
 
         $payroll->delete();
 

@@ -26,6 +26,7 @@ class Attendance extends Model
         'location_in',
         'location_out',
         'notes',
+        'admin_note',
         'is_manual',
         'manual_reason',
         'edited_by',

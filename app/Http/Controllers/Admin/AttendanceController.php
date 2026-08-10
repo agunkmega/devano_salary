@@ -145,7 +145,7 @@ class AttendanceController extends Controller
                     'ignore_late' => $att?->ignore_late ?? false,
                     'ignore_early_leave' => $att?->ignore_early_leave ?? false,
                     'ignore_excess_break' => $att?->ignore_excess_break ?? false,
-                    'notes' => $att?->notes,
+                    'admin_note' => $att?->admin_note,
                 ]);
             }
             }
@@ -176,6 +176,7 @@ class AttendanceController extends Controller
             'overtime_out' => 'nullable|date_format:H:i',
             'status' => 'required|in:hadir,terlambat,izin,sakit,cuti,alpha',
             'notes' => 'nullable|string',
+            'admin_note' => 'nullable|string',
         ]);
 
         $employee = Employee::findOrFail($validated['employee_id']);
@@ -233,6 +234,7 @@ class AttendanceController extends Controller
             'early_leave_minutes' => 'nullable|integer|min:0',
             'overtime_minutes' => 'nullable|integer|min:0',
             'notes' => 'nullable|string',
+            'admin_note' => 'nullable|string',
             'manual_reason' => 'nullable|string',
             'ignore_late' => 'nullable|boolean',
             'ignore_early_leave' => 'nullable|boolean',

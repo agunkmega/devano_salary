@@ -158,13 +158,13 @@
                                 <div x-show="att.status === 'Libur' && att.holiday_name" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" x-text="att.holiday_name"></div>
                             </td>
                             <td class="py-3 px-3">
-                                <template x-if="att.notes">
+                                <template x-if="att.admin_note">
                                     <span class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700/50 px-2 py-1 rounded-lg">
                                         <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                        <span x-text="att.notes"></span>
+                                        <span x-text="att.admin_note"></span>
                                     </span>
                                 </template>
-                                <template x-if="!att.notes">
+                                <template x-if="!att.admin_note">
                                     <span class="text-gray-300 dark:text-gray-600">-</span>
                                 </template>
                             </td>
@@ -338,7 +338,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Note</label>
-                        <textarea x-model="editForm.notes" name="notes" rows="2" placeholder="Catatan untuk absensi ini..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
+                        <textarea x-model="editForm.admin_note" name="admin_note" rows="2" placeholder="Catatan untuk absensi ini..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
@@ -376,11 +376,11 @@
             showManualModal: false,
             editModal: false,
             editing: null,
-            editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '', ignore_late: false, notes: '' },
+            editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '', ignore_late: false, admin_note: '' },
             departments: @json($departments),
             attendances: @json($attendancesData),
             get filteredAttendances() { return this.attendances.filter(a => { let status = a.status === '-' ? (a.day_name === 'Minggu' ? 'Libur' : 'Alpha') : a.status; if (this.filters.status && status !== this.filters.status) return false; if (this.filters.employee && !a.employee.toLowerCase().includes(this.filters.employee.toLowerCase())) return false; return true; }); },
-            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : (att.day_name === 'Minggu' ? 'hadir' : 'alpha'), ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false, notes: att.notes || '' }; this.editModal = true; },
+            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : (att.day_name === 'Minggu' ? 'hadir' : 'alpha'), ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false, admin_note: att.admin_note || '' }; this.editModal = true; },
             init() {}
         }));
     });

@@ -147,13 +147,13 @@ class ReportController extends Controller
 
         $attendances = $query->orderBy('attendance_date')->orderBy('employee_id')->get();
 
-        $attendanceNotes = $attendances->filter(fn($a) => !empty($a->notes))
+        $attendanceNotes = $attendances->filter(fn($a) => !empty($a->admin_note))
             ->groupBy('employee_id')
             ->map(function ($rows) {
                 return $rows->map(function ($a) {
                     return [
                         'date' => \Carbon\Carbon::parse($a->attendance_date)->format('d/m/Y'),
-                        'note' => $a->notes,
+                        'note' => $a->admin_note,
                         'editor' => $a->editor?->name ?? 'Admin',
                     ];
                 })->values();

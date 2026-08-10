@@ -46,14 +46,14 @@
                         </p>
                         <div class="flex items-center gap-2 mt-0.5">
                             @if($att->clock_in)
-                            <span class="text-[11px] text-gray-500">Masuk {{ $att->clock_in->format('H:i') }}</span>
+                            <span class="text-[11px] text-gray-600 dark:text-gray-300">Masuk {{ $att->clock_in->format('H:i') }}</span>
                             @endif
                             @if($att->clock_out)
-                            <span class="text-[11px] text-gray-400">·</span>
-                            <span class="text-[11px] text-gray-500">Pulang {{ $att->clock_out->format('H:i') }}</span>
+                            <span class="text-[11px] text-gray-400 dark:text-gray-500">·</span>
+                            <span class="text-[11px] text-gray-600 dark:text-gray-300">Pulang {{ $att->clock_out->format('H:i') }}</span>
                             @endif
                             @if(!$att->clock_in && !$att->clock_out)
-                            <span class="text-[11px] text-gray-400">Tidak ada absensi</span>
+                            <span class="text-[11px] text-gray-400 dark:text-gray-500">Tidak ada absensi</span>
                             @endif
                         </div>
                     </div>

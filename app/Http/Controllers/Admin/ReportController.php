@@ -147,6 +147,18 @@ class ReportController extends Controller
 
         $attendances = $query->orderBy('attendance_date')->orderBy('employee_id')->get();
 
+        $attendanceNotes = $attendances->filter(fn($a) => !empty($a->notes))
+            ->groupBy('employee_id')
+            ->map(function ($rows) {
+                return $rows->map(function ($a) {
+                    return [
+                        'date' => \Carbon\Carbon::parse($a->attendance_date)->format('d/m/Y'),
+                        'note' => $a->notes,
+                        'editor' => $a->editor?->name ?? 'Admin',
+                    ];
+                })->values();
+            });
+
         $leaveEmpQuery = \App\Models\Leave::where('status', 'approved')
             ->whereDate('end_date', '>=', $request->date_from ?? $attendances->min('attendance_date'))
             ->whereDate('start_date', '<=', $request->date_to ?? $attendances->max('attendance_date'));
@@ -231,7 +243,7 @@ class ReportController extends Controller
 
         $employees = $grouped;
 
-        return view('reports.attendance-print', compact('employees', 'dateFrom', 'dateTo'));
+        return view('reports.attendance-print', compact('employees', 'dateFrom', 'dateTo', 'attendanceNotes'));
     }
 
     public function attendanceExcel()

@@ -64,6 +64,24 @@
             padding: 3px 4px;
             font-size: 8px;
         }
+        .notes-section {
+            margin-top: 4px;
+            margin-bottom: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            padding: 4px 6px;
+        }
+        .notes-section .notes-title {
+            font-weight: 700;
+            font-size: 8px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .notes-section .note-row {
+            font-size: 8px;
+            padding: 1px 0;
+        }
+        .notes-section .note-row span.note-date { color: #64748b; font-weight: 600; }
         @media print { .no-print { display: none; } }
         .no-print { text-align: center; margin-bottom: 6px; }
         .no-print button {
@@ -142,6 +160,16 @@
             </tr>
         </tbody>
     </table>
+    @if(isset($attendanceNotes[$emp['employee_id']]) && $attendanceNotes[$emp['employee_id']]->count())
+    <div class="notes-section">
+        <div class="notes-title">Catatan Absensi</div>
+        @foreach($attendanceNotes[$emp['employee_id']] as $note)
+        <div class="note-row">
+            <span class="note-date">[{{ $note['date'] }}]</span> {{ $note['note'] }} <span style="color:#94a3b8;">— {{ $note['editor'] }}</span>
+        </div>
+        @endforeach
+    </div>
+    @endif
     @empty
     <p style="text-align:center;padding:20px;color:#94a3b8;">Tidak ada data absensi</p>
     @endforelse

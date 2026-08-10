@@ -145,6 +145,7 @@ class AttendanceController extends Controller
                     'ignore_late' => $att?->ignore_late ?? false,
                     'ignore_early_leave' => $att?->ignore_early_leave ?? false,
                     'ignore_excess_break' => $att?->ignore_excess_break ?? false,
+                    'notes' => $att?->notes,
                 ]);
             }
             }

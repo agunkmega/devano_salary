@@ -189,7 +189,7 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Diberikan jika lembur > 2 jam 29 menit</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" name="late_penalty_active" value="1" id="late_penalty_active" {{ old('late_penalty_active', $employee->late_penalty_active ?? false) ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <input type="checkbox" name="late_penalty_active" value="1" id="late_penalty_active" {{ old('late_penalty_active', $employee->late_penalty_active ?? true) ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                     <label for="late_penalty_active" class="text-sm font-medium text-gray-700 dark:text-gray-300">Potongan Keterlambatan 8% <span class="text-xs text-gray-400">(bulanan)</span></label>
                 </div>
                 <div class="flex items-center gap-2">

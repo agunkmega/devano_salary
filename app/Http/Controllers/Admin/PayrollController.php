@@ -396,7 +396,7 @@ class PayrollController extends Controller
         $otherDeductions = (float) ($validated['other_deductions'] ?? 0);
 
         $grossBeforeTax = $payroll->base_salary + $payroll->allowance + $bonus + $otherAdditions + $payroll->overtime_pay + $payroll->uang_makan_lembur + $uangMakanHarian;
-        $totalDeductions = $payroll->late_penalty + $payroll->absent_penalty + $otherDeductions + $payroll->cash_advance_deduction + $payroll->bpjs_deduction;
+        $totalDeductions = $payroll->late_penalty + $payroll->late_penalty_percent + $payroll->absent_penalty + $otherDeductions + $payroll->cash_advance_deduction + $payroll->bpjs_deduction;
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
         $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
         $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;
@@ -478,7 +478,7 @@ class PayrollController extends Controller
         $data['other_deductions'] = $otherDeductions;
 
         $grossBeforeTax = $data['base_salary'] + $data['allowance'] + $data['bonus'] + $data['other_additions'] + $data['overtime_pay'] + $data['uang_makan_lembur'] + $uangMakanHarian;
-        $totalDeductions = $data['late_penalty'] + $data['absent_penalty'] + $otherDeductions + $data['cash_advance_deduction'] + $data['bpjs_deduction'];
+        $totalDeductions = $data['late_penalty'] + $data['late_penalty_percent'] + $data['absent_penalty'] + $otherDeductions + $data['cash_advance_deduction'] + $data['bpjs_deduction'];
         $netBeforeTax = $grossBeforeTax - $totalDeductions;
         $taxThreshold = (float) \App\Models\Setting::where('key', 'tax_threshold')->value('value') ?? 4500000;
         $taxRate = (float) \App\Models\Setting::where('key', 'tax_rate')->value('value') ?? 5;

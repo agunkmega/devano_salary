@@ -223,7 +223,7 @@
         </div>
         @if($payrolls->hasPages())
         <div class="mt-4">
-            {{ $payrolls->links() }}
+            {{ $payrolls->withQueryString()->links() }}
         </div>
         @endif
     </div>

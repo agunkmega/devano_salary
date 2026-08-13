@@ -14,6 +14,7 @@ class Employee extends Model
         'user_id',
         'department_id',
         'position_id',
+        'position_grade',
         'shift_id',
         'full_name',
         'birth_date',

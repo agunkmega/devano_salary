@@ -104,6 +104,11 @@
                     </select>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Golongan/Grade</label>
+                    <input type="text" name="position_grade" value="{{ old('position_grade', $employee->position_grade) }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="cth: Staff, Senior, Supervisor">
+                    @error('position_grade') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Shift</label>
                     <select name="shift_id" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                         <option value="">Pilih Shift</option>

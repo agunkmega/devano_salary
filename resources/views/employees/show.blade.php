@@ -59,6 +59,7 @@
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Departemen</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->department->name ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jabatan</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->position->name ?? '-' }}</dd></div>
+                    <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Golongan/Grade</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->position_grade ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Shift</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->shift->name ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Masuk</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->join_date?->format('d M Y') ?? '-' }}</dd></div>
                     <div><dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Masa Kerja</dt><dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ $employee->join_date ? $employee->join_date->diffInMonths(now()) . ' bulan' : '-' }}</dd></div>

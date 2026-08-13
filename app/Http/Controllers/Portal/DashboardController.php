@@ -116,13 +116,25 @@ class DashboardController extends Controller
 
         $leaveTypes = \App\Models\LeaveType::where('is_active', true)->get();
 
+        $now = now();
+        if ($now->month === 12 && $now->day >= 26) {
+            $leaveYearStart = \Carbon\Carbon::create($now->year, 12, 26)->startOfDay();
+            $leaveYearEnd = \Carbon\Carbon::create($now->year + 1, 12, 25)->endOfDay();
+            $leaveYearLabel = $now->year . '/' . ($now->year + 1);
+        } else {
+            $leaveYearStart = \Carbon\Carbon::create($now->year - 1, 12, 26)->startOfDay();
+            $leaveYearEnd = \Carbon\Carbon::create($now->year, 12, 25)->endOfDay();
+            $leaveYearLabel = ($now->year - 1) . '/' . $now->year;
+        }
+
         $leaveBalances = \App\Models\LeaveType::where('is_active', true)
             ->whereNotNull('max_days_per_year')
             ->get()
-            ->map(function ($lt) use ($employee) {
+            ->map(function ($lt) use ($employee, $leaveYearStart, $leaveYearEnd) {
                 $used = Leave::where('employee_id', $employee->id)
                     ->where('leave_type_id', $lt->id)
                     ->where('status', 'approved')
+                    ->whereBetween('start_date', [$leaveYearStart, $leaveYearEnd])
                     ->get()
                     ->sum(fn($l) => $l->start_date->diffInDays($l->end_date) + 1);
                 return (object) [
@@ -157,7 +169,7 @@ class DashboardController extends Controller
             'employee', 'attendanceSummary', 'latestPayroll',
             'recentLeaves', 'leaveTypes', 'cashAdvances', 'dateFrom', 'dateTo',
             'payrolls', 'selectedPeriod', 'leaveBalances', 'isBirthday',
-            'pendingHeadCount'
+            'pendingHeadCount', 'leaveYearLabel'
         ));
     }
 

@@ -22,7 +22,8 @@
 
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sisa Cuti Tahunan & DP {{ now()->year }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sisa Cuti Tahunan &amp; DP {{ $leaveYearLabel }}</h3>
+            <span class="text-xs text-gray-500 dark:text-gray-400">(26 Des {{ substr($leaveYearLabel, 0, 4) }} - 25 Des {{ substr($leaveYearLabel, 5) }})</span>
         </div>
         <div class="overflow-x-auto overflow-y-auto" style="max-height:calc(100vh - 280px)">
             <table class="w-full text-sm" style="white-space:nowrap">

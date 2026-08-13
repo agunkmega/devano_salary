@@ -655,19 +655,29 @@ class ReportController extends Controller
         $dpId = $dp?->id;
         $ctQuota = $ct?->max_days_per_year ?? 12;
         $dpQuota = $dp?->max_days_per_year ?? 12;
-        $currentYear = now()->year;
 
-        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $dpQuota, $currentYear) {
+        $now = now();
+        if ($now->month === 12 && $now->day >= 26) {
+            $leaveYearStart = Carbon::create($now->year, 12, 26)->startOfDay();
+            $leaveYearEnd = Carbon::create($now->year + 1, 12, 25)->endOfDay();
+            $leaveYearLabel = $now->year . '/' . ($now->year + 1);
+        } else {
+            $leaveYearStart = Carbon::create($now->year - 1, 12, 26)->startOfDay();
+            $leaveYearEnd = Carbon::create($now->year, 12, 25)->endOfDay();
+            $leaveYearLabel = ($now->year - 1) . '/' . $now->year;
+        }
+
+        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $dpQuota, $leaveYearStart, $leaveYearEnd) {
             $usedCt = $ctId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $ctId)
                 ->where('status', 'approved')
-                ->whereYear('start_date', $currentYear)
+                ->whereBetween('start_date', [$leaveYearStart, $leaveYearEnd])
                 ->sum('total_days') : 0;
 
             $usedDp = $dpId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $dpId)
                 ->where('status', 'approved')
-                ->whereYear('start_date', $currentYear)
+                ->whereBetween('start_date', [$leaveYearStart, $leaveYearEnd])
                 ->sum('total_days') : 0;
 
             return [
@@ -685,7 +695,7 @@ class ReportController extends Controller
 
         $departments = Department::where('is_active', true)->get();
 
-        return view('reports.leave-balance', compact('balances', 'departments'));
+        return view('reports.leave-balance', compact('balances', 'departments', 'leaveYearLabel'));
     }
 
     public function bpjs()

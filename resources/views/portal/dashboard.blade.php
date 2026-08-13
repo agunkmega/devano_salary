@@ -329,7 +329,10 @@
     {{-- Leave & DP Balance --}}
     @if($leaveBalances->count() > 0)
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
-        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Sisa Cuti</h3>
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Sisa Cuti</h3>
+            <span class="text-[10px] text-gray-400">{{ $leaveYearLabel }}</span>
+        </div>
         <div class="space-y-3">
             @foreach($leaveBalances as $lb)
             <div>

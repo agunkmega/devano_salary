@@ -674,6 +674,11 @@ class ReportController extends Controller
         }
 
         $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $dpQuota, $leaveYearStart, $leaveYearEnd) {
+            $tenureDays = $emp->join_date ? $emp->join_date->diffInDays(now()) : 0;
+            $eligible = $emp->cuti_eligible && $tenureDays >= 365;
+            $effectiveCtQuota = $eligible ? $ctQuota : 0;
+            $effectiveDpQuota = $eligible ? $dpQuota : 0;
+
             $usedCt = $ctId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $ctId)
                 ->where('status', 'approved')
@@ -690,12 +695,13 @@ class ReportController extends Controller
                 'employee_id' => $emp->id,
                 'nama' => $emp->full_name ?? '-',
                 'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
-                'ct_quota' => $ctQuota,
+                'cuti_eligible' => $eligible,
+                'ct_quota' => $effectiveCtQuota,
                 'ct_used' => $usedCt,
-                'ct_remaining' => max(0, $ctQuota - $usedCt),
-                'dp_quota' => $dpQuota,
+                'ct_remaining' => max(0, $effectiveCtQuota - $usedCt),
+                'dp_quota' => $effectiveDpQuota,
                 'dp_used' => $usedDp,
-                'dp_remaining' => max(0, $dpQuota - $usedDp),
+                'dp_remaining' => max(0, $effectiveDpQuota - $usedDp),
             ];
         });
 

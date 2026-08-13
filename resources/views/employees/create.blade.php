@@ -206,6 +206,10 @@
                     <label for="late_penalty_active" class="text-sm font-medium text-gray-700 dark:text-gray-300">Potongan Keterlambatan 8% <span class="text-xs text-gray-400">(bulanan)</span></label>
                 </div>
                 <div class="flex items-center gap-2">
+                    <input type="checkbox" name="cuti_eligible" value="1" id="cuti_eligible" {{ old('cuti_eligible', true) ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="cuti_eligible" class="text-sm font-medium text-gray-700 dark:text-gray-300">Berhak Cuti Tahunan <span class="text-xs text-gray-400">(tidak otomatis, tetap butuh masa kerja ≥ 12 bulan)</span></label>
+                </div>
+                <div class="flex items-center gap-2">
                     <input type="checkbox" name="full_salary_no_attendance" value="1" id="full_salary_no_attendance" {{ old('full_salary_no_attendance') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                     <label for="full_salary_no_attendance" class="text-sm font-medium text-gray-700 dark:text-gray-300">Gaji Full Tanpa Absen <span class="text-xs text-gray-400">(abaikan ketidakhadiran)</span></label>
                 </div>

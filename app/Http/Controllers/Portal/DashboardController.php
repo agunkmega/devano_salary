@@ -127,10 +127,14 @@ class DashboardController extends Controller
             $leaveYearLabel = ($now->year - 1) . '/' . $now->year;
         }
 
+        $tenureDays = $employee->join_date ? $employee->join_date->diffInDays(now()) : 0;
+        $eligible = $employee->cuti_eligible && $tenureDays >= 365;
+
         $leaveBalances = \App\Models\LeaveType::where('is_active', true)
             ->whereNotNull('max_days_per_year')
             ->get()
-            ->map(function ($lt) use ($employee, $leaveYearStart, $leaveYearEnd) {
+            ->map(function ($lt) use ($employee, $eligible, $leaveYearStart, $leaveYearEnd) {
+                $quota = $eligible ? $lt->max_days_per_year : 0;
                 $used = Leave::where('employee_id', $employee->id)
                     ->where('leave_type_id', $lt->id)
                     ->where('status', 'approved')
@@ -140,9 +144,9 @@ class DashboardController extends Controller
                 return (object) [
                     'name' => $lt->name,
                     'code' => $lt->code,
-                    'max' => $lt->max_days_per_year,
+                    'max' => $quota,
                     'used' => $used,
-                    'remaining' => max(0, $lt->max_days_per_year - $used),
+                    'remaining' => max(0, $quota - $used),
                 ];
             });
 

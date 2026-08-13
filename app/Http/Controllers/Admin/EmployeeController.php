@@ -114,6 +114,7 @@ class EmployeeController extends Controller
             'off_days' => 'nullable|array',
             'employment_status' => 'nullable|in:permanent,contract_year,contract_permanent',
             'contract_end_date' => 'nullable|date|required_if:employment_status,contract_year',
+            'cuti_eligible' => 'boolean',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -123,6 +124,7 @@ class EmployeeController extends Controller
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
         $validated['full_salary_no_attendance'] = $request->boolean('full_salary_no_attendance');
+        $validated['cuti_eligible'] = $request->boolean('cuti_eligible');
         $validated['off_days'] = $request->input('off_days', ['sunday']);
 
         $employee = Employee::create($validated);
@@ -195,6 +197,7 @@ class EmployeeController extends Controller
             'overtime_pay_per_hour' => 'nullable|numeric|min:0',
             'uang_makan_lembur' => 'nullable|numeric|min:0',
             'late_penalty_active' => 'boolean',
+            'cuti_eligible' => 'boolean',
             'off_days' => 'nullable|array',
             'employment_status' => 'nullable|in:permanent,contract_year,contract_permanent',
             'contract_end_date' => 'nullable|date',
@@ -211,6 +214,7 @@ class EmployeeController extends Controller
         $validated['bpjs_kesehatan_active'] = $request->boolean('bpjs_kesehatan_active');
         $validated['late_penalty_active'] = $request->boolean('late_penalty_active');
         $validated['full_salary_no_attendance'] = $request->boolean('full_salary_no_attendance');
+        $validated['cuti_eligible'] = $request->boolean('cuti_eligible');
         $validated['off_days'] = $request->input('off_days', ['sunday']);
 
         foreach (['base_salary', 'allowance', 'allowance_absensi', 'allowance_transport', 'allowance_jabatan', 'allowance_insentif', 'iuran_wajib_amount', 'overtime_pay_per_hour', 'uang_makan_lembur'] as $numericField) {

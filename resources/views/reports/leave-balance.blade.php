@@ -42,6 +42,7 @@
                     <tr class="border-b border-gray-200 dark:border-gray-700">
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Nama</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jabatan</th>
+                        <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Status</th>
                         <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Quota CT</th>
                         <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">CT Terpakai</th>
                         <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Sisa CT</th>
@@ -55,15 +56,22 @@
                     <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="py-3 px-3 text-gray-900 dark:text-white font-medium">{{ $b['nama'] }}</td>
                         <td class="py-3 px-3 text-gray-600 dark:text-gray-400">{{ $b['jabatan'] }}</td>
-                        <td class="py-3 px-3 text-center text-gray-900 dark:text-white">{{ $b['ct_quota'] }}</td>
+                        <td class="py-3 px-3 text-center">
+                            @if($b['cuti_eligible'])
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">Berhak</span>
+                            @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">Belum berhak</span>
+                            @endif
+                        </td>
+                        <td class="py-3 px-3 text-center {{ !$b['cuti_eligible'] ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white' }}">{{ $b['ct_quota'] }}</td>
                         <td class="py-3 px-3 text-center {{ $b['ct_used'] > 0 ? 'text-orange-600' : 'text-gray-900 dark:text-white' }}">{{ $b['ct_used'] }}</td>
-                        <td class="py-3 px-3 text-center font-semibold {{ $b['ct_remaining'] == 0 ? 'text-red-600' : ($b['ct_remaining'] <= 3 ? 'text-orange-600' : 'text-emerald-600') }}">{{ $b['ct_remaining'] }}</td>
-                        <td class="py-3 px-3 text-center text-gray-900 dark:text-white">{{ $b['dp_quota'] }}</td>
+                        <td class="py-3 px-3 text-center font-semibold {{ !$b['cuti_eligible'] ? 'text-gray-400' : ($b['ct_remaining'] == 0 ? 'text-red-600' : ($b['ct_remaining'] <= 3 ? 'text-orange-600' : 'text-emerald-600')) }}">{{ $b['ct_remaining'] }}</td>
+                        <td class="py-3 px-3 text-center {{ !$b['cuti_eligible'] ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white' }}">{{ $b['dp_quota'] }}</td>
                         <td class="py-3 px-3 text-center {{ $b['dp_used'] > 0 ? 'text-orange-600' : 'text-gray-900 dark:text-white' }}">{{ $b['dp_used'] }}</td>
-                        <td class="py-3 px-3 text-center font-semibold {{ $b['dp_remaining'] == 0 ? 'text-red-600' : ($b['dp_remaining'] <= 3 ? 'text-orange-600' : 'text-emerald-600') }}">{{ $b['dp_remaining'] }}</td>
+                        <td class="py-3 px-3 text-center font-semibold {{ !$b['cuti_eligible'] ? 'text-gray-400' : ($b['dp_remaining'] == 0 ? 'text-red-600' : ($b['dp_remaining'] <= 3 ? 'text-orange-600' : 'text-emerald-600')) }}">{{ $b['dp_remaining'] }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="8" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Tidak ada data</td></tr>
+                    <tr><td colspan="9" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Tidak ada data</td></tr>
                     @endforelse
                 </tbody>
             </table>

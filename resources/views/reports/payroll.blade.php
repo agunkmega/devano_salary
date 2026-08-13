@@ -143,26 +143,17 @@
             <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">Rp {{ number_format($summary['total_cash_advance'], 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">Kasbon</p>
         </div>
-    </div>
-
-    <div class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5">
-        <div class="flex items-center gap-2 mb-3">
-            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-200">Dibayar Cash (Tanpa Rekening Bank)</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+            <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ $summary['cash_count'] }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Dibayar Cash (Jumlah Pegawai)</p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="text-center sm:text-left">
-                <p class="text-xs text-amber-700/70 dark:text-amber-300/70">Jumlah Pegawai</p>
-                <p class="text-xl font-bold text-amber-900 dark:text-amber-100">{{ $summary['cash_count'] }}</p>
-            </div>
-            <div class="text-center sm:text-left">
-                <p class="text-xs text-amber-700/70 dark:text-amber-300/70">Total Gaji Bersih</p>
-                <p class="text-xl font-bold text-amber-900 dark:text-amber-100">Rp {{ number_format($summary['cash_total_net_salary'], 0, ',', '.') }}</p>
-            </div>
-            <div class="text-center sm:text-left">
-                <p class="text-xs text-amber-700/70 dark:text-amber-300/70">Total Gaji</p>
-                <p class="text-xl font-bold text-amber-900 dark:text-amber-100">Rp {{ number_format($summary['cash_total_gaji'], 0, ',', '.') }}</p>
-            </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+            <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">Rp {{ number_format($summary['cash_total_net_salary'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Dibayar Cash (Gaji Bersih)</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+            <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">Rp {{ number_format($summary['cash_total_gaji'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Dibayar Cash (Total Gaji)</p>
         </div>
     </div>
 

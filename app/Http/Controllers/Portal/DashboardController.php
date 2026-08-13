@@ -130,11 +130,24 @@ class DashboardController extends Controller
         $tenureDays = $employee->join_date ? $employee->join_date->diffInDays(now()) : 0;
         $eligible = $employee->cuti_eligible && $tenureDays >= 365;
 
+        $effectiveCtQuota = 0;
+        if ($eligible && $employee->join_date) {
+            $anniversary = $employee->join_date->copy()->addYear();
+            if ($anniversary->lte($leaveYearStart)) {
+                $effectiveCtQuota = 12;
+            } elseif ($anniversary->gt($leaveYearEnd)) {
+                $effectiveCtQuota = 0;
+            } else {
+                $effectiveCtQuota = min(12, ($leaveYearEnd->year - $anniversary->year) * 12 + ($leaveYearEnd->month - $anniversary->month) + 1);
+            }
+        }
+
         $leaveBalances = \App\Models\LeaveType::where('is_active', true)
             ->whereNotNull('max_days_per_year')
             ->get()
-            ->map(function ($lt) use ($employee, $eligible, $leaveYearStart, $leaveYearEnd) {
-                $quota = $eligible ? $lt->max_days_per_year : 0;
+            ->map(function ($lt) use ($employee, $eligible, $effectiveCtQuota, $leaveYearStart, $leaveYearEnd) {
+                $isCutiTahunan = in_array($lt->code, ['CT', 'CUTI']);
+                $quota = $eligible ? ($isCutiTahunan ? $effectiveCtQuota : $lt->max_days_per_year) : 0;
                 $used = Leave::where('employee_id', $employee->id)
                     ->where('leave_type_id', $lt->id)
                     ->where('status', 'approved')

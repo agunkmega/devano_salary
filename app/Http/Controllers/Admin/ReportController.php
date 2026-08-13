@@ -692,7 +692,18 @@ class ReportController extends Controller
         $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $dpQuota, $leaveYearStart, $leaveYearEnd) {
             $tenureDays = $emp->join_date ? $emp->join_date->diffInDays(now()) : 0;
             $eligible = $emp->cuti_eligible && $tenureDays >= 365;
-            $effectiveCtQuota = $eligible ? $ctQuota : 0;
+
+            $effectiveCtQuota = 0;
+            if ($eligible) {
+                $anniversary = $emp->join_date->copy()->addYear();
+                if ($anniversary->lte($leaveYearStart)) {
+                    $effectiveCtQuota = $ctQuota;
+                } elseif ($anniversary->gt($leaveYearEnd)) {
+                    $effectiveCtQuota = 0;
+                } else {
+                    $effectiveCtQuota = min($ctQuota, ($leaveYearEnd->year - $anniversary->year) * 12 + ($leaveYearEnd->month - $anniversary->month) + 1);
+                }
+            }
             $effectiveDpQuota = $eligible ? $dpQuota : 0;
 
             $usedCt = $ctId ? Leave::where('employee_id', $emp->id)

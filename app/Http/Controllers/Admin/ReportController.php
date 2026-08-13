@@ -486,6 +486,8 @@ class ReportController extends Controller
 
         $all = $query->get();
 
+        $cashAll = $all->filter(fn($p) => empty($p->employee?->bank_account));
+
         $summary = [
             'count' => $all->count(),
             'total_base_salary' => $all->sum('base_salary'),
@@ -502,6 +504,9 @@ class ReportController extends Controller
             'total_iuran_bulanan' => $all->sum('iuran_bulanan_deduction'),
             'total_tax' => $all->sum('tax_amount'),
             'total_cash_advance' => $all->sum('cash_advance_deduction'),
+            'cash_count' => $cashAll->count(),
+            'cash_total_net_salary' => $cashAll->sum('net_salary'),
+            'cash_total_gaji' => $cashAll->sum('net_salary') + $cashAll->sum('iuran_bulanan_deduction'),
         ];
 
         $payrolls = $query->paginate(50);

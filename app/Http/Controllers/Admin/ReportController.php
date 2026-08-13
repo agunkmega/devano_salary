@@ -647,6 +647,12 @@ class ReportController extends Controller
             $employees->where('department_id', $request->department_id);
         }
 
+        if ($request->filled('employee_id')) {
+            $employees->where('id', $request->employee_id);
+        } elseif ($request->filled('name')) {
+            $employees->where('full_name', 'like', '%' . $request->name . '%');
+        }
+
         $employees = $employees->get();
 
         $ct = LeaveType::whereIn('code', ['CT', 'CUTI'])->first(['id', 'max_days_per_year']);
@@ -694,8 +700,9 @@ class ReportController extends Controller
         });
 
         $departments = Department::where('is_active', true)->get();
+        $employees = Employee::where('is_active', true)->where('employee_type', 'bulanan')->get(['id', 'full_name']);
 
-        return view('reports.leave-balance', compact('balances', 'departments', 'leaveYearLabel'));
+        return view('reports.leave-balance', compact('balances', 'departments', 'employees', 'leaveYearLabel'));
     }
 
     public function bpjs()

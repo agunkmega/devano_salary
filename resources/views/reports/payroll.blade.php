@@ -44,6 +44,15 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Golongan/Grade</label>
+                <select name="position_grade" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua</option>
+                    @foreach($grades as $grade)
+                    <option value="{{ $grade }}" {{ request('position_grade') == $grade ? 'selected' : '' }}>{{ $grade }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div x-data="employeeSearch()" class="relative">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai</label>
                 <input type="text" x-model="query" @input="open = true" @focus="open = true" @click.away="open = false" @keydown.escape="open = false" placeholder="Cari pegawai..." class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 w-48 focus:ring-2 focus:ring-blue-500">
@@ -140,15 +149,15 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detail Gaji</h3>
             <div class="flex gap-2">
-                <a href="{{ route('admin.reports.payroll-print', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
+                <a href="{{ route('admin.reports.payroll-print', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name', 'position_grade'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Print
                 </a>
-                <a href="{{ route('admin.reports.payroll-print-detail', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                <a href="{{ route('admin.reports.payroll-print-detail', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name', 'position_grade'])) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Print Detail
                 </a>
-                <a href="{{ route('admin.reports.payroll-excel-detail', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name'])) }}" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
+                <a href="{{ route('admin.reports.payroll-excel-detail', request()->only(['period', 'department_id', 'employee_id', 'status', 'employee_type', 'station_id', 'bank_name', 'position_grade'])) }}" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Excel Detail
                 </a>
@@ -160,6 +169,7 @@
                         <tr class="border-b border-gray-200 dark:border-gray-700">
                             <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium sticky left-0 z-20 bg-white dark:bg-gray-800 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]" style="min-width:180px">Nama</th>
                             <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jabatan</th>
+                            <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Golongan</th>
                             <th class="text-center py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Jenis</th>
                             <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Bank</th>
                             <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">No. Rek</th>
@@ -184,6 +194,13 @@
                         <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                             <td class="py-3 px-3 text-gray-900 dark:text-white font-medium sticky left-0 z-10 bg-white dark:bg-gray-800 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]" style="min-width:180px">{{ $p->employee->full_name ?? '-' }}</td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400">{{ $p->employee->position->name ?? $p->employee->department->name ?? '-' }}</td>
+                            <td class="py-3 px-3 text-center">
+                                @if(!empty($p->employee->position_grade))
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">{{ $p->employee->position_grade }}</span>
+                                @else
+                                <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
                             <td class="py-3 px-3 text-center">
                                 <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' }}">{{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span>
                             </td>
@@ -216,7 +233,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="19" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data payroll</td></tr>
+                        <tr><td colspan="20" class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">Belum ada data payroll</td></tr>
                         @endforelse
                     </tbody>
                 </table>

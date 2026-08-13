@@ -472,6 +472,11 @@ class ReportController extends Controller
                     $sub->where('station_id', $stationId);
                 });
             })
+            ->when(request('position_grade'), function ($q, $grade) {
+                $q->whereHas('employee', function ($sub) use ($grade) {
+                    $sub->where('position_grade', $grade);
+                });
+            })
             ->when(request('bank_name'), function ($q, $bank) {
                 $q->whereHas('employee', function ($sub) use ($bank) {
                     $sub->where('bank_name', $bank);
@@ -505,8 +510,9 @@ class ReportController extends Controller
         $employees = Employee::where('is_active', true)->get();
         $stations = Station::where('is_active', true)->get();
         $banks = Employee::whereNotNull('bank_name')->where('bank_name', '!=', '')->distinct()->orderBy('bank_name')->pluck('bank_name');
+        $grades = Employee::whereNotNull('position_grade')->where('position_grade', '!=', '')->distinct()->orderBy('position_grade')->pluck('position_grade');
 
-        return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'stations', 'banks', 'summary'));
+        return view('reports.payroll', compact('payrolls', 'periods', 'departments', 'employees', 'stations', 'banks', 'grades', 'summary'));
     }
 
     public function payrollPrint(Request $request)
@@ -530,6 +536,9 @@ class ReportController extends Controller
         }
         if ($request->filled('station_id')) {
             $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
+        }
+        if ($request->filled('position_grade')) {
+            $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
         }
         if ($request->filled('bank_name')) {
             $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
@@ -563,6 +572,9 @@ class ReportController extends Controller
         if ($request->filled('station_id')) {
             $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
         }
+        if ($request->filled('position_grade')) {
+            $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
+        }
         if ($request->filled('bank_name')) {
             $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
         }
@@ -595,6 +607,9 @@ class ReportController extends Controller
         if ($request->filled('station_id')) {
             $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
         }
+        if ($request->filled('position_grade')) {
+            $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
+        }
         if ($request->filled('bank_name')) {
             $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
         }
@@ -607,6 +622,7 @@ class ReportController extends Controller
                 'NIK' => $p->employee?->nik ?? '-',
                 'Nama' => $p->employee?->full_name ?? '-',
                 'Jabatan' => $p->employee?->position?->name ?? $p->employee?->department?->name ?? '-',
+                'Golongan/Grade' => $p->employee?->position_grade ?? '-',
                 'Jenis' => ($p->employee?->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
                 'Bank' => $p->employee?->bank_name ?? '-',
                 'No Rek' => $p->employee?->bank_account ?? '-',
@@ -626,7 +642,7 @@ class ReportController extends Controller
             ];
         });
 
-        $headings = ['Period', 'NIK', 'Nama', 'Jabatan', 'Jenis', 'Bank', 'No Rek', 'Nama Rek', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket (Kr)', 'BPJS Ket (Pr)', 'Iuran Bulanan', 'Total Potongan', 'Gaji Bersih', 'Status'];
+        $headings = ['Period', 'NIK', 'Nama', 'Jabatan', 'Golongan/Grade', 'Jenis', 'Bank', 'No Rek', 'Nama Rek', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket (Kr)', 'BPJS Ket (Pr)', 'Iuran Bulanan', 'Total Potongan', 'Gaji Bersih', 'Status'];
 
         return Excel::download(new class($data, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
             private $data;

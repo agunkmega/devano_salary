@@ -144,10 +144,6 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">Kasbon</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ $summary['cash_count'] }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Dibayar Cash (Jumlah Pegawai)</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
             <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">Rp {{ number_format($summary['cash_total_net_salary'], 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">Dibayar Cash (Gaji Bersih)</p>
         </div>

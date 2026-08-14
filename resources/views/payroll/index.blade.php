@@ -143,7 +143,7 @@
                     @forelse($payrolls as $p)
                     @php
                         $name = $p->employee?->full_name ?? 'Unknown';
-                        $empType = $p->employee?->employee_type ?? 'bulanan';
+                        $empType = $p->employee_type ?? 'bulanan';
                         $words = preg_split('/\s+/', trim($name));
                         $initials = strtoupper(substr($words[0] ?? '', 0, 1) . substr($words[1] ?? $words[0] ?? '', 0, 1));
                         [$year, $month] = explode('-', $p->period);

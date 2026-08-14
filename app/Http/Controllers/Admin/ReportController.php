@@ -463,9 +463,7 @@ class ReportController extends Controller
                 $q->where('status', $status);
             })
             ->when(request('employee_type'), function ($q, $type) {
-                $q->whereHas('employee', function ($sub) use ($type) {
-                    $sub->where('employee_type', $type);
-                });
+                $q->where('employee_type', $type);
             })
             ->when(request('station_id'), function ($q, $stationId) {
                 $q->whereHas('employee', function ($sub) use ($stationId) {
@@ -478,9 +476,15 @@ class ReportController extends Controller
                 });
             })
             ->when(request('bank_name'), function ($q, $bank) {
-                $q->whereHas('employee', function ($sub) use ($bank) {
-                    $sub->where('bank_name', $bank);
-                });
+                if ($bank === 'cash') {
+                    $q->whereHas('employee', function ($sub) {
+                        $sub->whereNull('bank_account')->orWhere('bank_account', '');
+                    });
+                } else {
+                    $q->whereHas('employee', function ($sub) use ($bank) {
+                        $sub->where('bank_name', $bank);
+                    });
+                }
             })
             ->latest();
 
@@ -537,7 +541,7 @@ class ReportController extends Controller
             $query->where('status', $request->status);
         }
         if ($request->filled('employee_type')) {
-            $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+            $query->where('employee_type', $request->employee_type);
         }
         if ($request->filled('station_id')) {
             $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
@@ -546,7 +550,11 @@ class ReportController extends Controller
             $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
         }
         if ($request->filled('bank_name')) {
-            $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            if ($request->bank_name === 'cash') {
+                $query->whereHas('employee', fn($q) => $q->whereNull('bank_account')->orWhere('bank_account', ''));
+            } else {
+                $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            }
         }
 
         $payrolls = $query->orderBy('period', 'desc')->get();
@@ -572,7 +580,7 @@ class ReportController extends Controller
             $query->where('status', $request->status);
         }
         if ($request->filled('employee_type')) {
-            $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+            $query->where('employee_type', $request->employee_type);
         }
         if ($request->filled('station_id')) {
             $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
@@ -581,7 +589,11 @@ class ReportController extends Controller
             $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
         }
         if ($request->filled('bank_name')) {
-            $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            if ($request->bank_name === 'cash') {
+                $query->whereHas('employee', fn($q) => $q->whereNull('bank_account')->orWhere('bank_account', ''));
+            } else {
+                $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            }
         }
 
         $payrolls = $query->orderBy('period', 'desc')->get();
@@ -607,7 +619,7 @@ class ReportController extends Controller
             $query->where('status', $request->status);
         }
         if ($request->filled('employee_type')) {
-            $query->whereHas('employee', fn($q) => $q->where('employee_type', $request->employee_type));
+            $query->where('employee_type', $request->employee_type);
         }
         if ($request->filled('station_id')) {
             $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
@@ -616,7 +628,11 @@ class ReportController extends Controller
             $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
         }
         if ($request->filled('bank_name')) {
-            $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            if ($request->bank_name === 'cash') {
+                $query->whereHas('employee', fn($q) => $q->whereNull('bank_account')->orWhere('bank_account', ''));
+            } else {
+                $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            }
         }
 
         $payrolls = $query->orderBy('period', 'desc')->get();
@@ -628,7 +644,7 @@ class ReportController extends Controller
                 'Nama' => $p->employee?->full_name ?? '-',
                 'Jabatan' => $p->employee?->position?->name ?? $p->employee?->department?->name ?? '-',
                 'Golongan/Grade' => $p->employee?->position_grade ?? '-',
-                'Jenis' => ($p->employee?->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
+                'Jenis' => ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
                 'Bank' => $p->employee?->bank_name ?? '-',
                 'No Rek' => $p->employee?->bank_account ?? '-',
                 'Nama Rek' => $p->employee?->bank_holder ?? '-',

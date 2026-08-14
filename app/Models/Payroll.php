@@ -8,6 +8,7 @@ class Payroll extends Model
 {
     protected $fillable = [
         'employee_id',
+        'employee_type',
         'period',
         'base_salary',
         'attendance_days',

@@ -106,7 +106,7 @@
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $p->employee->full_name ?? '-' }}</td>
                 <td>{{ $p->employee->position->name ?? $p->employee->department->name ?? '-' }}</td>
-                <td class="right"><span class="badge {{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'badge-h' : 'badge-b' }}">{{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span></td>
+                <td class="right"><span class="badge {{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'badge-h' : 'badge-b' }}">{{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span></td>
                 <td>{{ $p->employee->bank_name ?? '-' }}</td>
                 <td>{{ $p->employee->bank_account ?? '-' }}</td>
                 <td>{{ $p->employee->bank_holder ?? '-' }}</td>

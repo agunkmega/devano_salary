@@ -55,9 +55,7 @@ class PayrollController extends Controller
                 $q->where('employee_id', $empId);
             })
             ->when(request('employee_type'), function ($q, $type) {
-                $q->whereHas('employee', function ($sub) use ($type) {
-                    $sub->where('employee_type', $type);
-                });
+                $q->where('employee_type', $type);
             })
             ->when(request('status'), function ($q, $status) {
                 $q->where('status', $status);
@@ -340,6 +338,7 @@ class PayrollController extends Controller
 
         return [
             'employee_id' => $employee->id,
+            'employee_type' => $employee->employee_type,
             'period' => $period,
             'base_salary' => round($computedBaseSalary, 2),
             'attendance_days' => $attendanceDays,

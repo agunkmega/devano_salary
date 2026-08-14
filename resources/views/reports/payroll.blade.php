@@ -39,6 +39,7 @@
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bank</label>
                 <select name="bank_name" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
                     <option value="">Semua</option>
+                    <option value="cash" {{ request('bank_name') == 'cash' ? 'selected' : '' }}>Cash (Tanpa Rekening)</option>
                     @foreach($banks as $bank)
                     <option value="{{ $bank }}" {{ request('bank_name') == $bank ? 'selected' : '' }}>{{ $bank }}</option>
                     @endforeach
@@ -210,7 +211,7 @@
                                 @endif
                             </td>
                             <td class="py-3 px-3 text-center">
-                                <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' }}">{{ ($p->employee->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span>
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' }}">{{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span>
                             </td>
                             <td class="py-3 px-3 text-gray-900 dark:text-white">{{ $p->employee->bank_name ?? '-' }}</td>
                             <td class="py-3 px-3 text-gray-900 dark:text-white font-mono text-xs">{{ $p->employee->bank_account ?? '-' }}</td>

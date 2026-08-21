@@ -7,7 +7,7 @@
     <title>{{ config('app.name') }} - Portal Karyawan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>[x-cloak] { display: none !important; }
-        .dark input[type="date"] { color-scheme: dark; }
+        .dark input[type="date"], .dark select { color-scheme: dark; }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
@@ -47,7 +47,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 <span class="text-[10px] font-medium">Absensi</span>
             </a>
-            <a href="{{ route('portal.leave.create') }}" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.leave.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
+            <a href="{{ route('portal.leave.create') }}" @click.prevent="showTrialNotice = true" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.leave.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span class="text-[10px] font-medium">Cuti</span>
             </a>
@@ -60,7 +60,7 @@
                 @endif
             </a>
             @endif
-            <a href="{{ route('portal.cash-advance.create') }}" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.cash-advance.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
+            <a href="{{ route('portal.cash-advance.create') }}" @click.prevent="showTrialNotice = true" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl {{ request()->routeIs('portal.cash-advance.*') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500' }}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span class="text-[10px] font-medium">Kasbon</span>
             </a>
@@ -75,10 +75,23 @@
     </nav>
     @endif
 
+    {{-- Popup: menu dalam uji coba --}}
+    <div x-show="showTrialNotice" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50" @click="showTrialNotice = false"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 max-w-xs w-full text-center" @click.stop>
+            <div class="w-12 h-12 mx-auto mb-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Menu ini masih dalam uji coba</p>
+            <button type="button" @click="showTrialNotice = false" class="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">OK</button>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('portalApp', () => ({
                 darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+                showTrialNotice: false,
                 init() {
                     this.$watch('darkMode', val => {
                         localStorage.setItem('darkMode', val);

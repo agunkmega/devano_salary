@@ -28,10 +28,18 @@
                 <h2 class="text-base font-bold text-white leading-tight">{{ $employee->full_name }}</h2>
                 <p class="text-xs text-blue-200 truncate mt-0.5">{{ $employee->position->name ?? '-' }}</p>
             </div>
-            <button @click="toggleDark()" class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/25 transition-colors flex-shrink-0">
-                <svg x-show="!darkMode" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                <svg x-show="darkMode" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            </button>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                @php $portalLogo = \App\Models\Setting::where('key', 'app_logo')?->value('value'); @endphp
+                @if($portalLogo)
+                <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center p-1.5 shadow-sm" title="{{ config('app.name') }}">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url($portalLogo) }}" alt="Logo Perusahaan" class="max-w-full max-h-full object-contain">
+                </div>
+                @endif
+                <button @click="toggleDark()" class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white hover:bg-white/25 transition-colors flex-shrink-0">
+                    <svg x-show="!darkMode" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    <svg x-show="darkMode" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -67,7 +75,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-3">
         <form method="GET" action="{{ route('portal.dashboard') }}" class="flex items-center gap-2">
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <select name="period" onchange="this.form.submit()" class="flex-1 text-sm bg-transparent text-gray-900 dark:text-white border-none focus:ring-0 py-1 appearance-none">
+            <select name="period" onchange="this.form.submit()" class="flex-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-none focus:ring-0 py-1 appearance-none rounded-lg [&>option]:text-gray-900 [&>option]:bg-white">
                 @foreach($payrolls as $p)
                 <option value="{{ $p->period }}" {{ ($selectedPeriod ?: $payrolls->first()->period) == $p->period ? 'selected' : '' }}>
                     {{ \Carbon\Carbon::createFromFormat('Y-m', $p->period)->locale('id')->isoFormat('MMMM YYYY') }}
@@ -119,19 +127,20 @@
 
     {{-- Quick Actions --}}
     <div class="grid grid-cols-2 gap-3">
-        <a href="{{ route('portal.leave.create') }}" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
+        {{-- Nonaktif sementara: klik hanya menampilkan popup uji coba --}}
+        <a href="{{ route('portal.leave.create') }}" @click.prevent="showTrialNotice = true" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
             <div class="w-11 h-11 mx-auto mb-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             </div>
             <p class="text-[11px] font-semibold text-gray-900 dark:text-white">Ajukan Cuti</p>
         </a>
-        <a href="{{ route('portal.leave.create') }}?type=sakit" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
+        <a href="{{ route('portal.leave.create') }}?type=sakit" @click.prevent="showTrialNotice = true" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
             <div class="w-11 h-11 mx-auto mb-2 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-sm">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <p class="text-[11px] font-semibold text-gray-900 dark:text-white">Surat Sakit</p>
         </a>
-        <a href="{{ route('portal.cash-advance.create') }}" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
+        <a href="{{ route('portal.cash-advance.create') }}" @click.prevent="showTrialNotice = true" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 text-center hover:shadow-md transition-shadow active:scale-[0.97]">
             <div class="w-11 h-11 mx-auto mb-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>

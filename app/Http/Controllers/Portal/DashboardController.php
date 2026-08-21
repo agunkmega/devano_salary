@@ -144,6 +144,7 @@ class DashboardController extends Controller
 
         $leaveBalances = \App\Models\LeaveType::where('is_active', true)
             ->whereNotNull('max_days_per_year')
+            ->whereIn('code', ['CT', 'CUTI', 'DP', 'PH'])
             ->get()
             ->map(function ($lt) use ($employee, $eligible, $effectiveCtQuota, $leaveYearStart, $leaveYearEnd) {
                 $isCutiTahunan = in_array($lt->code, ['CT', 'CUTI']);

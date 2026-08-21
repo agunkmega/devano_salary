@@ -32,9 +32,11 @@
         tr:nth-child(even) td { background: #f8fafc; }
         .totals td {
             font-weight: 700;
+            font-size: 12px;
+            color: #2563eb;
             background: #eff6ff;
             border-top: 2px solid #2563eb;
-            padding: 4px 6px;
+            padding: 5px 6px;
         }
         .badge {
             font-size: 8px;

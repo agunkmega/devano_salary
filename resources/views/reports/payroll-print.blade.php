@@ -62,7 +62,7 @@
     <h1>Laporan Payroll</h1>
     <p class="sub">Periode: {{ $period ?? 'Semua Periode' }} | {{ now()->format('d/m/Y H:i') }}</p>
     @php
-        $grouped = $payrolls->groupBy(fn($p) => $p->employee->bank_name ?? 'Tanpa Rekening');
+        $grouped = $payrolls->groupBy(fn($p) => $p->employee->bank_name ?? 'Cash (Tanpa Rekening)');
     @endphp
     @if($grouped->isEmpty())
     <table>
@@ -96,7 +96,7 @@
                     <td>{{ $p->employee->full_name ?? '-' }}</td>
                     <td>{{ $p->employee->identity_number ?? '-' }}</td>
                     <td><span class="badge {{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'badge-h' : 'badge-b' }}">{{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span></td>
-                    <td>{{ $p->employee->bank_name ?? '-' }}</td>
+                    <td>{{ $p->employee->bank_name ?? 'Cash' }}</td>
                     <td>{{ $p->employee->bank_account ?? '-' }}</td>
                     <td>{{ $p->employee->bank_holder ?? '-' }}</td>
                     <td style="font-weight:600;">Rp {{ number_format($p->net_salary, 0, ',', '.') }}</td>

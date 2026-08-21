@@ -81,6 +81,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
         Route::get('attendance-print', [ReportController::class, 'attendancePrint'])->name('attendance-print');
         Route::get('payroll', [ReportController::class, 'payroll'])->name('payroll');
         Route::get('payroll-print', [ReportController::class, 'payrollPrint'])->name('payroll-print');
+        Route::get('payroll-excel', [ReportController::class, 'payrollExcel'])->name('payroll-excel');
         Route::get('payroll-print-detail', [ReportController::class, 'payrollPrintDetail'])->name('payroll-print-detail');
         Route::get('payroll-excel-detail', [ReportController::class, 'payrollExcelDetail'])->name('payroll-excel-detail');
         Route::get('leave-balance', [ReportController::class, 'leaveBalance'])->name('leave-balance');

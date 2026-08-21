@@ -563,6 +563,83 @@ class ReportController extends Controller
         return view('reports.payroll-print', compact('payrolls', 'period'));
     }
 
+    public function payrollExcel(Request $request)
+    {
+        $query = Payroll::with(['employee.position', 'employee.department']);
+
+        if ($request->filled('period')) {
+            $query->where('period', $request->period);
+        }
+        if ($request->filled('department_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
+        }
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('employee_type')) {
+            $query->where('employee_type', $request->employee_type);
+        }
+        if ($request->filled('station_id')) {
+            $query->whereHas('employee', fn($q) => $q->where('station_id', $request->station_id));
+        }
+        if ($request->filled('position_grade')) {
+            $query->whereHas('employee', fn($q) => $q->where('position_grade', $request->position_grade));
+        }
+        if ($request->filled('bank_name')) {
+            if ($request->bank_name === 'cash') {
+                $query->whereHas('employee', fn($q) => $q->whereNull('bank_account')->orWhere('bank_account', ''));
+            } else {
+                $query->whereHas('employee', fn($q) => $q->where('bank_name', $request->bank_name));
+            }
+        }
+
+        $payrolls = $query->orderBy('period', 'desc')->get();
+
+        $grouped = $payrolls->groupBy(fn($p) => $p->employee->bank_name ?? 'Cash (Tanpa Rekening)');
+
+        $rows = collect();
+        foreach ($grouped as $bank => $items) {
+            $no = 1;
+            $total = 0;
+            foreach ($items as $p) {
+                $total += $p->net_salary;
+                $rows->push([
+                    'No' => $no++,
+                    'Nama' => $p->employee->full_name ?? '-',
+                    'No. KTP' => $p->employee->identity_number ?? '-',
+                    'Jenis' => ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
+                    'Bank' => $p->employee->bank_name ?? 'Cash',
+                    'No. Rekening' => $p->employee->bank_account ?? '-',
+                    'Nama Rekening' => $p->employee->bank_holder ?? '-',
+                    'Gaji Bersih' => (float) $p->net_salary,
+                ]);
+            }
+            $rows->push([
+                'No' => '',
+                'Nama' => '',
+                'No. KTP' => '',
+                'Jenis' => '',
+                'Bank' => '',
+                'No. Rekening' => '',
+                'Nama Rekening' => 'Total ' . $bank,
+                'Gaji Bersih' => (float) $total,
+            ]);
+        }
+
+        $headings = ['No', 'Nama', 'No. KTP', 'Jenis', 'Bank', 'No. Rekening', 'Nama Rekening', 'Gaji Bersih'];
+
+        return Excel::download(new class($rows, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+            private $data;
+            private $headings;
+            public function __construct($data, $headings) { $this->data = $data; $this->headings = $headings; }
+            public function array(): array { return $this->data->toArray(); }
+            public function headings(): array { return $this->headings; }
+        }, 'payroll-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     public function payrollPrintDetail(Request $request)
     {
         $query = Payroll::with(['employee.position', 'employee.department']);

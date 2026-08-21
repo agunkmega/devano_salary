@@ -12,7 +12,7 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, Shou
 {
     public function collection()
     {
-        return Employee::with(['department', 'position'])->get();
+        return Employee::with(['department', 'position', 'station'])->get();
     }
 
     public function headings(): array
@@ -23,6 +23,7 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, Shou
             'Department',
             'Position',
             'No. HP',
+            'Station',
             'Base Salary',
             'Allowance',
             'Allowance Type',
@@ -46,6 +47,7 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, Shou
             $employee->department?->name,
             $employee->position?->name,
             $employee->phone,
+            $employee->station?->name,
             $employee->base_salary,
             $employee->allowance,
             $employee->allowance_type,

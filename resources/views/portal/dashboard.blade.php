@@ -305,14 +305,27 @@
 
     {{-- Leave History --}}
     @if($recentLeaves->count() > 0)
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+    @php
+        $leaveDetails = $recentLeaves->map(fn($leave) => [
+            'type' => $leave->leaveType->name ?? '-',
+            'status' => $leave->status,
+            'start' => $leave->start_date->format('d M Y'),
+            'end' => $leave->end_date->format('d M Y'),
+            'days' => $leave->total_days,
+            'reason' => $leave->reason,
+            'notes' => $leave->notes,
+            'rejection' => $leave->rejection_reason,
+            'submitted' => optional($leave->submission_date)->format('d M Y'),
+        ])->values();
+    @endphp
+    <div x-data="leaveHistory" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Riwayat Cuti</h3>
-            <span class="text-[10px] text-gray-400">{{ $recentLeaves->count() }} terakhir</span>
+            <span class="text-[10px] text-gray-400">{{ $recentLeaves->count() }} terakhir · ketuk untuk detail</span>
         </div>
         <div class="space-y-1">
             @foreach($recentLeaves as $leave)
-            <div class="flex items-center justify-between py-2.5 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+            <button type="button" @click="selected = leaveDetails[{{ $loop->index }}]" class="w-full text-left flex items-center justify-between py-2.5 border-b border-gray-50 dark:border-gray-700/50 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-lg px-1 -mx-1 transition-colors">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
                         <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -329,10 +342,67 @@
                 @else
                 <span class="text-[10px] font-medium text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-lg">Pending</span>
                 @endif
-            </div>
+            </button>
             @endforeach
         </div>
+
+        {{-- Modal Detail Cuti --}}
+        <div x-show="selected" x-cloak class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style="display:none">
+            <div class="absolute inset-0 bg-black/50" @click="selected = null"></div>
+            <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-5" @click.stop x-transition>
+                <template x-if="selected">
+                    <div>
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white" x-text="selected.type"></h3>
+                                <p class="text-[11px] text-gray-400 mt-0.5" x-text="'Diajukan ' + (selected.submitted ?? '-')"></p>
+                            </div>
+                            <button type="button" @click="selected = null" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <span x-show="selected.status === 'approved'" class="text-[11px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg">Disetujui</span>
+                            <span x-show="selected.status === 'rejected'" class="text-[11px] font-medium text-red-600 bg-red-50 dark:bg-red-900/30 px-2.5 py-1 rounded-lg">Ditolak</span>
+                            <span x-show="selected.status !== 'approved' && selected.status !== 'rejected'" class="text-[11px] font-medium text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 rounded-lg">Pending</span>
+                        </div>
+
+                        <div class="space-y-2.5 text-sm">
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-500 flex-shrink-0">Tanggal</span>
+                                <span class="font-medium text-gray-900 dark:text-white text-right" x-text="selected.start + ' - ' + selected.end"></span>
+                            </div>
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-500 flex-shrink-0">Jumlah Hari</span>
+                                <span class="font-medium text-gray-900 dark:text-white" x-text="(selected.days ?? '-') + ' hari'"></span>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 mb-1">Keterangan / Alasan</p>
+                                <p class="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 text-[13px]" x-text="selected.reason || '-'"></p>
+                            </div>
+                            <div x-show="selected.rejection">
+                                <p class="text-gray-500 mb-1">Alasan Penolakan</p>
+                                <p class="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl p-3 text-[13px]" x-text="selected.rejection"></p>
+                            </div>
+                            <div x-show="selected.notes">
+                                <p class="text-gray-500 mb-1">Catatan</p>
+                                <p class="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 text-[13px]" x-text="selected.notes"></p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('leaveHistory', () => ({
+                selected: null,
+                leaveDetails: @json($leaveDetails),
+            }));
+        });
+    </script>
     @endif
 
     {{-- Leave & DP Balance --}}

@@ -14,21 +14,24 @@ class DpBalanceController extends Controller
 
     public function index(Request $request)
     {
-        $employees = Employee::where('is_active', true)
+        $mapBalance = fn(Employee $emp) => [
+            'id' => $emp->id,
+            'name' => $emp->full_name,
+            'granted' => $emp->dp_granted,
+            'used' => $emp->dp_used,
+            'remaining' => $emp->dp_remaining,
+        ];
+
+        $base = Employee::where('is_active', true)->orderBy('full_name');
+
+        $pickerEmployees = $base->get()->map($mapBalance);
+
+        $employees = (clone $base)
             ->when($request->filled('employee'), function ($q) use ($request) {
                 $q->where('full_name', 'like', '%' . $request->employee . '%');
             })
-            ->orderBy('full_name')
             ->get()
-            ->map(function ($emp) {
-                return [
-                    'id' => $emp->id,
-                    'name' => $emp->full_name,
-                    'granted' => $emp->dp_granted,
-                    'used' => $emp->dp_used,
-                    'remaining' => $emp->dp_remaining,
-                ];
-            });
+            ->map($mapBalance);
 
         $grants = CompensatoryDay::with(['employee', 'granter'])
             ->when($request->filled('employee'), function ($q) use ($request) {
@@ -38,7 +41,7 @@ class DpBalanceController extends Controller
             ->latest('id')
             ->paginate(20);
 
-        return view('dp.index', compact('employees', 'grants'));
+        return view('dp.index', compact('employees', 'pickerEmployees', 'grants'));
     }
 
     public function store(Request $request)

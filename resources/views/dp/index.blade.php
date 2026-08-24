@@ -132,7 +132,7 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('employeePicker', () => ({
-            employees: @json($employees),
+            employees: @json($pickerEmployees),
             query: '',
             open: false,
             selected: null,

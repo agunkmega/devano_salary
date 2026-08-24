@@ -39,6 +39,8 @@
             font-size: 8px;
         }
         tr:nth-child(even) td { background: #f8fafc; }
+        tbody tr.sunday td { background: #fecaca; }
+        tbody tr.sunday td.day-cell { font-weight: 700; color: #dc2626; }
         .hadir, .terlambat { font-weight: 600; }
         .hadir { color: #059669; }
         .terlambat { color: #d97706; }
@@ -136,9 +138,9 @@
                 if ($statusClass === 'sakit') $totalSakit++;
                 if ($statusClass === 'alpha') $totalAlpha++;
             @endphp
-            <tr>
+            <tr @if(\Carbon\Carbon::parse($att->attendance_date)->isSunday()) class="sunday" @endif>
                 <td>{{ \Carbon\Carbon::parse($att->attendance_date)->format('d/m/Y') }}</td>
-                <td class="{{ $statusClass === 'libur' ? 'libur' : '' }}">{{ $att->day_name ?? \Carbon\Carbon::parse($att->attendance_date)->locale('id')->dayName }}</td>
+                <td class="day-cell {{ $statusClass === 'libur' ? 'libur' : '' }}">{{ $att->day_name ?? \Carbon\Carbon::parse($att->attendance_date)->locale('id')->dayName }}</td>
                 <td>{{ $att->clock_in ? \Carbon\Carbon::parse($att->clock_in)->format('H:i') : '-' }}</td>
                 <td>{{ $att->break_out ? \Carbon\Carbon::parse($att->break_out)->format('H:i') : '-' }}</td>
                 <td>{{ $att->break_in ? \Carbon\Carbon::parse($att->break_in)->format('H:i') : '-' }}</td>

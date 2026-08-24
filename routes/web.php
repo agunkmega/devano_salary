@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\NationalHolidayController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\DpBalanceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\FingerSpotController;
@@ -106,6 +107,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     Route::resource('national-holidays', NationalHolidayController::class);
+
+    Route::resource('announcements', AnnouncementController::class);
 
     Route::get('dp-balances', [DpBalanceController::class, 'index'])->name('dp.index');
     Route::post('dp-balances', [DpBalanceController::class, 'store'])->name('dp.store');

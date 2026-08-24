@@ -154,6 +154,33 @@
         </a>
     </div>
 
+    {{-- Announcements --}}
+    @if($announcements->count() > 0)
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Pengumuman</h3>
+        <div class="space-y-2.5">
+            @foreach($announcements as $ann)
+            <div x-data="{ open: false }" class="bg-blue-50/60 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3">
+                <button type="button" @click="open = !open" class="w-full flex items-start gap-2.5 text-left">
+                    <span class="shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mt-0.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.177 0.918l-2.9-3.688a1.76 1.76 0 000-2.14l2.9-3.688A1.76 1.76 0 0111 4.76m7.28 10.466c-.058.467-.172.922-.341 1.365-.114.29-.257.573-.43.85a1.505 1.505 0 01-1.36.707c-.35 0-.67-.107-.94-.32-.27-.213-.47-.497-.59-.85a3.42 3.42 0 01-.21-1.21c0-.44.07-.86.21-1.26a2.5 2.5 0 01.59-.92c.27-.25.59-.38.94-.38.53 0 .96.23 1.29.68.33.45.55 1.02.66 1.72z"/></svg>
+                    </span>
+                    <span class="flex-1 min-w-0">
+                        <span class="block text-xs font-semibold text-gray-900 dark:text-white">{{ $ann->title }}</span>
+                        <span class="block text-[10px] text-gray-400 mt-0.5">{{ $ann->created_at->locale('id')->isoFormat('D MMM YYYY') }}</span>
+                        <span x-show="!open" class="block text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{{ \Illuminate\Support\Str::limit($ann->content, 80) }}</span>
+                    </span>
+                    <svg :class="open ? 'rotate-180' : ''" class="shrink-0 w-4 h-4 text-gray-400 transition-transform mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="open" x-transition class="mt-2 pt-2 border-t border-blue-100 dark:border-blue-900/40 pl-[42px]">
+                    <p class="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed">{{ $ann->content }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Latest Salary --}}
     @if($latestPayroll)
     @php

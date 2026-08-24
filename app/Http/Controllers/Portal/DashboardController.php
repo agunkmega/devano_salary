@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\CashAdvance;
+use App\Models\Announcement;
 use App\Models\Payroll;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -194,11 +195,16 @@ class DashboardController extends Controller
                 ->count();
         }
 
+        $announcements = Announcement::active()
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('portal.dashboard', compact(
             'employee', 'attendanceSummary', 'latestPayroll',
             'recentLeaves', 'leaveTypes', 'cashAdvances', 'dateFrom', 'dateTo',
             'payrolls', 'selectedPeriod', 'leaveBalances', 'isBirthday',
-            'pendingHeadCount', 'leaveYearLabel'
+            'pendingHeadCount', 'leaveYearLabel', 'announcements'
         ));
     }
 

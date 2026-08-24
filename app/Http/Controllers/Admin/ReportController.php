@@ -761,10 +761,8 @@ class ReportController extends Controller
             $employees->where('department_id', $request->department_id);
         }
 
-        if ($request->filled('employee_id')) {
-            $employees->where('id', $request->employee_id);
-        } elseif ($request->filled('name')) {
-            $employees->where('full_name', 'like', '%' . $request->name . '%');
+        if ($request->filled('employee')) {
+            $employees->where('full_name', 'like', '%' . $request->employee . '%');
         }
 
         $employees = $employees->get();

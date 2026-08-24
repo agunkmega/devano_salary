@@ -16,16 +16,9 @@
                     @endforeach
                 </select>
             </div>
-            <div x-data="employeeSearch()" class="relative">
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai</label>
-                <input type="text" x-model="query" x-ref="input" @input="open = true" @focus="open = true" @click.away="open = false" @keydown.escape="open = false" placeholder="Ketik nama pegawai..." class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 w-56 focus:ring-2 focus:ring-blue-500">
-                <input type="hidden" name="employee_id" :value="selectedId">
-                <div x-show="open && query.length > 0" class="absolute z-10 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                    <template x-for="emp in filtered" :key="emp.id">
-                        <button type="button" @click="select(emp)" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white" x-text="emp.full_name"></button>
-                    </template>
-                    <p x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-400">Tidak ditemukan</p>
-                </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nama Pegawai</label>
+                <input type="text" name="employee" value="{{ request('employee') }}" placeholder="Cari nama pegawai..." class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
             </div>
             <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">Tampilkan</button>
         </form>
@@ -79,31 +72,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('employeeSearch', () => ({
-            query: '',
-            selectedId: '{{ request("employee_id") }}',
-            open: false,
-            employees: @json($employees->map(fn($e) => ['id' => $e->id, 'full_name' => $e->full_name])),
-            get filtered() {
-                if (!this.query) return [];
-                return this.employees.filter(e => e.full_name.toLowerCase().includes(this.query.toLowerCase()));
-            },
-            select(emp) {
-                this.selectedId = emp.id;
-                this.query = emp.full_name;
-                this.open = false;
-            },
-            init() {
-                if (this.selectedId) {
-                    const emp = this.employees.find(e => e.id == this.selectedId);
-                    if (emp) this.query = emp.full_name;
-                }
-            }
-        }));
-    });
-</script>
-@endpush

@@ -23,6 +23,17 @@
         }
         .header h1 { font-size: 13px; font-weight: 700; }
         .header p { font-size: 9px; color: #64748b; }
+        .employee-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 3px 0 1px;
+            color: #0f172a;
+        }
+        .employee-title span {
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748b;
+        }
         table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
         th {
             padding: 3px 4px;
@@ -49,18 +60,7 @@
         .cuti { color: #0891b2; }
         .alpha { color: #dc2626; }
         .libur { color: #64748b; }
-        .emp-header {
-            background: #f1f5f9;
-            padding: 3px 5px;
-            font-weight: 600;
-            font-size: 9px;
-            margin-top: 4px;
-            margin-bottom: 2px;
-            border-radius: 2px;
-        }
-        .emp-header span { color: #64748b; font-weight: 400; }
-        .totals td {
-            font-weight: 700;
+        .totals td {            font-weight: 700;
             background: #f1f5f9;
             border-top: 2px solid #1e293b;
             padding: 3px 4px;
@@ -95,14 +95,14 @@
 </head>
 <body>
     <div class="no-print"><button onclick="window.print()">Cetak</button></div>
-    <div class="header">
-        <h1>Laporan Absensi</h1>
-        <p>Periode: {{ $dateFrom ? \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') : '-' }} s/d {{ $dateTo ? \Carbon\Carbon::parse($dateTo)->format('d/m/Y') : '-' }} | Cetak: {{ now()->format('d/m/Y H:i') }}</p>
-    </div>
 
     @forelse($employees as $emp)
     @if(!$loop->first)<div class="page-break"></div>@endif
-    <div class="emp-header">{{ $emp['nama'] }} <span>— {{ $emp['jabatan'] }}</span></div>
+    <div class="header">
+        <h1>Laporan Absensi</h1>
+        <div class="employee-title">{{ $emp['nama'] }} <span>— {{ $emp['jabatan'] }}</span></div>
+        <p>Periode: {{ $dateFrom ? \Carbon\Carbon::parse($dateFrom)->format('d/m/Y') : '-' }} s/d {{ $dateTo ? \Carbon\Carbon::parse($dateTo)->format('d/m/Y') : '-' }} | Cetak: {{ now()->format('d/m/Y H:i') }}</p>
+    </div>
     <table>
         <thead>
             <tr>

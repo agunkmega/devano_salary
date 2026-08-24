@@ -10,11 +10,23 @@ use App\Models\Notification;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Traits\LogsActivity;
+use App\Services\LeaveBalanceService;
 use Illuminate\Http\Request;
 
 class LeaveController extends Controller
 {
     use LogsActivity;
+
+    public function balance(Employee $employee)
+    {
+        [$ctId, $dpId, $ctQuota] = LeaveBalanceService::typeConfig();
+        [$leaveYearStart, $leaveYearEnd, $leaveYearLabel] = LeaveBalanceService::leaveYear();
+
+        $balance = LeaveBalanceService::forEmployee($employee, $leaveYearStart, $leaveYearEnd, $ctId, $dpId, $ctQuota);
+
+        return response()->json($balance + ['leave_year' => $leaveYearLabel]);
+    }
+
     public function index()
     {
         $leaves = Leave::with(['employee.user', 'employee.department', 'leaveType', 'approver'])

@@ -22,6 +22,17 @@
                             </template>
                         </ul>
                         <p x-show="selected && search" class="mt-1 text-xs text-emerald-600 dark:text-emerald-400" x-text="'Terpilih: ' + selectedName"></p>
+                        <div x-show="balances" x-cloak class="mt-2 flex flex-wrap items-center gap-2">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                Sisa CT: <span class="font-bold ml-1" x-text="(balances ? balances.ct_remaining : 0) + ' hari'"></span>
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-xs font-medium text-purple-700 dark:text-purple-300">
+                                Sisa DP: <span class="font-bold ml-1" x-text="(balances ? balances.dp_remaining : 0) + ' hari'"></span>
+                            </span>
+                            <span x-show="balances && !balances.cuti_eligible" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                Belum memenuhi syarat cuti tahunan
+                            </span>
+                        </div>
                     </div>
                     @error('employee_id') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
                 </div>
@@ -101,12 +112,24 @@
             open: false,
             selected: '{{ old('employee_id') }}',
             selectedName: '',
+            balances: null,
+            balanceUrl: @js(route('admin.leaves.balance', ['employee' => 'EMPID'])),
             employees: @json($employees->map(fn($e) => ['id' => $e->id, 'full_name' => $e->full_name])),
             init() {
                 if (this.selected) {
                     const emp = this.employees.find(e => e.id == this.selected);
                     if (emp) { this.selectedName = emp.full_name; this.search = emp.full_name; }
+                    this.fetchBalance();
                 }
+            },
+            fetchBalance() {
+                if (!this.selected) { this.balances = null; return; }
+                fetch(this.balanceUrl.replace('EMPID', this.selected), {
+                    headers: { 'Accept': 'application/json' },
+                })
+                    .then(r => r.json())
+                    .then(d => this.balances = d)
+                    .catch(() => this.balances = null);
             },
             get filtered() {
                 if (!this.search) return this.employees;
@@ -118,6 +141,7 @@
                 this.selectedName = emp.full_name;
                 this.search = emp.full_name;
                 this.open = false;
+                this.fetchBalance();
             },
         }));
     });

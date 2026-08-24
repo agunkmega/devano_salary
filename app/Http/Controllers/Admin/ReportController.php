@@ -13,6 +13,7 @@ use App\Models\Position;
 use App\Models\Station;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\LeaveBalanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -767,63 +768,13 @@ class ReportController extends Controller
 
         $employees = $employees->get();
 
-        $ct = LeaveType::whereIn('code', ['CT', 'CUTI'])->first(['id', 'max_days_per_year']);
-        $dp = LeaveType::where('code', 'DP')->first(['id']);
-        $ctId = $ct?->id;
-        $dpId = $dp?->id;
-        $ctQuota = $ct?->max_days_per_year ?? 12;
+        [$ctId, $dpId, $ctQuota] = LeaveBalanceService::typeConfig();
 
-        $now = now();
-        if ($now->month === 12 && $now->day >= 26) {
-            $leaveYearStart = Carbon::create($now->year, 12, 26)->startOfDay();
-            $leaveYearEnd = Carbon::create($now->year + 1, 12, 25)->endOfDay();
-            $leaveYearLabel = $now->year . '/' . ($now->year + 1);
-        } else {
-            $leaveYearStart = Carbon::create($now->year - 1, 12, 26)->startOfDay();
-            $leaveYearEnd = Carbon::create($now->year, 12, 25)->endOfDay();
-            $leaveYearLabel = ($now->year - 1) . '/' . $now->year;
-        }
+        [$leaveYearStart, $leaveYearEnd, $leaveYearLabel] = LeaveBalanceService::leaveYear();
 
-        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $leaveYearStart, $leaveYearEnd) {
-            $tenureDays = $emp->join_date ? $emp->join_date->diffInDays(now()) : 0;
-            $eligible = $emp->cuti_eligible && $tenureDays >= 365;
-
-            $effectiveCtQuota = 0;
-            if ($eligible) {
-                $anniversary = $emp->join_date->copy()->addYear();
-                if ($anniversary->lte($leaveYearStart)) {
-                    $effectiveCtQuota = $ctQuota;
-                } elseif ($anniversary->gt($leaveYearEnd)) {
-                    $effectiveCtQuota = 0;
-                } else {
-                    $effectiveCtQuota = min($ctQuota, ($leaveYearEnd->year - $anniversary->year) * 12 + ($leaveYearEnd->month - $anniversary->month) + 1);
-                }
-            }
-            $usedCt = $ctId ? Leave::where('employee_id', $emp->id)
-                ->where('leave_type_id', $ctId)
-                ->where('status', 'approved')
-                ->whereBetween('start_date', [$leaveYearStart, $leaveYearEnd])
-                ->sum('total_days') : 0;
-
-            $usedDp = $dpId ? Leave::where('employee_id', $emp->id)
-                ->where('leave_type_id', $dpId)
-                ->where('status', 'approved')
-                ->sum('total_days') : 0;
-            $grantedDp = (int) \App\Models\CompensatoryDay::where('employee_id', $emp->id)->sum('days');
-
-            return [
-                'employee_id' => $emp->id,
-                'nama' => $emp->full_name ?? '-',
-                'jabatan' => $emp->position->name ?? $emp->department->name ?? '-',
-                'cuti_eligible' => $eligible,
-                'ct_quota' => $effectiveCtQuota,
-                'ct_used' => $usedCt,
-                'ct_remaining' => max(0, $effectiveCtQuota - $usedCt),
-                'dp_quota' => $grantedDp,
-                'dp_used' => $usedDp,
-                'dp_remaining' => max(0, $grantedDp - $usedDp),
-            ];
-        });
+        $balances = $employees->map(
+            fn ($emp) => LeaveBalanceService::forEmployee($emp, $leaveYearStart, $leaveYearEnd, $ctId, $dpId, $ctQuota)
+        );
 
         $departments = Department::where('is_active', true)->get();
         $employees = Employee::where('is_active', true)->where('employee_type', 'bulanan')->get(['id', 'full_name']);

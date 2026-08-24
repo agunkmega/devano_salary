@@ -9,6 +9,8 @@ use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\CashAdvance;
 use App\Models\Payroll;
+use App\Models\Setting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -149,6 +151,15 @@ class DashboardController extends Controller
             ->map(function ($lt) use ($employee, $eligible, $effectiveCtQuota, $leaveYearStart, $leaveYearEnd) {
                 $isCutiTahunan = in_array($lt->code, ['CT', 'CUTI']);
                 $quota = $eligible ? ($isCutiTahunan ? $effectiveCtQuota : $lt->max_days_per_year) : 0;
+                if ($lt->code === 'DP') {
+                    return (object) [
+                        'name' => $lt->name,
+                        'code' => $lt->code,
+                        'max' => $employee->dp_granted,
+                        'used' => $employee->dp_used,
+                        'remaining' => $employee->dp_remaining,
+                    ];
+                }
                 $used = Leave::where('employee_id', $employee->id)
                     ->where('leave_type_id', $lt->id)
                     ->where('status', 'approved')
@@ -189,6 +200,27 @@ class DashboardController extends Controller
             'payrolls', 'selectedPeriod', 'leaveBalances', 'isBirthday',
             'pendingHeadCount', 'leaveYearLabel'
         ));
+    }
+
+    public function slipPdf($id)
+    {
+        $employee = Employee::findOrFail(session('portal_employee_id'));
+
+        $payroll = Payroll::with(['employee.user', 'employee.department', 'employee.position'])
+            ->where('employee_id', $employee->id)
+            ->findOrFail($id);
+
+        if (!in_array($payroll->status, ['approved', 'paid'])) {
+            return back()->withErrors('Slip gaji periode ini belum disetujui sehingga belum dapat diunduh.');
+        }
+
+        $companySettings = Setting::where('group', 'company')->get()->keyBy('key');
+        $companyName = $companySettings->get('company_name')?->value ?? 'PT. DEVANO SILVER INDONESIA';
+        $companyAddress = $companySettings->get('company_address')?->value ?? '';
+
+        $pdf = Pdf::loadView('payroll.slip', compact('payroll', 'companyName', 'companyAddress'));
+
+        return $pdf->download("slip-gaji-{$payroll->employee->nik}-{$payroll->period}.pdf");
     }
 
     public function attendanceHistory(Request $request)

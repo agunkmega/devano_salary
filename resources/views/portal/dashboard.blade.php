@@ -164,7 +164,15 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Slip Gaji Detail</h3>
-            <span class="text-[10px] font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{{ \Carbon\Carbon::createFromFormat('Y-m', $p->period)->locale('id')->isoFormat('MMMM YYYY') }}</span>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{{ \Carbon\Carbon::createFromFormat('Y-m', $p->period)->locale('id')->isoFormat('MMMM YYYY') }}</span>
+                @if(in_array($p->status, ['approved', 'paid']))
+                <a href="{{ route('portal.payroll.slip-pdf', $p->id) }}" class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-transform px-2.5 py-1.5 rounded-lg">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                    Download PDF
+                </a>
+                @endif
+            </div>
         </div>
         <div class="space-y-3 text-sm">
             {{-- Income --}}

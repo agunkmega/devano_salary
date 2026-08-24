@@ -49,6 +49,11 @@ class LeaveApprovalController extends Controller
             return redirect()->route('portal.leave-approval.index')->with('error', 'Cuti ini sudah diproses.');
         }
 
+        $employee = $leave->employee;
+        if ($employee && $leave->leaveType?->code === 'DP' && $leave->total_days > $employee->dp_remaining) {
+            return redirect()->route('portal.leave-approval.index')->with('error', 'Saldo DP pegawai tidak cukup (' . $employee->dp_remaining . ' hari tersisa).');
+        }
+
         $leave->update([
             'status' => 'approved',
             'approved_by_head' => $headId,

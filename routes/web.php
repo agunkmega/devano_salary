@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\NationalHolidayController;
+use App\Http\Controllers\Admin\DpBalanceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\FingerSpotController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
@@ -106,6 +107,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
 
     Route::resource('national-holidays', NationalHolidayController::class);
 
+    Route::get('dp-balances', [DpBalanceController::class, 'index'])->name('dp.index');
+    Route::post('dp-balances', [DpBalanceController::class, 'store'])->name('dp.store');
+    Route::delete('dp-balances/{id}', [DpBalanceController::class, 'destroy'])->name('dp.destroy');
+
     Route::get('fingerspot', [FingerSpotController::class, 'index'])->name('fingerspot.index');
     Route::get('fingerspot/machines', [FingerSpotController::class, 'machines'])->name('fingerspot.machines');
     Route::post('fingerspot/fetch', [FingerSpotController::class, 'fetch'])->name('fingerspot.fetch');
@@ -120,6 +125,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
     Route::middleware('portal')->group(function () {
         Route::get('dashboard', [PortalDashboardController::class, 'index'])->name('dashboard');
+        Route::get('payroll/{payroll}/slip-pdf', [PortalDashboardController::class, 'slipPdf'])->name('payroll.slip-pdf');
         Route::get('leave/create', [PortalLeaveController::class, 'create'])->name('leave.create');
         Route::post('leave', [PortalLeaveController::class, 'store'])->name('leave.store');
         Route::get('leave-approvals', [PortalLeaveApprovalController::class, 'index'])->name('leave-approval.index');

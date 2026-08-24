@@ -108,6 +108,12 @@
         </header>
 
         <main class="p-4 sm:p-6 lg:p-8">
+            @if(session('success'))
+            <div class="mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+            <div class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">{{ session('error') }}</div>
+            @endif
             @yield('page-content')
         </main>
 

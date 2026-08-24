@@ -109,6 +109,10 @@ class LeaveController extends Controller
         $validated['total_days'] = $start->diffInDays($end) + 1;
         $validated['status'] = 'pending';
 
+        if (!$this->validateDpBalance($validated['employee_id'], $validated['leave_type_id'], $validated['total_days'])) {
+            return back()->withInput()->with('error', 'Saldo DP pegawai tidak cukup.');
+        }
+
         if ($request->hasFile('attachment')) {
             $validated['attachment'] = $request->file('attachment')->store('leaves', 'public');
         }
@@ -162,6 +166,10 @@ class LeaveController extends Controller
         $end = Carbon::parse($validated['end_date']);
         $validated['total_days'] = $start->diffInDays($end) + 1;
 
+        if (!$this->validateDpBalance($validated['employee_id'], $validated['leave_type_id'], $validated['total_days'], $leave->id)) {
+            return back()->withInput()->with('error', 'Saldo DP pegawai tidak cukup.');
+        }
+
         if ($request->hasFile('attachment')) {
             $validated['attachment'] = $request->file('attachment')->store('leaves', 'public');
         }
@@ -181,6 +189,11 @@ class LeaveController extends Controller
         if (!in_array(auth()->user()->role, ['super_admin', 'hr', 'manager'])) {
             return redirect()->route('admin.leaves.index')
                 ->with('error', 'You do not have permission to approve leaves.');
+        }
+
+        if (!$this->validateDpBalance($leave->employee_id, $leave->leave_type_id, $leave->total_days, $leave->id)) {
+            return redirect()->route('admin.leaves.index')
+                ->with('error', 'Saldo DP pegawai tidak cukup untuk cuti ini.');
         }
 
         $leave->update([
@@ -295,5 +308,23 @@ class LeaveController extends Controller
         $leaveTypes = LeaveType::where('is_active', true)->get();
 
         return view('leaves.my-leaves', compact('leaves', 'leaveTypes'));
+    }
+
+    private function validateDpBalance($employeeId, $leaveTypeId, int $days, ?int $excludeLeaveId = null): bool
+    {
+        $employee = Employee::find($employeeId);
+        if (!$employee || $employee->dp_leave_type_id !== (int) $leaveTypeId) {
+            return true;
+        }
+
+        $used = $employee->dp_used;
+        if ($excludeLeaveId) {
+            $excluded = Leave::find($excludeLeaveId);
+            if ($excluded && $excluded->status === 'approved' && $excluded->leave_type_id === (int) $leaveTypeId) {
+                $used -= (int) $excluded->total_days;
+            }
+        }
+
+        return ($employee->dp_granted - $used) >= $days;
     }
 }

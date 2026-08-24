@@ -12,9 +12,22 @@
         </div>
     </div>
 
+    @if(session('error'))
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">{{ session('error') }}</div>
+    @endif
+
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
         <form method="POST" action="{{ route('portal.leave.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
+            @php
+                $dpTypeId = $leaveTypes->firstWhere('code', 'DP')->id ?? null;
+            @endphp
+            @if($dpTypeId)
+            <div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-xl text-xs">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Saldo DP Anda saat ini: <span class="font-semibold">{{ $dpRemaining }}</span> hari
+            </div>
+            @endif
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jenis Cuti</label>
                 <select name="leave_type_id" required class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all appearance-none">

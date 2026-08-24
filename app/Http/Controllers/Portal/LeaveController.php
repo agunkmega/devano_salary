@@ -16,7 +16,9 @@ class LeaveController extends Controller
     public function create()
     {
         $leaveTypes = LeaveType::where('is_active', true)->get();
-        return view('portal.leave.create', compact('leaveTypes'));
+        $employee = Employee::find(session('portal_employee_id'));
+        $dpRemaining = $employee?->dp_remaining ?? 0;
+        return view('portal.leave.create', compact('leaveTypes', 'dpRemaining'));
     }
 
     public function store(Request $request)
@@ -32,6 +34,14 @@ class LeaveController extends Controller
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);
         $totalDays = $start->diffInDays($end) + 1;
+
+        $employee = Employee::find(session('portal_employee_id'));
+        $leaveType = LeaveType::find($request->leave_type_id);
+
+        if ($leaveType?->code === 'DP' && $totalDays > $employee?->dp_remaining) {
+            return back()->withInput()
+                ->with('error', 'Saldo DP tidak cukup. Sisa saldo Anda ' . ($employee?->dp_remaining ?? 0) . ' hari.');
+        }
 
         $data = [
             'employee_id' => session('portal_employee_id'),
@@ -50,8 +60,6 @@ class LeaveController extends Controller
 
         Leave::create($data);
 
-        $employee = Employee::with('department')->find(session('portal_employee_id'));
-        $leaveType = LeaveType::find($request->leave_type_id);
         $admins = User::whereIn('role', [User::ROLE_SUPER_ADMIN, User::ROLE_HR])->get();
         foreach ($admins as $admin) {
             Notification::create([

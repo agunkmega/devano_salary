@@ -770,11 +770,10 @@ class ReportController extends Controller
         $employees = $employees->get();
 
         $ct = LeaveType::whereIn('code', ['CT', 'CUTI'])->first(['id', 'max_days_per_year']);
-        $dp = LeaveType::where('code', 'DP')->first(['id', 'max_days_per_year']);
+        $dp = LeaveType::where('code', 'DP')->first(['id']);
         $ctId = $ct?->id;
         $dpId = $dp?->id;
         $ctQuota = $ct?->max_days_per_year ?? 12;
-        $dpQuota = $dp?->max_days_per_year ?? 12;
 
         $now = now();
         if ($now->month === 12 && $now->day >= 26) {
@@ -787,7 +786,7 @@ class ReportController extends Controller
             $leaveYearLabel = ($now->year - 1) . '/' . $now->year;
         }
 
-        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $dpQuota, $leaveYearStart, $leaveYearEnd) {
+        $balances = $employees->map(function ($emp) use ($ctId, $dpId, $ctQuota, $leaveYearStart, $leaveYearEnd) {
             $tenureDays = $emp->join_date ? $emp->join_date->diffInDays(now()) : 0;
             $eligible = $emp->cuti_eligible && $tenureDays >= 365;
 
@@ -802,8 +801,6 @@ class ReportController extends Controller
                     $effectiveCtQuota = min($ctQuota, ($leaveYearEnd->year - $anniversary->year) * 12 + ($leaveYearEnd->month - $anniversary->month) + 1);
                 }
             }
-            $effectiveDpQuota = $eligible ? $dpQuota : 0;
-
             $usedCt = $ctId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $ctId)
                 ->where('status', 'approved')
@@ -813,8 +810,8 @@ class ReportController extends Controller
             $usedDp = $dpId ? Leave::where('employee_id', $emp->id)
                 ->where('leave_type_id', $dpId)
                 ->where('status', 'approved')
-                ->whereBetween('start_date', [$leaveYearStart, $leaveYearEnd])
                 ->sum('total_days') : 0;
+            $grantedDp = (int) \App\Models\CompensatoryDay::where('employee_id', $emp->id)->sum('days');
 
             return [
                 'employee_id' => $emp->id,
@@ -824,9 +821,9 @@ class ReportController extends Controller
                 'ct_quota' => $effectiveCtQuota,
                 'ct_used' => $usedCt,
                 'ct_remaining' => max(0, $effectiveCtQuota - $usedCt),
-                'dp_quota' => $effectiveDpQuota,
+                'dp_quota' => $grantedDp,
                 'dp_used' => $usedDp,
-                'dp_remaining' => max(0, $effectiveDpQuota - $usedDp),
+                'dp_remaining' => max(0, $grantedDp - $usedDp),
             ];
         });
 

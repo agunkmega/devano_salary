@@ -133,6 +133,39 @@ class Employee extends Model
         return $this->belongsTo(Station::class);
     }
 
+    public function compensatoryDays()
+    {
+        return $this->hasMany(CompensatoryDay::class);
+    }
+
+    public function getDpLeaveTypeIdAttribute(): ?int
+    {
+        return LeaveType::where('code', 'DP')->where('is_active', true)->value('id');
+    }
+
+    public function getDpGrantedAttribute(): int
+    {
+        return (int) $this->compensatoryDays()->sum('days');
+    }
+
+    public function getDpUsedAttribute(): int
+    {
+        $dpTypeId = $this->dp_leave_type_id;
+        if (!$dpTypeId) {
+            return 0;
+        }
+
+        return (int) Leave::where('employee_id', $this->id)
+            ->where('leave_type_id', $dpTypeId)
+            ->whereIn('status', ['approved'])
+            ->sum('total_days');
+    }
+
+    public function getDpRemainingAttribute(): int
+    {
+        return max(0, $this->dp_granted - $this->dp_used);
+    }
+
     public function getTotalSalaryAttribute()
     {
         return $this->base_salary + $this->allowance + $this->allowance_absensi + $this->allowance_transport + $this->allowance_jabatan + $this->allowance_insentif;

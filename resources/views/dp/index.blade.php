@@ -10,14 +10,22 @@
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Tambah DP Pegawai</h3>
             <form action="{{ route('admin.dp.store') }}" method="POST" class="space-y-4">
                 @csrf
-                <div>
+                <div x-data="employeePicker()" @click.outside="open = false">
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pegawai <span class="text-red-500">*</span></label>
-                    <select name="employee_id" required class="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
-                        <option value="">Pilih pegawai</option>
-                        @foreach($employees as $emp)
-                        <option value="{{ $emp['id'] }}">{{ $emp['name'] }} (sisa {{ $emp['remaining'] }})</option>
-                        @endforeach
-                    </select>
+                    <div class="relative">
+                        <input type="text" x-model="query" @focus="open = true" @input="selected = null; open = true" placeholder="Ketik nama pegawai..."
+                            class="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
+                        <input type="hidden" name="employee_id" :value="selected ? selected.id : ''">
+                        <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-56 overflow-y-auto">
+                            <template x-for="emp in filteredEmployees()" :key="emp.id">
+                                <button type="button" @click="pick(emp)" class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                    <span class="text-gray-900 dark:text-white truncate" x-text="emp.name"></span>
+                                    <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0" :class="emp.remaining > 0 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'" x-text="'sisa ' + emp.remaining"></span>
+                                </button>
+                            </template>
+                            <div x-show="filteredEmployees().length === 0" class="px-3 py-3 text-sm text-gray-400 text-center">Pegawai tidak ditemukan</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -119,3 +127,26 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('employeePicker', () => ({
+            employees: @json($employees),
+            query: '',
+            open: false,
+            selected: null,
+            filteredEmployees() {
+                const q = this.query.trim().toLowerCase();
+                if (!q) return this.employees;
+                return this.employees.filter(e => e.name.toLowerCase().includes(q));
+            },
+            pick(emp) {
+                this.selected = emp;
+                this.query = emp.name;
+                this.open = false;
+            }
+        }));
+    });
+</script>
+@endpush

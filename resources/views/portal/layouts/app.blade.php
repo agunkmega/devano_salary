@@ -6,6 +6,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} - Portal Karyawan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        (function () {
+            var stored = localStorage.getItem('darkMode');
+            if (stored === 'true' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <style>[x-cloak] { display: none !important; }
         .dark input[type="date"], .dark select { color-scheme: dark; }
         .dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }

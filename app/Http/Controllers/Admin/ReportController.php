@@ -14,12 +14,20 @@ use App\Models\Station;
 use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\LeaveBalanceService;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    protected $attendanceService;
+
+    public function __construct(AttendanceService $attendanceService)
+    {
+        $this->attendanceService = $attendanceService;
+    }
+
     public function attendance()
     {
         $query = Attendance::with(['employee.user', 'employee.department', 'employee.position', 'shift'])
@@ -210,7 +218,14 @@ class ReportController extends Controller
             }
         }
 
-        $grouped = $attendances->groupBy('employee_id')->map(function ($rows, $empId) use ($allEmployees, $dateFrom, $dateTo, $holidayDates, $leaveDateMap) {
+        $holidaysByDate = \App\Models\NationalHoliday::where('is_active', true)
+            ->whereDate('date', '>=', $dateFrom)
+            ->whereDate('date', '<=', $dateTo)
+            ->get(['date', 'name', 'religion'])
+            ->groupBy(fn($h) => $h->date->format('Y-m-d'))
+            ->toArray();
+
+        $grouped = $attendances->groupBy('employee_id')->map(function ($rows, $empId) use ($allEmployees, $dateFrom, $dateTo, $holidayDates, $leaveDateMap, $holidaysByDate, $leaves) {
             $emp = $allEmployees->get($empId);
             $attByDate = $rows->keyBy(fn($r) => $r->attendance_date->format('Y-m-d'));
             $fullRows = [];
@@ -221,6 +236,19 @@ class ReportController extends Controller
                 if (isset($attByDate[$dateStr])) {
                     $att = $attByDate[$dateStr];
                     $att->day_name = $dayName;
+                    $this->attendanceService->recalculateAttendance($att);
+
+                    $attStatus = ucfirst($att->status);
+
+                    $employeeLeaves = $leaves->where('employee_id', $empId);
+                    foreach ($employeeLeaves as $leave) {
+                        if ($cursor->between($leave->start_date, $leave->end_date)) {
+                            $attStatus = 'Cuti';
+                            break;
+                        }
+                    }
+
+                    $att->status = strtolower($attStatus);
                     $fullRows[] = $att;
                 } elseif ($cursor->dayOfWeek === Carbon::SUNDAY || in_array($dateStr, $holidayDates)) {
                     $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
@@ -229,7 +257,13 @@ class ReportController extends Controller
                     $dummy = $this->makeDummyAtt($dateStr, $dayName, 'cuti');
                     $fullRows[] = $dummy;
                 } else {
-                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'alpha');
+                    $dayLower = strtolower($cursor->format('l'));
+                    $offDays = $emp->off_days ?? ['sunday'];
+                    if (in_array($dayLower, $offDays)) {
+                        $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
+                    } else {
+                        $dummy = $this->makeDummyAtt($dateStr, $dayName, 'alpha');
+                    }
                     $fullRows[] = $dummy;
                 }
                 $cursor->addDay();

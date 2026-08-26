@@ -146,9 +146,9 @@
                 <td>{{ $att->break_in ? \Carbon\Carbon::parse($att->break_in)->format('H:i') : '-' }}</td>
                 <td>{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('H:i') : '-' }}</td>
                 <td>{{ $att->overtime_in && $att->overtime_out ? \Carbon\Carbon::parse($att->overtime_in)->format('H:i') . '-' . \Carbon\Carbon::parse($att->overtime_out)->format('H:i') : '-' }}</td>
-                <td>{{ $att->late_minutes > 0 ? $att->late_minutes . 'm' : '-' }}</td>
-                <td>{{ $att->early_leave_minutes > 0 ? $att->early_leave_minutes . 'm' : '-' }}</td>
-                <td>{{ $att->excess_break_minutes > 0 ? $att->excess_break_minutes . 'm' : '-' }}</td>
+                <td>@if($att->ignore_late)<span style="color:#d97706;font-weight:600;">Diabaikan</span>@elseif($att->late_minutes > 0){{ $att->late_minutes }}m@else -@endif</td>
+                <td>@if($att->ignore_early_leave)<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@elseif($att->early_leave_minutes > 0){{ $att->early_leave_minutes }}m@else -@endif</td>
+                <td>@if($att->ignore_excess_break)<span style="color:#0891b2;font-weight:600;">Diabaikan</span>@elseif($att->excess_break_minutes > 0){{ $att->excess_break_minutes }}m@else -@endif</td>
                 <td class="{{ $statusClass }}">{{ $statusLabels[$statusClass] ?? ucfirst($att->status) }}</td>
             </tr>
             @endforeach

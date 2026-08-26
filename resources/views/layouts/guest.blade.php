@@ -9,6 +9,14 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>[x-cloak] { display: none !important; }</style>
+        <script>
+            (function () {
+                var stored = localStorage.getItem('darkMode');
+                if (stored === 'true' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                }
+            })();
+        </script>
     </head>
     <body x-data="guestTheme()" x-init="init()" class="font-sans text-gray-900 dark:text-white antialiased">
         <div class="relative min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 overflow-hidden">

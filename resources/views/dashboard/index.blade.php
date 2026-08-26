@@ -11,9 +11,10 @@
         -webkit-transform: translate3d(0, 0, 0);
         -moz-transform: translate3d(0, 0, 0);
         transform: translate3d(0, 0, 0);
-        width: 420px;
+        width: 100%;
         margin: 0 auto;
-        height: 570px;
+        height: auto;
+        min-height: 480px;
         overflow: hidden;
     }
     #calendar *, #calendar *:before, #calendar *:after {
@@ -21,7 +22,7 @@
     }
     #calendar .header {
         height: 50px;
-        width: 420px;
+        width: 100%;
         background: rgba(66, 66, 66, 1);
         text-align: center;
         position: relative;
@@ -79,11 +80,13 @@
         animation: moveToBottomFadeMonth .4s ease-in;
         opacity: 1;
     }
-    #calendar .week { background: #4A4A4A; }
+    #calendar .week { background: #4A4A4A; display: flex; }
     #calendar .day {
         display: inline-block;
-        width: 60px;
-        padding: 10px;
+        width: 14.28%;
+        flex: 1 1 14.28%;
+        min-width: 0;
+        padding: 8px 4px;
         text-align: center;
         vertical-align: top;
         cursor: pointer;
@@ -100,7 +103,7 @@
         color: rgba(255, 255, 255, .5);
         letter-spacing: .7px;
     }
-    #calendar .day-number { font-size: 24px; letter-spacing: 1.5px; }
+    #calendar .day-number { font-size: 22px; letter-spacing: 1.5px; }
     #calendar .day .day-events {
         list-style: none;
         margin-top: 3px;
@@ -127,7 +130,7 @@
     #calendar .purple { background: rgba(180, 140, 230, 1); }
     #calendar .details {
         position: relative;
-        width: 420px;
+        width: 100%;
         height: 75px;
         background: rgba(164, 164, 164, 1);
         margin-top: 5px;
@@ -637,7 +640,7 @@
             }, []);
 
             this.renderEvents(todaysEvents, details);
-            arrow.style.left = el.offsetLeft - el.parentNode.offsetLeft + 27 + 'px';
+            arrow.style.left = (el.offsetLeft - el.parentNode.offsetLeft + el.offsetWidth / 2) + 'px';
         }
 
         Calendar.prototype.renderEvents = function(events, ele) {

@@ -890,6 +890,9 @@ class ReportController extends Controller
         $dummy->early_leave_minutes = 0;
         $dummy->excess_break_minutes = 0;
         $dummy->overtime_minutes = 0;
+        $dummy->ignore_late = false;
+        $dummy->ignore_early_leave = false;
+        $dummy->ignore_excess_break = false;
         $dummy->status = $status;
         return $dummy;
     }

@@ -99,7 +99,7 @@
                     $calOffset = $calStart->dayOfWeek;
                 @endphp
                 @for($i = 0; $i < $calOffset; $i++)
-                <div class="aspect-square rounded-xl border border-transparent"></div>
+                <div class="min-h-[76px] rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40"></div>
                 @endfor
                 @for($d = 1; $d <= $calMonth->daysInMonth; $d++)
                 @php
@@ -112,40 +112,52 @@
                     $isSunday = $date->dayOfWeek === 0;
                     $isToday = $key === $calendarData['today'];
                     $isPast = $key < $calendarData['today'];
-                    $hasData = $isHoliday || count($leaves) > 0 || ($att !== null);
+
+                    $events = [];
+                    if ($isHoliday) {
+                        $events[] = ['label' => $holidayName, 'color' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'];
+                    }
+                    if (count($leaves) > 0) {
+                        foreach ($leaves as $lv) {
+                            $events[] = ['label' => $lv['name'] . ' · ' . $lv['type'], 'color' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'];
+                        }
+                    }
+                    if ($att) {
+                        if ($att['total_hadir'] > 0) {
+                            $events[] = ['label' => $att['total_hadir'] . ' hadir', 'color' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'];
+                        }
+                        if ($att['izin'] > 0) {
+                            $events[] = ['label' => $att['izin'] . ' izin', 'color' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'];
+                        }
+                        if ($att['sakit'] > 0) {
+                            $events[] = ['label' => $att['sakit'] . ' sakit', 'color' => 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300'];
+                        }
+                        if ($att['alpha'] > 0) {
+                            $events[] = ['label' => $att['alpha'] . ' alpha', 'color' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'];
+                        }
+                    }
+                    $showEvents = array_slice($events, 0, 3);
+                    $moreCount = count($events) - count($showEvents);
                 @endphp
-                <button type="button" @click="openDay('{{ $key }}')" class="aspect-square rounded-xl border p-1.5 flex flex-col items-center justify-center gap-0.5 transition-colors min-h-14 relative
-                    {{ $isHoliday ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700' }}
-                    hover:border-blue-300 dark:hover:border-blue-700
-                    {{ $isToday ? 'ring-2 ring-blue-500' : '' }}">
-                    @if($isSunday || $isHoliday)
-                    <span class="text-xs font-bold {{ $isHoliday ? 'text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-gray-500' }}">{{ $d }}</span>
-                    @else
-                    <span class="text-xs font-semibold {{ $isPast ? 'text-gray-300 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">{{ $d }}</span>
-                    @endif
-                    @if($hasData)
-                    <div class="flex flex-wrap items-center justify-center gap-0.5">
-                        @if($att && ($att['total_hadir'] > 0 || $att['terlambat'] > 0))
-                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">H{{ $att['total_hadir'] }}</span>
-                        @endif
-                        @if($att && $att['izin'] > 0)
-                        <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">I{{ $att['izin'] }}</span>
-                        @endif
-                        @if($att && $att['sakit'] > 0)
-                        <span class="text-[9px] font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/40 px-1 py-0.5 rounded">S{{ $att['sakit'] }}</span>
-                        @endif
-                        @if($isHoliday)
-                        <span class="text-[9px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 px-1 py-0.5 rounded">Libur</span>
-                        @elseif(count($leaves) > 0)
-                        <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-1 py-0.5 rounded">C{{ count($leaves) }}</span>
-                        @endif
-                        @if($att && $att['alpha'] > 0)
-                        <span class="text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/40 px-1 py-0.5 rounded">A{{ $att['alpha'] }}</span>
+                <button type="button" @click="openDay('{{ $key }}')" class="min-h-[76px] rounded-lg border p-1.5 flex flex-col items-stretch gap-1 text-left transition-colors relative
+                    {{ $isHoliday ? 'bg-red-50/70 dark:bg-red-900/10 border-red-200 dark:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700' }}
+                    hover:border-blue-300 dark:hover:border-blue-700">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold {{ $isToday ? 'bg-blue-600 text-white w-5 h-5 flex items-center justify-center rounded-full' : ($isSunday || $isHoliday ? 'text-red-500 dark:text-red-400' : ($isPast ? 'text-gray-300 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300')) }}">{{ $d }}</span>
+                        @if($att && ($att['izin'] > 0 || $att['sakit'] > 0 || $att['cuti'] > 0 || $att['alpha'] > 0 || $att['total_hadir'] > 0))
+                        <span class="text-[9px] text-gray-400 dark:text-gray-500">{{ $att['total_hadir'] }}/{{ $isHoliday || (!$isPast && $isSunday) ? '-' : $calendarData['total_employees'] }}</span>
+                        @elseif($isHoliday)
+                        <span class="text-[9px] text-red-400">Libur</span>
                         @endif
                     </div>
-                    @elseif($isSunday)
-                    <span class="text-[9px] font-semibold text-gray-300 dark:text-gray-600">Libur</span>
-                    @endif
+                    <div class="flex flex-col gap-0.5 flex-1">
+                        @foreach($showEvents as $ev)
+                        <span class="text-[9px] leading-tight px-1 py-0.5 rounded truncate {{ $ev['color'] }}">{{ $ev['label'] }}</span>
+                        @endforeach
+                        @if($moreCount > 0)
+                        <span class="text-[9px] text-gray-400 dark:text-gray-500 px-1">+{{ $moreCount }} lainnya</span>
+                        @endif
+                    </div>
                 </button>
                 @endfor
             </div>

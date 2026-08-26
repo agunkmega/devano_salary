@@ -153,8 +153,9 @@
                                     'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400': att.status === 'Terlambat',
                                     'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400': att.status === 'Izin' || att.status === 'Sakit',
                                     'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400': att.status === 'Cuti' || att.status === 'Libur' || (att.status === '-' && att.day_name === 'Minggu'),
-                                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': att.status === 'Alpha' || (att.status === '-' && att.day_name !== 'Minggu')
-                                }" x-text="att.status === 'Cuti' && att.leave_type_name ? att.leave_type_name : ((att.status === 'Izin' || att.status === 'Sakit') && att.leave_type_name ? att.leave_type_name : (att.status === '-' ? (att.day_name === 'Minggu' ? 'Libur' : 'Alpha') : att.status))"></span>
+                                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': att.status === 'Alpha' || (att.status === '-' && att.day_name !== 'Minggu'),
+                                    'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400': att.is_half_day
+                                }" x-text="att.is_half_day ? 'Setengah Hari' : (att.status === 'Cuti' && att.leave_type_name ? att.leave_type_name : ((att.status === 'Izin' || att.status === 'Sakit') && att.leave_type_name ? att.leave_type_name : (att.status === '-' ? (att.day_name === 'Minggu' ? 'Libur' : 'Alpha') : att.status)))"></span>
                                 <div x-show="att.status === 'Libur' && att.holiday_name" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" x-text="att.holiday_name"></div>
                             </td>
                             <td class="py-3 px-3">
@@ -336,6 +337,10 @@
                         <input type="checkbox" x-model="editForm.ignore_excess_break" name="ignore_excess_break" id="edit_ignore_excess_break" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
                         <label for="edit_ignore_excess_break" class="text-sm text-gray-700 dark:text-gray-300">Abaikan lebih istirahat</label>
                     </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" x-model="editForm.is_half_day" name="is_half_day" id="edit_is_half_day" value="1" class="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500">
+                        <label for="edit_is_half_day" class="text-sm text-gray-700 dark:text-gray-300">Setengah hari (tidak dihitung telat 8%)</label>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Note</label>
                         <textarea x-model="editForm.admin_note" name="admin_note" rows="2" placeholder="Catatan untuk absensi ini..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
@@ -376,11 +381,11 @@
             showManualModal: false,
             editModal: false,
             editing: null,
-            editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '', ignore_late: false, admin_note: '' },
+            editForm: { clock_in: '', break_out: '', break_in: '', clock_out: '', overtime_in: '', overtime_out: '', status: '', is_half_day: false, ignore_late: false, admin_note: '' },
             departments: @json($departments),
             attendances: @json($attendancesData),
             get filteredAttendances() { return this.attendances.filter(a => { let status = a.status === '-' ? (a.day_name === 'Minggu' ? 'Libur' : 'Alpha') : a.status; if (this.filters.status && status !== this.filters.status) return false; if (this.filters.employee && !a.employee.toLowerCase().includes(this.filters.employee.toLowerCase())) return false; return true; }); },
-            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : (att.day_name === 'Minggu' ? 'hadir' : 'alpha'), ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false, admin_note: att.admin_note || '' }; this.editModal = true; },
+            openEditModal(att) { this.editing = att; this.editForm = { clock_in: att.clock_in || '', break_out: att.break_out || '', break_in: att.break_in || '', clock_out: att.clock_out || '', overtime_in: att.overtime_in || '', overtime_out: att.overtime_out || '', status: att.status && att.status !== '-' ? att.status.toLowerCase() : (att.day_name === 'Minggu' ? 'hadir' : 'alpha'), is_half_day: att.is_half_day || false, ignore_late: att.ignore_late || false, ignore_early_leave: att.ignore_early_leave || false, ignore_excess_break: att.ignore_excess_break || false, admin_note: att.admin_note || '' }; this.editModal = true; },
             init() {}
         }));
     });

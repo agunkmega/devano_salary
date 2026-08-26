@@ -138,6 +138,10 @@
                 if ($statusClass === 'izin') $totalIzin++;
                 if ($statusClass === 'sakit') $totalSakit++;
                 if ($statusClass === 'alpha') $totalAlpha++;
+
+                $lateDisplay = $att->ignore_late ? 'Diabaikan' : ($att->late_minutes > 0 ? $att->late_minutes . 'm' : '-');
+                $earlyDisplay = $att->ignore_early_leave ? 'Diabaikan' : ($att->early_leave_minutes > 0 ? $att->early_leave_minutes . 'm' : '-');
+                $breakDisplay = $att->ignore_excess_break ? 'Diabaikan' : ($att->excess_break_minutes > 0 ? $att->excess_break_minutes . 'm' : '-');
             @endphp
             <tr @if(\Carbon\Carbon::parse($att->attendance_date)->isSunday()) class="sunday" @endif>
                 <td>{{ \Carbon\Carbon::parse($att->attendance_date)->format('d/m/Y') }}</td>
@@ -147,9 +151,9 @@
                 <td>{{ $att->break_in ? \Carbon\Carbon::parse($att->break_in)->format('H:i') : '-' }}</td>
                 <td>{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('H:i') : '-' }}</td>
                 <td>{{ $att->overtime_in && $att->overtime_out ? \Carbon\Carbon::parse($att->overtime_in)->format('H:i') . '-' . \Carbon\Carbon::parse($att->overtime_out)->format('H:i') : '-' }}</td>
-                <td>@if($att->ignore_late)<span style="color:#d97706;font-weight:600;">Diabaikan</span>@elseif($att->late_minutes > 0){{ $att->late_minutes }}m@else -@endif</td>
-                <td>@if($att->ignore_early_leave)<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@elseif($att->early_leave_minutes > 0){{ $att->early_leave_minutes }}m@else -@endif</td>
-                <td>@if($att->ignore_excess_break)<span style="color:#0891b2;font-weight:600;">Diabaikan</span>@elseif($att->excess_break_minutes > 0){{ $att->excess_break_minutes }}m@else -@endif</td>
+                <td>@if($lateDisplay === 'Diabaikan')<span style="color:#d97706;font-weight:600;">Diabaikan</span>@else{{ $lateDisplay }}@endif</td>
+                <td>@if($earlyDisplay === 'Diabaikan')<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@else{{ $earlyDisplay }}@endif</td>
+                <td>@if($breakDisplay === 'Diabaikan')<span style="color:#0891b2;font-weight:600;">Diabaikan</span>@else{{ $breakDisplay }}@endif</td>
                 <td class="{{ $statusClass }}">{{ $displayStatus }}</td>
             </tr>
             @endforeach

@@ -236,6 +236,7 @@ class PayrollController extends Controller
         $lateDays = (int) Attendance::where('employee_id', $employee->id)
             ->whereBetween('attendance_date', [$startDate, $endDate])
             ->where('late_minutes', '>', 0)
+            ->where('is_half_day', false)
             ->count();
 
         $attendanceDays = Attendance::where('employee_id', $employee->id)

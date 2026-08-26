@@ -72,6 +72,11 @@
                 </select>
             </div>
 
+            <div class="flex items-center gap-2 py-1">
+                <input type="checkbox" name="is_half_day" id="is_half_day" value="1" @checked(old('is_half_day')) class="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500">
+                <label for="is_half_day" class="text-sm text-gray-700 dark:text-gray-300">Setengah hari (tidak dihitung telat 8%)</label>
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan</label>
                 <textarea name="notes" rows="3" class="w-full px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Opsional">{{ old('notes') }}</textarea>

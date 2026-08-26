@@ -67,17 +67,138 @@
         <x-stats-card icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' label="Total Gaji Bulanan" value="Rp {{ number_format($monthlyPayroll, 0, ',', '.') }}" color="indigo" />
     </div>
 
-    <div x-data="chartView()" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div x-data="dashboardCalendar()" class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Grafik Kehadiran</h3>
-                <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <button @click="switchView('daily')" class="px-4 py-1.5 text-sm font-medium transition-colors" :class="view === 'daily' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">Harian</button>
-                    <button @click="switchView('monthly')" class="px-4 py-1.5 text-sm font-medium transition-colors" :class="view === 'monthly' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">Bulanan</button>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Kalender Kehadiran</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ $calendarData['month_label'] }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="navigate(-1)" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button type="button" @click="navigate(1)" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <button type="button" @click="navigate(0)" class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Bulan Ini</button>
                 </div>
             </div>
-            <div class="relative" style="height:300px">
-                <canvas x-ref="chart"></canvas>
+
+            <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                @foreach(['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $dn)
+                <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 py-1.5">{{ $dn }}</div>
+                @endforeach
+            </div>
+
+            <div class="grid grid-cols-7 gap-1">
+                @php
+                    $calMonth = Carbon\Carbon::parse($calendarData['month']);
+                    $calStart = $calMonth->copy()->startOfMonth()->startOfDay();
+                    $calEnd = $calMonth->copy()->endOfMonth();
+                    $calOffset = $calStart->dayOfWeek;
+                @endphp
+                @for($i = 0; $i < $calOffset; $i++)
+                <div class="aspect-square rounded-xl border border-transparent"></div>
+                @endfor
+                @for($d = 1; $d <= $calMonth->daysInMonth; $d++)
+                @php
+                    $date = $calStart->copy()->setDay($d);
+                    $key = $date->format('Y-m-d');
+                    $isHoliday = isset($calendarData['holidays'][$key]);
+                    $holidayName = $isHoliday ? $calendarData['holidays'][$key]['name'] : null;
+                    $leaves = $calendarData['leaves'][$key] ?? [];
+                    $att = $calendarData['attendance'][$key] ?? null;
+                    $isSunday = $date->dayOfWeek === 0;
+                    $isToday = $key === $calendarData['today'];
+                    $isPast = $key < $calendarData['today'];
+                    $hasData = $isHoliday || count($leaves) > 0 || ($att !== null);
+                @endphp
+                <button type="button" @click="openDay('{{ $key }}')" class="aspect-square rounded-xl border p-1.5 flex flex-col items-center justify-center gap-0.5 transition-colors min-h-14 relative
+                    {{ $isHoliday ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700' }}
+                    hover:border-blue-300 dark:hover:border-blue-700
+                    {{ $isToday ? 'ring-2 ring-blue-500' : '' }}">
+                    @if($isSunday || $isHoliday)
+                    <span class="text-xs font-bold {{ $isHoliday ? 'text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-gray-500' }}">{{ $d }}</span>
+                    @else
+                    <span class="text-xs font-semibold {{ $isPast ? 'text-gray-300 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">{{ $d }}</span>
+                    @endif
+                    @if($hasData)
+                    <div class="flex flex-wrap items-center justify-center gap-0.5">
+                        @if($att && ($att['total_hadir'] > 0 || $att['terlambat'] > 0))
+                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">H{{ $att['total_hadir'] }}</span>
+                        @endif
+                        @if($att && $att['izin'] > 0)
+                        <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">I{{ $att['izin'] }}</span>
+                        @endif
+                        @if($att && $att['sakit'] > 0)
+                        <span class="text-[9px] font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/40 px-1 py-0.5 rounded">S{{ $att['sakit'] }}</span>
+                        @endif
+                        @if($isHoliday)
+                        <span class="text-[9px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 px-1 py-0.5 rounded">Libur</span>
+                        @elseif(count($leaves) > 0)
+                        <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-1 py-0.5 rounded">C{{ count($leaves) }}</span>
+                        @endif
+                        @if($att && $att['alpha'] > 0)
+                        <span class="text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/40 px-1 py-0.5 rounded">A{{ $att['alpha'] }}</span>
+                        @endif
+                    </div>
+                    @elseif($isSunday)
+                    <span class="text-[9px] font-semibold text-gray-300 dark:text-gray-600">Libur</span>
+                    @endif
+                </button>
+                @endfor
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50 text-xs">
+                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Hadir</span>
+                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Izin</span>
+                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-violet-500"></span> Sakit</span>
+                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Cuti</span>
+                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Libur Nasional</span>
+                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Alpha</span>
+            </div>
+
+            {{-- Day detail modal --}}
+            <div x-show="selectedDay" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm" @click.self="selectedDay = false">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-bold text-gray-900 dark:text-white" x-text="detailTitle"></h4>
+                        <button type="button" @click="selectedDay = false" class="w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="space-y-4 text-sm">
+                        <template x-if="detailHoliday">
+                            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300">
+                                <p class="font-semibold">Libur Nasional</p>
+                                <p class="mt-0.5" x-text="detailHoliday"></p>
+                            </div>
+                        </template>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-center">
+                                <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400" x-text="detailHadir"></p>
+                                <p class="text-xs text-emerald-700 dark:text-emerald-300">Pegawai Hadir</p>
+                            </div>
+                            <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-center">
+                                <p class="text-lg font-bold text-rose-600 dark:text-rose-400" x-text="detailAlpha"></p>
+                                <p class="text-xs text-rose-700 dark:text-rose-300">Tidak Hadir</p>
+                            </div>
+                        </div>
+                        <div x-show="detailLeaves.length > 0">
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Pegawai Cuti/Izin:</p>
+                            <div class="space-y-1.5 max-h-40 overflow-y-auto">
+                                <template x-for="(lv, i) in detailLeaves" :key="i">
+                                    <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                        <span class="text-gray-800 dark:text-gray-200" x-text="lv.name"></span>
+                                        <span class="text-xs text-purple-600 dark:text-purple-400" x-text="lv.type"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <p x-show="detailLeaves.length === 0 && !detailHoliday && detailHadir === 0" class="text-gray-400 text-center py-4">Tidak ada aktivitas pada tanggal ini</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -107,6 +228,19 @@
                     @endforeach
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div x-data="chartView()" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Grafik Kehadiran</h3>
+            <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <button @click="switchView('daily')" class="px-4 py-1.5 text-sm font-medium transition-colors" :class="view === 'daily' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">Harian</button>
+                <button @click="switchView('monthly')" class="px-4 py-1.5 text-sm font-medium transition-colors" :class="view === 'monthly' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'">Bulanan</button>
+            </div>
+        </div>
+        <div class="relative" style="height:230px">
+            <canvas x-ref="chart"></canvas>
         </div>
     </div>
 
@@ -283,6 +417,50 @@
                         }
                     }
                 });
+            }
+        }));
+
+        Alpine.data('dashboardCalendar', () => ({
+            data: @json($calendarData),
+            selectedDay: false,
+            insets: {},
+            init() {
+                this.insets = this.data;
+            },
+            navigate(delta) {
+                const [year, month] = this.data.month.split('-').map(Number);
+                const d = new Date(year, month - 1 + delta, 1);
+                const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                window.location.href = this.withCalendar(ym);
+            },
+            withCalendar(ym) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('cal_month', ym);
+                return url.toString();
+            },
+            get detailTitle() {
+                if (!this.selectedDay) return '';
+                const d = new Date(this.selectedDay + 'T00:00:00');
+                return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            },
+            get detailHoliday() {
+                return this.data.holidays[this.selectedDay]?.name || '';
+            },
+            get detailLeaves() {
+                return this.data.leaves[this.selectedDay] || [];
+            },
+            get detailHadir() {
+                return this.data.attendance[this.selectedDay]?.total_hadir ?? 0;
+            },
+            get detailAlpha() {
+                const att = this.data.attendance[this.selectedDay];
+                if (!att) return 0;
+                const hadir = att.hadir + att.terlambat;
+                const onLeave = att.izin + att.sakit + att.cuti;
+                return Math.max(0, this.data.total_employees - hadir - onLeave);
+            },
+            openDay(key) {
+                this.selectedDay = key;
             }
         }));
     });

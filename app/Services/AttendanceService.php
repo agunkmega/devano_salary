@@ -455,7 +455,7 @@ class AttendanceService
                 $attendance->clock_in, $shiftStart, $shift->late_tolerance_minutes ?? 0
             );
             $attendance->late_minutes = $lateMinutes;
-            $attendance->status = $lateMinutes > 0 ? 'terlambat' : 'hadir';
+            $attendance->status = ($lateMinutes > 0 && !$attendance->is_half_day) ? 'terlambat' : 'hadir';
         } else {
             $attendance->late_minutes = 0;
             if ($isSunday) {

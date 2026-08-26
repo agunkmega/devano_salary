@@ -8,6 +8,7 @@ use App\Models\CashAdvance;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Leave;
+use App\Models\NationalHoliday;
 use App\Models\Payroll;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -55,6 +56,9 @@ class DashboardController extends Controller
         $chartData = $this->getMonthlyChartData();
         $dailyChartData = $this->getDailyChartData();
 
+        $calendarMonth = $request->input('cal_month');
+        $calendarData = $this->getCalendarData($calendarMonth, $totalEmployees);
+
         $recentAttendances = Attendance::with('employee.user')
             ->latest()
             ->take(10)
@@ -98,7 +102,8 @@ class DashboardController extends Controller
             'cashAdvanceSummary',
             'departmentStats',
             'todayBirthdays',
-            'thisMonthBirthdays'
+            'thisMonthBirthdays',
+            'calendarData'
         ));
     }
 
@@ -163,5 +168,74 @@ class DashboardController extends Controller
         }
 
         return $data;
+    }
+
+    private function getCalendarData(?string $month, int $totalEmployees): array
+    {
+        $base = $month ? Carbon::createFromFormat('Y-m', $month) : Carbon::today();
+        $monthStart = $base->copy()->startOfMonth()->startOfDay();
+        $monthEnd = $base->copy()->endOfMonth()->endOfDay();
+
+        $holidays = NationalHoliday::where('is_active', true)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->get(['date', 'name', 'religion'])
+            ->map(fn($h) => [
+                'date' => $h->date->format('Y-m-d'),
+                'name' => $h->name,
+                'religion' => $h->religion,
+            ]);
+
+        $leaves = Leave::with(['employee', 'leaveType'])
+            ->where('status', 'approved')
+            ->where('start_date', '<=', $monthEnd)
+            ->where('end_date', '>=', $monthStart)
+            ->get();
+
+        $leavesByDate = [];
+        foreach ($leaves as $leave) {
+            $start = max(Carbon::parse($leave->start_date), $monthStart);
+            $end = min(Carbon::parse($leave->end_date), $monthEnd);
+            for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                $key = $d->format('Y-m-d');
+                $leavesByDate[$key][] = [
+                    'name' => $leave->employee?->full_name ?? '-',
+                    'type' => $leave->leaveType?->name ?? 'Cuti',
+                ];
+            }
+        }
+
+        $attendance = Attendance::whereBetween('attendance_date', [$monthStart, $monthEnd])
+            ->selectRaw("attendance_date,
+                SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir,
+                SUM(CASE WHEN status = 'terlambat' THEN 1 ELSE 0 END) as terlambat,
+                SUM(CASE WHEN status = 'izin' THEN 1 ELSE 0 END) as izin,
+                SUM(CASE WHEN status = 'sakit' THEN 1 ELSE 0 END) as sakit,
+                SUM(CASE WHEN status = 'cuti' THEN 1 ELSE 0 END) as cuti,
+                SUM(CASE WHEN status = 'alpha' THEN 1 ELSE 0 END) as alpha
+            ")
+            ->groupBy('attendance_date')
+            ->get()
+            ->keyBy(fn($a) => $a->attendance_date->format('Y-m-d'));
+
+        return [
+            'month' => $base->format('Y-m'),
+            'month_label' => $base->translatedFormat('F Y'),
+            'today' => Carbon::today()->format('Y-m-d'),
+            'total_employees' => $totalEmployees,
+            'holidays' => $holidays->keyBy('date')->toArray(),
+            'leaves' => $leavesByDate,
+            'attendance' => $attendance->map(function ($row) {
+                $hadir = (int) $row->hadir + (int) $row->terlambat;
+                return [
+                    'hadir' => (int) $row->hadir,
+                    'terlambat' => (int) $row->terlambat,
+                    'izin' => (int) $row->izin,
+                    'sakit' => (int) $row->sakit,
+                    'cuti' => (int) $row->cuti,
+                    'alpha' => (int) $row->alpha,
+                    'total_hadir' => $hadir,
+                ];
+            })->toArray(),
+        ];
     }
 }

@@ -65,6 +65,7 @@ class PayrollService
         $lateDays = Attendance::where('employee_id', $employee->id)
             ->whereBetween('attendance_date', [$startDate, $endDate])
             ->where('late_minutes', '>', 0)
+            ->where('is_half_day', false)
             ->count();
 
         $offDays = $employee->off_days ?? ['sunday'];

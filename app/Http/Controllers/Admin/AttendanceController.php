@@ -141,6 +141,7 @@ class AttendanceController extends Controller
                     'overtime_in' => $att?->overtime_in?->format('H:i'),
                     'overtime_out' => $att?->overtime_out?->format('H:i'),
                     'status' => $status,
+                    'is_half_day' => $att?->is_half_day ?? false,
                     'leave_type_name' => $leaveTypeName,
                     'holiday_name' => $holidayName,
                     'late_minutes' => $att?->late_minutes,
@@ -181,6 +182,7 @@ class AttendanceController extends Controller
             'overtime_in' => 'nullable|date_format:H:i',
             'overtime_out' => 'nullable|date_format:H:i',
             'status' => 'required|in:hadir,terlambat,izin,sakit,cuti,alpha',
+            'is_half_day' => 'nullable|boolean',
             'notes' => 'nullable|string',
             'admin_note' => 'nullable|string',
         ]);
@@ -203,6 +205,8 @@ class AttendanceController extends Controller
             'is_manual' => true,
             'edited_by' => auth()->id(),
         ]);
+
+        $data['is_half_day'] = $request->boolean('is_half_day');
 
         Attendance::create($data);
 
@@ -245,6 +249,7 @@ class AttendanceController extends Controller
             'ignore_late' => 'nullable|boolean',
             'ignore_early_leave' => 'nullable|boolean',
             'ignore_excess_break' => 'nullable|boolean',
+            'is_half_day' => 'nullable|boolean',
         ]);
 
         $validated['is_manual'] = true;
@@ -252,6 +257,7 @@ class AttendanceController extends Controller
         $validated['ignore_late'] = $request->boolean('ignore_late');
         $validated['ignore_early_leave'] = $request->boolean('ignore_early_leave');
         $validated['ignore_excess_break'] = $request->boolean('ignore_excess_break');
+        $validated['is_half_day'] = $request->boolean('is_half_day');
 
         $dateStr = $validated['attendance_date'];
         foreach (['clock_in', 'clock_out', 'break_out', 'break_in', 'overtime_in', 'overtime_out'] as $field) {

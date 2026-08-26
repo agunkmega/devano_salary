@@ -259,13 +259,13 @@ class ReportController extends Controller
 
                     $att->status = strtolower($attStatus);
                     $fullRows[] = $att;
-                } elseif ($cursor->dayOfWeek === Carbon::SUNDAY || in_array($dateStr, $holidayDates)) {
-                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
-                    $fullRows[] = $dummy;
                 } elseif (isset($leaveDateMap[$empId][$dateStr])) {
                     $leaveInfo = $leaveDateMap[$empId][$dateStr];
                     $dummy = $this->makeDummyAtt($dateStr, $dayName, strtolower($leaveInfo['status']));
                     $dummy->leave_type_name = $leaveInfo['leave_type_name'];
+                    $fullRows[] = $dummy;
+                } elseif ($cursor->dayOfWeek === Carbon::SUNDAY || $this->isHolidayForEmployee($dateStr, $emp, $holidaysByDate)) {
+                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
                     $fullRows[] = $dummy;
                 } else {
                     $dayLower = strtolower($cursor->format('l'));
@@ -907,6 +907,21 @@ class ReportController extends Controller
         $dummy->leave_type_name = null;
         $dummy->status = $status;
         return $dummy;
+    }
+
+    private function isHolidayForEmployee(string $dateStr, ?\App\Models\Employee $emp, array $holidaysByDate): bool
+    {
+        if (!isset($holidaysByDate[$dateStr])) {
+            return false;
+        }
+        $empReligion = $emp?->religion;
+        foreach ($holidaysByDate[$dateStr] as $holiday) {
+            $religion = $holiday['religion'] ?? null;
+            if (empty($religion) || $religion === $empReligion) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function mapLeaveTypeToStatus(string $code): string

@@ -5,6 +5,266 @@
 
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+<style>
+    #calendar {
+        -webkit-transform: translate3d(0, 0, 0);
+        -moz-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        width: 420px;
+        margin: 0 auto;
+        height: 570px;
+        overflow: hidden;
+    }
+    #calendar *, #calendar *:before, #calendar *:after {
+        -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+    }
+    #calendar .header {
+        height: 50px;
+        width: 420px;
+        background: rgba(66, 66, 66, 1);
+        text-align: center;
+        position: relative;
+        z-index: 100;
+    }
+    #calendar .header h1 {
+        margin: 0;
+        padding: 0;
+        font-size: 20px;
+        line-height: 50px;
+        font-weight: 100;
+        letter-spacing: 1px;
+    }
+    #calendar .left, #calendar .right {
+        position: absolute;
+        width: 0px;
+        height: 0px;
+        border-style: solid;
+        top: 50%;
+        margin-top: -7.5px;
+        cursor: pointer;
+    }
+    #calendar .left {
+        border-width: 7.5px 10px 7.5px 0;
+        border-color: transparent rgba(160, 159, 160, 1) transparent transparent;
+        left: 20px;
+    }
+    #calendar .right {
+        border-width: 7.5px 0 7.5px 10px;
+        border-color: transparent transparent transparent rgba(160, 159, 160, 1);
+        right: 20px;
+    }
+    #calendar .month { opacity: 0; }
+    #calendar .month.new {
+        -webkit-animation: fadeIn 1s ease-out;
+        opacity: 1;
+    }
+    #calendar .month.in.next {
+        -webkit-animation: moveFromTopFadeMonth .4s ease-out;
+        animation: moveFromTopFadeMonth .4s ease-out;
+        opacity: 1;
+    }
+    #calendar .month.out.next {
+        -webkit-animation: moveToTopFadeMonth .4s ease-in;
+        animation: moveToTopFadeMonth .4s ease-in;
+        opacity: 1;
+    }
+    #calendar .month.in.prev {
+        -webkit-animation: moveFromBottomFadeMonth .4s ease-out;
+        animation: moveFromBottomFadeMonth .4s ease-out;
+        opacity: 1;
+    }
+    #calendar .month.out.prev {
+        -webkit-animation: moveToBottomFadeMonth .4s ease-in;
+        animation: moveToBottomFadeMonth .4s ease-in;
+        opacity: 1;
+    }
+    #calendar .week { background: #4A4A4A; }
+    #calendar .day {
+        display: inline-block;
+        width: 60px;
+        padding: 10px;
+        text-align: center;
+        vertical-align: top;
+        cursor: pointer;
+        background: #4A4A4A;
+        position: relative;
+        z-index: 100;
+    }
+    #calendar .day.other { color: rgba(255, 255, 255, .3); }
+    #calendar .day.today { color: rgba(156, 202, 235, 1); }
+    #calendar .day-name {
+        font-size: 9px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        color: rgba(255, 255, 255, .5);
+        letter-spacing: .7px;
+    }
+    #calendar .day-number { font-size: 24px; letter-spacing: 1.5px; }
+    #calendar .day .day-events {
+        list-style: none;
+        margin-top: 3px;
+        text-align: center;
+        height: 12px;
+        line-height: 6px;
+        overflow: hidden;
+    }
+    #calendar .day .day-events span {
+        vertical-align: top;
+        display: inline-block;
+        padding: 0;
+        margin: 0;
+        width: 5px;
+        height: 5px;
+        line-height: 5px;
+        margin: 0 1px;
+    }
+    #calendar .blue { background: rgba(156, 202, 235, 1); }
+    #calendar .orange { background: rgba(247, 167, 0, 1); }
+    #calendar .green { background: rgba(153, 198, 109, 1); }
+    #calendar .yellow { background: rgba(249, 233, 0, 1); }
+    #calendar .red { background: rgba(240, 100, 100, 1); }
+    #calendar .purple { background: rgba(180, 140, 230, 1); }
+    #calendar .details {
+        position: relative;
+        width: 420px;
+        height: 75px;
+        background: rgba(164, 164, 164, 1);
+        margin-top: 5px;
+        border-radius: 4px;
+    }
+    #calendar .details.in {
+        -webkit-animation: moveFromTopFade .5s ease both;
+        animation: moveFromTopFade .5s ease both;
+    }
+    #calendar .details.out {
+        -webkit-animation: moveToTopFade .5s ease both;
+        animation: moveToTopFade .5s ease both;
+    }
+    #calendar .arrow {
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        margin-left: -2px;
+        width: 0px;
+        height: 0px;
+        border-style: solid;
+        border-width: 0 5px 5px 5px;
+        border-color: transparent transparent rgba(164, 164, 164, 1) transparent;
+        transition: all 0.7s ease;
+    }
+    #calendar .events {
+        height: 75px;
+        padding: 7px 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    #calendar .events.in {
+        -webkit-animation: fadeIn .3s ease both;
+        animation: fadeIn .3s ease both;
+        -webkit-animation-delay: .3s;
+        animation-delay: .3s;
+    }
+    #calendar .details.out .events {
+        -webkit-animation: fadeOutShink .4s ease both;
+        animation: fadeOutShink .4s ease both;
+    }
+    #calendar .events.out {
+        -webkit-animation: fadeOut .3s ease both;
+        animation: fadeOut .3s ease both;
+    }
+    #calendar .event {
+        font-size: 16px;
+        line-height: 22px;
+        letter-spacing: .5px;
+        padding: 2px 16px;
+        vertical-align: top;
+        color: rgba(255, 255, 255, 1);
+    }
+    #calendar .event.empty { color: #eee; }
+    #calendar .event-category {
+        height: 10px;
+        width: 10px;
+        display: inline-block;
+        margin: 6px 0 0;
+        vertical-align: top;
+    }
+    #calendar .event span { display: inline-block; padding: 0 0 0 7px; }
+    #calendar .legend {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 30px;
+        background: rgba(60, 60, 60, 1);
+        line-height: 30px;
+    }
+    #calendar .entry {
+        position: relative;
+        padding: 0 0 0 25px;
+        font-size: 13px;
+        display: inline-block;
+        line-height: 30px;
+        background: transparent;
+    }
+    #calendar .entry:after {
+        position: absolute;
+        content: '';
+        height: 5px;
+        width: 5px;
+        top: 12px;
+        left: 14px;
+    }
+    #calendar .entry.blue:after { background: rgba(156, 202, 235, 1); }
+    #calendar .entry.orange:after { background: rgba(247, 167, 0, 1); }
+    #calendar .entry.green:after { background: rgba(153, 198, 109, 1); }
+    #calendar .entry.yellow:after { background: rgba(249, 233, 0, 1); }
+    #calendar .entry.red:after { background: rgba(240, 100, 100, 1); }
+    #calendar .entry.purple:after { background: rgba(180, 140, 230, 1); }
+    #calendar .entry:last-child { margin-right: 15px; }
+
+    @-webkit-keyframes moveFromTopFade {
+      from { opacity: .3; height:0px; margin-top:0px; -webkit-transform: translateY(-100%); }
+    }
+    @keyframes moveFromTopFade {
+      from { height:0px; margin-top:0px; transform: translateY(-100%); }
+    }
+    @-webkit-keyframes moveToTopFade {
+      to { opacity: .3; height:0px; margin-top:0px; opacity: 0.3; -webkit-transform: translateY(-100%); }
+    }
+    @keyframes moveToTopFade {
+      to { height:0px; transform: translateY(-100%); }
+    }
+    @-webkit-keyframes moveToTopFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(-30%) scale(.95); }
+    }
+    @keyframes moveToTopFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(-30%); }
+    }
+    @-webkit-keyframes moveFromTopFadeMonth {
+      from { opacity: 0; -webkit-transform: translateY(30%) scale(.95); }
+    }
+    @keyframes moveFromTopFadeMonth {
+      from { opacity: 0; -webkit-transform: translateY(30%); }
+    }
+    @-webkit-keyframes moveToBottomFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(30%) scale(.95); }
+    }
+    @keyframes moveToBottomFadeMonth {
+      to { opacity: 0; -webkit-transform: translateY(30%); }
+    }
+    @-webkit-keyframes moveFromBottomFadeMonth {
+      from { opacity: 0; -webkit-transform: translateY(-30%) scale(.95); }
+    }
+    @keyframes moveFromBottomFadeMonth {
+      from { opacity: 0; -webkit-transform: translateY(-30%); }
+    }
+    @-webkit-keyframes fadeIn { from { opacity: 0; } }
+    @keyframes fadeIn { from { opacity: 0; } }
+    @-webkit-keyframes fadeOut { to { opacity: 0; } }
+    @keyframes fadeOut { to { opacity: 0; } }
+    @-webkit-keyframes fadeOutShink { to { opacity: 0; padding: 0px; height: 0px; } }
+    @keyframes fadeOutShink { to { opacity: 0; padding: 0px; height: 0px; } }
+</style>
 @endpush
 
 @section('page-content')
@@ -68,150 +328,8 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div x-data="dashboardCalendar()" class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Kalender Kehadiran</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ $calendarData['month_label'] }}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="navigate(-1)" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <button type="button" @click="navigate(1)" class="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                    <button type="button" @click="navigate(0)" class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Bulan Ini</button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                @foreach(['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $dn)
-                <div class="text-xs font-semibold text-gray-400 dark:text-gray-500 py-1.5">{{ $dn }}</div>
-                @endforeach
-            </div>
-
-            <div class="grid grid-cols-7 gap-1">
-                @php
-                    $calMonth = Carbon\Carbon::parse($calendarData['month']);
-                    $calStart = $calMonth->copy()->startOfMonth()->startOfDay();
-                    $calEnd = $calMonth->copy()->endOfMonth();
-                    $calOffset = $calStart->dayOfWeek;
-                @endphp
-                @for($i = 0; $i < $calOffset; $i++)
-                <div class="min-h-[76px] rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40"></div>
-                @endfor
-                @for($d = 1; $d <= $calMonth->daysInMonth; $d++)
-                @php
-                    $date = $calStart->copy()->setDay($d);
-                    $key = $date->format('Y-m-d');
-                    $isHoliday = isset($calendarData['holidays'][$key]);
-                    $holidayName = $isHoliday ? $calendarData['holidays'][$key]['name'] : null;
-                    $leaves = $calendarData['leaves'][$key] ?? [];
-                    $att = $calendarData['attendance'][$key] ?? null;
-                    $isSunday = $date->dayOfWeek === 0;
-                    $isToday = $key === $calendarData['today'];
-                    $isPast = $key < $calendarData['today'];
-
-                    $events = [];
-                    if ($isHoliday) {
-                        $events[] = ['label' => $holidayName, 'color' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'];
-                    }
-                    if (count($leaves) > 0) {
-                        foreach ($leaves as $lv) {
-                            $events[] = ['label' => $lv['name'] . ' · ' . $lv['type'], 'color' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'];
-                        }
-                    }
-                    if ($att) {
-                        if ($att['total_hadir'] > 0) {
-                            $events[] = ['label' => $att['total_hadir'] . ' hadir', 'color' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'];
-                        }
-                        if ($att['izin'] > 0) {
-                            $events[] = ['label' => $att['izin'] . ' izin', 'color' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'];
-                        }
-                        if ($att['sakit'] > 0) {
-                            $events[] = ['label' => $att['sakit'] . ' sakit', 'color' => 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300'];
-                        }
-                        if ($att['alpha'] > 0) {
-                            $events[] = ['label' => $att['alpha'] . ' alpha', 'color' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'];
-                        }
-                    }
-                    $showEvents = array_slice($events, 0, 3);
-                    $moreCount = count($events) - count($showEvents);
-                @endphp
-                <button type="button" @click="openDay('{{ $key }}')" class="min-h-[76px] rounded-lg border p-1.5 flex flex-col items-stretch gap-1 text-left transition-colors relative
-                    {{ $isHoliday ? 'bg-red-50/70 dark:bg-red-900/10 border-red-200 dark:border-red-800' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700' }}
-                    hover:border-blue-300 dark:hover:border-blue-700">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold {{ $isToday ? 'bg-blue-600 text-white w-5 h-5 flex items-center justify-center rounded-full' : ($isSunday || $isHoliday ? 'text-red-500 dark:text-red-400' : ($isPast ? 'text-gray-300 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300')) }}">{{ $d }}</span>
-                        @if($att && ($att['izin'] > 0 || $att['sakit'] > 0 || $att['cuti'] > 0 || $att['alpha'] > 0 || $att['total_hadir'] > 0))
-                        <span class="text-[9px] text-gray-400 dark:text-gray-500">{{ $att['total_hadir'] }}/{{ $isHoliday || (!$isPast && $isSunday) ? '-' : $calendarData['total_employees'] }}</span>
-                        @elseif($isHoliday)
-                        <span class="text-[9px] text-red-400">Libur</span>
-                        @endif
-                    </div>
-                    <div class="flex flex-col gap-0.5 flex-1">
-                        @foreach($showEvents as $ev)
-                        <span class="text-[9px] leading-tight px-1 py-0.5 rounded truncate {{ $ev['color'] }}">{{ $ev['label'] }}</span>
-                        @endforeach
-                        @if($moreCount > 0)
-                        <span class="text-[9px] text-gray-400 dark:text-gray-500 px-1">+{{ $moreCount }} lainnya</span>
-                        @endif
-                    </div>
-                </button>
-                @endfor
-            </div>
-
-            <div class="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50 text-xs">
-                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Hadir</span>
-                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Izin</span>
-                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-violet-500"></span> Sakit</span>
-                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Cuti</span>
-                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Libur Nasional</span>
-                <span class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Alpha</span>
-            </div>
-
-            {{-- Day detail modal --}}
-            <div x-show="selectedDay" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm" @click.self="selectedDay = false">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-bold text-gray-900 dark:text-white" x-text="detailTitle"></h4>
-                        <button type="button" @click="selectedDay = false" class="w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </div>
-                    <div class="space-y-4 text-sm">
-                        <template x-if="detailHoliday">
-                            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300">
-                                <p class="font-semibold">Libur Nasional</p>
-                                <p class="mt-0.5" x-text="detailHoliday"></p>
-                            </div>
-                        </template>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-center">
-                                <p class="text-lg font-bold text-emerald-600 dark:text-emerald-400" x-text="detailHadir"></p>
-                                <p class="text-xs text-emerald-700 dark:text-emerald-300">Pegawai Hadir</p>
-                            </div>
-                            <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-center">
-                                <p class="text-lg font-bold text-rose-600 dark:text-rose-400" x-text="detailAlpha"></p>
-                                <p class="text-xs text-rose-700 dark:text-rose-300">Tidak Hadir</p>
-                            </div>
-                        </div>
-                        <div x-show="detailLeaves.length > 0">
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Pegawai Cuti/Izin:</p>
-                            <div class="space-y-1.5 max-h-40 overflow-y-auto">
-                                <template x-for="(lv, i) in detailLeaves" :key="i">
-                                    <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                        <span class="text-gray-800 dark:text-gray-200" x-text="lv.name"></span>
-                                        <span class="text-xs text-purple-600 dark:text-purple-400" x-text="lv.type"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                        <p x-show="detailLeaves.length === 0 && !detailHoliday && detailHadir === 0" class="text-gray-400 text-center py-4">Tidak ada aktivitas pada tanggal ini</p>
-                    </div>
-                </div>
-            </div>
+        <div x-data="dashboardCalendar()" class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 flex flex-col items-center justify-center overflow-hidden">
+            <div id="calendar"></div>
         </div>
 
         <div class="space-y-6">
@@ -329,6 +447,286 @@
 
 @push('scripts')
 <script>
+    !function() {
+        var today = moment();
+
+        function Calendar(selector, events, currentMonth) {
+            this.el = document.querySelector(selector);
+            this.events = events;
+            this.current = currentMonth ? moment(currentMonth + '-01', 'YYYY-MM-DD') : moment().date(1);
+            this.draw();
+            var current = document.querySelector('.today');
+            if (current) {
+                var self = this;
+                window.setTimeout(function() {
+                    self.openDay(current);
+                }, 500);
+            }
+        }
+
+        Calendar.prototype.draw = function() {
+            this.drawHeader();
+            this.drawMonth();
+            this.drawLegend();
+        }
+
+        Calendar.prototype.drawHeader = function() {
+            var self = this;
+            if (!this.header) {
+                this.header = createElement('div', 'header');
+                this.header.className = 'header';
+                this.title = createElement('h1');
+                var right = createElement('div', 'right');
+                right.addEventListener('click', function() { self.nextMonth(); });
+                var left = createElement('div', 'left');
+                left.addEventListener('click', function() { self.prevMonth(); });
+                this.header.appendChild(this.title);
+                this.header.appendChild(right);
+                this.header.appendChild(left);
+                this.el.appendChild(this.header);
+            }
+            this.title.innerHTML = this.current.format('MMMM YYYY');
+        }
+
+        Calendar.prototype.drawMonth = function() {
+            var self = this;
+
+            // Assign event date (no randomness — use real date if provided)
+            this.events.forEach(function(ev) {
+                if (ev.date) {
+                    ev.mdate = moment(ev.date, 'YYYY-MM-DD');
+                }
+            });
+
+            if (this.month) {
+                this.oldMonth = this.month;
+                this.oldMonth.className = 'month out ' + (self.next ? 'next' : 'prev');
+                this.oldMonth.addEventListener('webkitAnimationEnd', function() {
+                    self.oldMonth.parentNode.removeChild(self.oldMonth);
+                    self.month = createElement('div', 'month');
+                    self.backFill();
+                    self.currentMonth();
+                    self.fowardFill();
+                    self.el.appendChild(self.month);
+                    window.setTimeout(function() {
+                        self.month.className = 'month in ' + (self.next ? 'next' : 'prev');
+                    }, 16);
+                });
+            } else {
+                this.month = createElement('div', 'month');
+                this.el.appendChild(this.month);
+                this.backFill();
+                this.currentMonth();
+                this.fowardFill();
+                this.month.className = 'month new';
+            }
+        }
+
+        Calendar.prototype.backFill = function() {
+            var clone = this.current.clone();
+            var dayOfWeek = clone.day();
+            if (!dayOfWeek) { return; }
+            clone.subtract('days', dayOfWeek + 1);
+            for (var i = dayOfWeek; i > 0; i--) {
+                this.drawDay(clone.add('days', 1));
+            }
+        }
+
+        Calendar.prototype.fowardFill = function() {
+            var clone = this.current.clone().add('months', 1).subtract('days', 1);
+            var dayOfWeek = clone.day();
+            if (dayOfWeek === 6) { return; }
+            for (var i = dayOfWeek; i < 6; i++) {
+                this.drawDay(clone.add('days', 1));
+            }
+        }
+
+        Calendar.prototype.currentMonth = function() {
+            var clone = this.current.clone();
+            while (clone.month() === this.current.month()) {
+                this.drawDay(clone);
+                clone.add('days', 1);
+            }
+        }
+
+        Calendar.prototype.getWeek = function(day) {
+            if (!this.week || day.day() === 0) {
+                this.week = createElement('div', 'week');
+                this.month.appendChild(this.week);
+            }
+        }
+
+        Calendar.prototype.drawDay = function(day) {
+            var self = this;
+            this.getWeek(day);
+            var outer = createElement('div', this.getDayClass(day));
+            outer.addEventListener('click', function() {
+                self.openDay(this);
+            });
+            var name = createElement('div', 'day-name', day.format('ddd'));
+            var number = createElement('div', 'day-number', day.format('DD'));
+            var events = createElement('div', 'day-events');
+            this.drawEvents(day, events);
+            outer.appendChild(name);
+            outer.appendChild(number);
+            outer.appendChild(events);
+            this.week.appendChild(outer);
+        }
+
+        Calendar.prototype.drawEvents = function(day, element) {
+            if (day.month() === this.current.month()) {
+                var todaysEvents = this.events.reduce(function(memo, ev) {
+                    if (ev.mdate && ev.mdate.isSame(day, 'day')) {
+                        memo.push(ev);
+                    }
+                    return memo;
+                }, []);
+                todaysEvents.forEach(function(ev) {
+                    var evSpan = createElement('span', ev.color);
+                    element.appendChild(evSpan);
+                });
+            }
+        }
+
+        Calendar.prototype.getDayClass = function(day) {
+            classes = ['day'];
+            if (day.month() !== this.current.month()) {
+                classes.push('other');
+            } else if (today.isSame(day, 'day')) {
+                classes.push('today');
+            }
+            return classes.join(' ');
+        }
+
+        Calendar.prototype.openDay = function(el) {
+            var details, arrow;
+            var dayNumber = +el.querySelectorAll('.day-number')[0].innerText || +el.querySelectorAll('.day-number')[0].textContent;
+            var day = this.current.clone().date(dayNumber);
+
+            var currentOpened = document.querySelector('.details');
+            if (currentOpened && currentOpened.parentNode === el.parentNode) {
+                details = currentOpened;
+                arrow = document.querySelector('.arrow');
+            } else {
+                if (currentOpened) {
+                    currentOpened.addEventListener('webkitAnimationEnd', function() {
+                        currentOpened.parentNode.removeChild(currentOpened);
+                    });
+                    currentOpened.addEventListener('oanimationend', function() {
+                        currentOpened.parentNode.removeChild(currentOpened);
+                    });
+                    currentOpened.addEventListener('msAnimationEnd', function() {
+                        currentOpened.parentNode.removeChild(currentOpened);
+                    });
+                    currentOpened.addEventListener('animationend', function() {
+                        currentOpened.parentNode.removeChild(currentOpened);
+                    });
+                    currentOpened.className = 'details out';
+                }
+                details = createElement('div', 'details in');
+                var arrow = createElement('div', 'arrow');
+                details.appendChild(arrow);
+                el.parentNode.appendChild(details);
+            }
+
+            var todaysEvents = this.events.reduce(function(memo, ev) {
+                if (ev.mdate && ev.mdate.isSame(day, 'day')) {
+                    memo.push(ev);
+                }
+                return memo;
+            }, []);
+
+            this.renderEvents(todaysEvents, details);
+            arrow.style.left = el.offsetLeft - el.parentNode.offsetLeft + 27 + 'px';
+        }
+
+        Calendar.prototype.renderEvents = function(events, ele) {
+            var currentWrapper = ele.querySelector('.events');
+            var wrapper = createElement('div', 'events in' + (currentWrapper ? ' new' : ''));
+            events.forEach(function(ev) {
+                var div = createElement('div', 'event');
+                var square = createElement('div', 'event-category ' + ev.color);
+                var span = createElement('span', '', ev.eventName);
+                div.appendChild(square);
+                div.appendChild(span);
+                wrapper.appendChild(div);
+            });
+            if (!events.length) {
+                var div = createElement('div', 'event empty');
+                var span = createElement('span', '', 'No Events');
+                div.appendChild(span);
+                wrapper.appendChild(div);
+            }
+            if (currentWrapper) {
+                currentWrapper.className = 'events out';
+                currentWrapper.addEventListener('webkitAnimationEnd', function() {
+                    currentWrapper.parentNode.removeChild(currentWrapper);
+                    ele.appendChild(wrapper);
+                });
+                currentWrapper.addEventListener('oanimationend', function() {
+                    currentWrapper.parentNode.removeChild(currentWrapper);
+                    ele.appendChild(wrapper);
+                });
+                currentWrapper.addEventListener('msAnimationEnd', function() {
+                    currentWrapper.parentNode.removeChild(currentWrapper);
+                    ele.appendChild(wrapper);
+                });
+                currentWrapper.addEventListener('animationend', function() {
+                    currentWrapper.parentNode.removeChild(currentWrapper);
+                    ele.appendChild(wrapper);
+                });
+            } else {
+                ele.appendChild(wrapper);
+            }
+        }
+
+        Calendar.prototype.drawLegend = function() {
+            var legend = createElement('div', 'legend');
+            var calendars = this.events.map(function(e) {
+                return e.calendar + '|' + e.color;
+            }).reduce(function(memo, e) {
+                if (memo.indexOf(e) === -1) {
+                    memo.push(e);
+                }
+                return memo;
+            }, []).forEach(function(e) {
+                var parts = e.split('|');
+                var entry = createElement('span', 'entry ' + parts[1], parts[0]);
+                legend.appendChild(entry);
+            });
+            this.el.appendChild(legend);
+        }
+
+        Calendar.prototype.nextMonth = function() {
+            window.location.href = this.gotoMonth(1);
+        }
+
+        Calendar.prototype.prevMonth = function() {
+            window.location.href = this.gotoMonth(-1);
+        }
+
+        Calendar.prototype.gotoMonth = function(delta) {
+            var d = this.current.clone().add('months', delta);
+            var ym = d.format('YYYY-MM');
+            var url = new URL(window.location.href);
+            url.searchParams.set('cal_month', ym);
+            return url.toString();
+        }
+
+        window.Calendar = Calendar;
+
+        function createElement(tagName, className, innerText) {
+            var ele = document.createElement(tagName);
+            if (className) {
+                ele.className = className;
+            }
+            if (innerText) {
+                ele.innerText = ele.textContent = innerText;
+            }
+            return ele;
+        }
+    }();
+
     document.addEventListener('alpine:init', () => {
         Alpine.data('chartView', () => ({
             view: 'daily',
@@ -433,46 +831,29 @@
         }));
 
         Alpine.data('dashboardCalendar', () => ({
-            data: @json($calendarData),
-            selectedDay: false,
-            insets: {},
             init() {
-                this.insets = this.data;
-            },
-            navigate(delta) {
-                const [year, month] = this.data.month.split('-').map(Number);
-                const d = new Date(year, month - 1 + delta, 1);
-                const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                window.location.href = this.withCalendar(ym);
-            },
-            withCalendar(ym) {
-                const url = new URL(window.location.href);
-                url.searchParams.set('cal_month', ym);
-                return url.toString();
-            },
-            get detailTitle() {
-                if (!this.selectedDay) return '';
-                const d = new Date(this.selectedDay + 'T00:00:00');
-                return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-            },
-            get detailHoliday() {
-                return this.data.holidays[this.selectedDay]?.name || '';
-            },
-            get detailLeaves() {
-                return this.data.leaves[this.selectedDay] || [];
-            },
-            get detailHadir() {
-                return this.data.attendance[this.selectedDay]?.total_hadir ?? 0;
-            },
-            get detailAlpha() {
-                const att = this.data.attendance[this.selectedDay];
-                if (!att) return 0;
-                const hadir = att.hadir + att.terlambat;
-                const onLeave = att.izin + att.sakit + att.cuti;
-                return Math.max(0, this.data.total_employees - hadir - onLeave);
-            },
-            openDay(key) {
-                this.selectedDay = key;
+                const calData = @json($calendarData);
+                const events = [];
+
+                Object.entries(calData.holidays || {}).forEach(([date, h]) => {
+                    events.push({ date: date, eventName: h.name, calendar: 'Libur', color: 'red' });
+                });
+
+                Object.entries(calData.leaves || {}).forEach(([date, list]) => {
+                    list.forEach(lv => {
+                        let color = 'purple';
+                        if ((lv.type || '').toLowerCase().includes('izin')) color = 'orange';
+                        else if ((lv.type || '').toLowerCase().includes('sakit')) color = 'green';
+                        events.push({ date: date, eventName: lv.name + ' · ' + lv.type, calendar: 'Cuti', color: color });
+                    });
+                });
+
+                Object.entries(calData.attendance || {}).forEach(([date, att]) => {
+                    if (att.total_hadir > 0) events.push({ date: date, eventName: att.total_hadir + ' hadir', calendar: 'Hadir', color: 'blue' });
+                    if (att.alpha > 0) events.push({ date: date, eventName: att.alpha + ' alpha', calendar: 'Alpha', color: 'yellow' });
+                });
+
+                this.cal = new Calendar('#calendar', events, calData.month);
             }
         }));
     });

@@ -88,11 +88,17 @@ class AttendanceController extends Controller
                 $employeeLeaves = $leaves->get($emp->id);
                 $leaveTypeName = null;
                 if ($employeeLeaves) {
-                    foreach ($employeeLeaves as $leave) {
-                        if ($date->between($leave->start_date, $leave->end_date)) {
-                            $status = 'Cuti';
-                            $leaveTypeName = $leave->leaveType?->name;
-                            break;
+                    $matchingLeaves = $employeeLeaves->filter(fn($leave) => $date->between($leave->start_date, $leave->end_date));
+                    if ($matchingLeaves->isNotEmpty()) {
+                        $manualStatuses = ['Izin', 'Sakit'];
+                        if (!in_array($status, $manualStatuses)) {
+                            $bestLeave = $matchingLeaves->sortBy(fn($l) => $l->start_date)->first();
+                            $statusCode = strtoupper($bestLeave->leaveType?->code ?? '');
+                            $status = $this->mapLeaveTypeToStatus($statusCode);
+                            $leaveTypeName = $bestLeave->leaveType?->name;
+                        } else {
+                            $bestLeave = $matchingLeaves->sortBy(fn($l) => $l->start_date)->first();
+                            $leaveTypeName = $bestLeave->leaveType?->name;
                         }
                     }
                 }
@@ -452,5 +458,22 @@ class AttendanceController extends Controller
             ->paginate(20);
 
         return view('attendances.history', compact('logs'));
+    }
+
+    private function mapLeaveTypeToStatus(string $code): string
+    {
+        if (str_starts_with($code, 'IJ') || $code === 'IML') {
+            return 'Izin';
+        }
+        if (str_starts_with($code, 'SK')) {
+            return 'Sakit';
+        }
+        if ($code === 'ALFA') {
+            return 'Alpha';
+        }
+        if ($code === 'PH') {
+            return 'Libur';
+        }
+        return 'Cuti';
     }
 }

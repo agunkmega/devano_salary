@@ -127,6 +127,7 @@
             @php
                 $statusLabels = ['hadir' => 'Hadir', 'terlambat' => 'Terlambat', 'izin' => 'Izin', 'sakit' => 'Sakit', 'cuti' => 'Cuti', 'alpha' => 'Alpha', 'libur' => 'Libur'];
                 $statusClass = $att->status ?? 'alpha';
+                $displayStatus = ($att->leave_type_name ?? null) ?: ($statusLabels[$statusClass] ?? ucfirst($att->status));
                 $totalTelat += (int) $att->late_minutes;
                 $totalPulangAwal += (int) $att->early_leave_minutes;
                 $totalIstirahat += (int) $att->excess_break_minutes;
@@ -149,7 +150,7 @@
                 <td>@if($att->ignore_late)<span style="color:#d97706;font-weight:600;">Diabaikan</span>@elseif($att->late_minutes > 0){{ $att->late_minutes }}m@else -@endif</td>
                 <td>@if($att->ignore_early_leave)<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@elseif($att->early_leave_minutes > 0){{ $att->early_leave_minutes }}m@else -@endif</td>
                 <td>@if($att->ignore_excess_break)<span style="color:#0891b2;font-weight:600;">Diabaikan</span>@elseif($att->excess_break_minutes > 0){{ $att->excess_break_minutes }}m@else -@endif</td>
-                <td class="{{ $statusClass }}">{{ $statusLabels[$statusClass] ?? ucfirst($att->status) }}</td>
+                <td class="{{ $statusClass }}">{{ $displayStatus }}</td>
             </tr>
             @endforeach
             <tr class="totals">

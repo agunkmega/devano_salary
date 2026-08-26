@@ -154,7 +154,7 @@
                                     'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400': att.status === 'Izin' || att.status === 'Sakit',
                                     'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400': att.status === 'Cuti' || att.status === 'Libur' || (att.status === '-' && att.day_name === 'Minggu'),
                                     'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400': att.status === 'Alpha' || (att.status === '-' && att.day_name !== 'Minggu')
-                                }" x-text="att.status === 'Cuti' && att.leave_type_name ? att.leave_type_name : (att.status === '-' ? (att.day_name === 'Minggu' ? 'Libur' : 'Alpha') : att.status)"></span>
+                                }" x-text="att.status === 'Cuti' && att.leave_type_name ? att.leave_type_name : ((att.status === 'Izin' || att.status === 'Sakit') && att.leave_type_name ? att.leave_type_name : (att.status === '-' ? (att.day_name === 'Minggu' ? 'Libur' : 'Alpha') : att.status))"></span>
                                 <div x-show="att.status === 'Libur' && att.holiday_name" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5" x-text="att.holiday_name"></div>
                             </td>
                             <td class="py-3 px-3">

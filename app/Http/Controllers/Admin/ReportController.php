@@ -202,18 +202,22 @@ class ReportController extends Controller
             ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
             ->toArray();
 
-        $leaves = \App\Models\Leave::whereIn('employee_id', $employeeIds)
+        $leaves = \App\Models\Leave::with('leaveType')->whereIn('employee_id', $employeeIds)
             ->where('status', 'approved')
             ->whereDate('end_date', '>=', $dateFrom)
             ->whereDate('start_date', '<=', $dateTo)
-            ->get(['employee_id', 'start_date', 'end_date']);
+            ->get(['employee_id', 'leave_type_id', 'start_date', 'end_date']);
 
         $leaveDateMap = [];
         foreach ($leaves as $leave) {
             $s = Carbon::parse($leave->start_date);
             $e = Carbon::parse($leave->end_date);
+            $statusCode = strtoupper($leave->leaveType?->code ?? '');
             while ($s->lte($e)) {
-                $leaveDateMap[$leave->employee_id][$s->format('Y-m-d')] = true;
+                $leaveDateMap[$leave->employee_id][$s->format('Y-m-d')] = [
+                    'status' => $this->mapLeaveTypeToStatus($statusCode),
+                    'leave_type_name' => $leave->leaveType?->name,
+                ];
                 $s->addDay();
             }
         }
@@ -240,11 +244,16 @@ class ReportController extends Controller
 
                     $attStatus = ucfirst($att->status);
 
-                    $employeeLeaves = $leaves->where('employee_id', $empId);
-                    foreach ($employeeLeaves as $leave) {
-                        if ($cursor->between($leave->start_date, $leave->end_date)) {
-                            $attStatus = 'Cuti';
-                            break;
+                    $manualStatuses = ['Izin', 'Sakit'];
+                    if (!in_array($attStatus, $manualStatuses)) {
+                        $employeeLeaves = $leaves->where('employee_id', $empId);
+                        foreach ($employeeLeaves as $leave) {
+                            if ($cursor->between($leave->start_date, $leave->end_date)) {
+                                $statusCode = strtoupper($leave->leaveType?->code ?? '');
+                                $attStatus = $this->mapLeaveTypeToStatus($statusCode);
+                                $att->leave_type_name = $leave->leaveType?->name;
+                                break;
+                            }
                         }
                     }
 
@@ -254,7 +263,9 @@ class ReportController extends Controller
                     $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
                     $fullRows[] = $dummy;
                 } elseif (isset($leaveDateMap[$empId][$dateStr])) {
-                    $dummy = $this->makeDummyAtt($dateStr, $dayName, 'cuti');
+                    $leaveInfo = $leaveDateMap[$empId][$dateStr];
+                    $dummy = $this->makeDummyAtt($dateStr, $dayName, strtolower($leaveInfo['status']));
+                    $dummy->leave_type_name = $leaveInfo['leave_type_name'];
                     $fullRows[] = $dummy;
                 } else {
                     $dayLower = strtolower($cursor->format('l'));
@@ -893,7 +904,25 @@ class ReportController extends Controller
         $dummy->ignore_late = false;
         $dummy->ignore_early_leave = false;
         $dummy->ignore_excess_break = false;
+        $dummy->leave_type_name = null;
         $dummy->status = $status;
         return $dummy;
+    }
+
+    private function mapLeaveTypeToStatus(string $code): string
+    {
+        if (str_starts_with($code, 'IJ') || $code === 'IML') {
+            return 'Izin';
+        }
+        if (str_starts_with($code, 'SK')) {
+            return 'Sakit';
+        }
+        if ($code === 'ALFA') {
+            return 'Alpha';
+        }
+        if ($code === 'PH') {
+            return 'Libur';
+        }
+        return 'Cuti';
     }
 }

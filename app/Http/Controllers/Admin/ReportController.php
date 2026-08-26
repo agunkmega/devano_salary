@@ -235,8 +235,8 @@ class ReportController extends Controller
                 $dayName = $cursor->locale('id')->dayName;
                 if (isset($attByDate[$dateStr])) {
                     $att = $attByDate[$dateStr];
-                    $att->day_name = $dayName;
                     $this->attendanceService->recalculateAttendance($att);
+                    $att->day_name = $dayName;
 
                     $attStatus = ucfirst($att->status);
 

@@ -110,11 +110,11 @@ class PayrollService
             ->count();
         $uangMakanLembur = $overtimeMealDays * (float) ($employee->uang_makan_lembur ?? 0);
 
-        $cashAdvanceDeduction = $this->calculateCashAdvanceDeduction($employee->id);
+        $cashAdvance = $this->getCashAdvanceBreakdown($employee->id);
         $bpjsBreakdown = $this->calculateBpjsDeduction($employee, $computedBaseSalary);
 
         $grossSalary = $computedBaseSalary + $totalAllowance + $overtimePay + $uangMakanLembur;
-        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvanceDeduction + $bpjsBreakdown['total'];
+        $totalDeductions = $latePenalty + $latePenaltyPercent + $absentPenalty + $cashAdvance['total'] + $bpjsBreakdown['total'];
         $netSalary = $grossSalary - $totalDeductions;
         $taxAmount = $this->calculateTax($netSalary);
 
@@ -130,7 +130,9 @@ class PayrollService
             'late_penalty' => round($latePenalty, 2),
             'late_penalty_percent' => round($latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
-            'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
+            'cash_advance_deduction' => round($cashAdvance['total'], 2),
+            'cash_advance_tunai' => round($cashAdvance['tunai'], 2),
+            'cash_advance_nontunai' => round($cashAdvance['nontunai'], 2),
             'bpjs_deduction' => $bpjsBreakdown['total'],
             'bpjs_kesehatan_deduction' => $bpjsBreakdown['bpjs_kesehatan_deduction'],
             'bpjs_kesehatan_company' => $bpjsBreakdown['bpjs_kesehatan_company'],
@@ -164,16 +166,23 @@ class PayrollService
 
     public function calculateCashAdvanceDeduction($employeeId): float
     {
-        $activeAdvance = CashAdvance::where('employee_id', $employeeId)
+        return $this->getCashAdvanceBreakdown($employeeId)['total'];
+    }
+
+    public function getCashAdvanceBreakdown($employeeId): array
+    {
+        $base = CashAdvance::where('employee_id', $employeeId)
             ->where('status', 'approved')
-            ->where('remaining_amount', '>', 0)
-            ->first();
+            ->where('remaining_amount', '>', 0);
 
-        if (!$activeAdvance) {
-            return 0;
-        }
+        $tunai = (float) (clone $base)->where('type', 'tunai')->sum('installment_amount');
+        $nontunai = (float) (clone $base)->whereIn('type', ['nontunai', 'non_tunai'])->sum('installment_amount');
 
-        return (float) $activeAdvance->installment_amount;
+        return [
+            'tunai' => $tunai,
+            'nontunai' => $nontunai,
+            'total' => $tunai + $nontunai,
+        ];
     }
 
     public function calculateBpjsDeduction(Employee $employee, ?float $baseSalary = null): array

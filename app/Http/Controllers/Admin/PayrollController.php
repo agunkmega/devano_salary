@@ -319,10 +319,8 @@ class PayrollController extends Controller
 
         $uangMakanLembur = $overtimeMealDays * (float) ($employee->uang_makan_lembur ?? 0);
 
-        $cashAdvanceDeduction = CashAdvance::where('employee_id', $employee->id)
-            ->where('status', 'approved')
-            ->where('remaining_amount', '>', 0)
-            ->sum('installment_amount');
+        $cashAdvance = $this->payrollService->getCashAdvanceBreakdown($employee->id);
+        $cashAdvanceDeduction = $cashAdvance['total'];
 
         $bpjsBreakdown = $this->payrollService->calculateBpjsDeduction($employee, $computedBaseSalary);
 
@@ -353,6 +351,8 @@ class PayrollController extends Controller
             'late_penalty_percent' => round($latePenaltyPercent, 2),
             'absent_penalty' => round($absentPenalty, 2),
             'cash_advance_deduction' => round($cashAdvanceDeduction, 2),
+            'cash_advance_tunai' => round($cashAdvance['tunai'], 2),
+            'cash_advance_nontunai' => round($cashAdvance['nontunai'], 2),
             'bpjs_deduction' => $bpjsBreakdown['total'],
             'bpjs_kesehatan_deduction' => $bpjsBreakdown['bpjs_kesehatan_deduction'],
             'bpjs_kesehatan_company' => $bpjsBreakdown['bpjs_kesehatan_company'],

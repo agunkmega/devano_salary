@@ -266,6 +266,7 @@ class ReportController extends Controller
                     $fullRows[] = $dummy;
                 } elseif ($cursor->dayOfWeek === Carbon::SUNDAY || $this->isHolidayForEmployee($dateStr, $emp, $holidaysByDate)) {
                     $dummy = $this->makeDummyAtt($dateStr, $dayName, 'libur');
+                    $dummy->holiday_name = $this->holidayNameForEmployee($dateStr, $emp, $holidaysByDate);
                     $fullRows[] = $dummy;
                 } else {
                     $dayLower = strtolower($cursor->format('l'));
@@ -911,17 +912,22 @@ class ReportController extends Controller
 
     private function isHolidayForEmployee(string $dateStr, ?\App\Models\Employee $emp, array $holidaysByDate): bool
     {
+        return $this->holidayNameForEmployee($dateStr, $emp, $holidaysByDate) !== null;
+    }
+
+    private function holidayNameForEmployee(string $dateStr, ?\App\Models\Employee $emp, array $holidaysByDate): ?string
+    {
         if (!isset($holidaysByDate[$dateStr])) {
-            return false;
+            return null;
         }
         $empReligion = $emp?->religion;
         foreach ($holidaysByDate[$dateStr] as $holiday) {
             $religion = $holiday['religion'] ?? null;
             if (empty($religion) || $religion === $empReligion) {
-                return true;
+                return $holiday['name'] ?? null;
             }
         }
-        return false;
+        return null;
     }
 
     private function mapLeaveTypeToStatus(string $code): string

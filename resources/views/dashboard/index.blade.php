@@ -11,11 +11,35 @@
         -webkit-transform: translate3d(0, 0, 0);
         -moz-transform: translate3d(0, 0, 0);
         transform: translate3d(0, 0, 0);
+        position: relative;
         width: 100%;
         margin: 0 auto;
         height: auto;
         min-height: 480px;
         overflow: hidden;
+        background: transparent;
+        --cal-text: #111827;
+        --cal-muted: #6b7280;
+        --cal-other: #d1d5db;
+        --cal-accent: #2563eb;
+        --cal-header: #f3f4f6;
+        --cal-details-bg: #ffffff;
+        --cal-details-text: #111827;
+        --cal-legend: #f9fafb;
+        --cal-legend-text: #6b7280;
+        --cal-border: rgba(0, 0, 0, .08);
+    }
+    html.dark #calendar {
+        --cal-text: #f9fafb;
+        --cal-muted: #9ca3af;
+        --cal-other: #4b5563;
+        --cal-accent: #60a5fa;
+        --cal-header: #1f2937;
+        --cal-details-bg: #1f2937;
+        --cal-details-text: #f9fafb;
+        --cal-legend: #111827;
+        --cal-legend-text: #9ca3af;
+        --cal-border: rgba(255, 255, 255, .1);
     }
     #calendar *, #calendar *:before, #calendar *:after {
         -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
@@ -23,7 +47,8 @@
     #calendar .header {
         height: 50px;
         width: 100%;
-        background: rgba(66, 66, 66, 1);
+        background: var(--cal-header);
+        color: var(--cal-text);
         text-align: center;
         position: relative;
         z-index: 100;
@@ -47,12 +72,12 @@
     }
     #calendar .left {
         border-width: 7.5px 10px 7.5px 0;
-        border-color: transparent rgba(160, 159, 160, 1) transparent transparent;
+        border-color: transparent var(--cal-muted) transparent transparent;
         left: 20px;
     }
     #calendar .right {
         border-width: 7.5px 0 7.5px 10px;
-        border-color: transparent transparent transparent rgba(160, 159, 160, 1);
+        border-color: transparent transparent transparent var(--cal-muted);
         right: 20px;
     }
     #calendar .month { opacity: 0; }
@@ -80,7 +105,7 @@
         animation: moveToBottomFadeMonth .4s ease-in;
         opacity: 1;
     }
-    #calendar .week { background: #4A4A4A; display: flex; }
+    #calendar .week { background: transparent; display: flex; }
     #calendar .day {
         display: inline-block;
         width: 14.28%;
@@ -90,17 +115,19 @@
         text-align: center;
         vertical-align: top;
         cursor: pointer;
-        background: #4A4A4A;
+        background: transparent;
+        color: var(--cal-text);
         position: relative;
         z-index: 100;
     }
-    #calendar .day.other { color: rgba(255, 255, 255, .3); }
-    #calendar .day.today { color: rgba(156, 202, 235, 1); }
+    #calendar .day:hover { background: var(--cal-legend); border-radius: 6px; }
+    #calendar .day.other { color: var(--cal-other); }
+    #calendar .day.today { color: var(--cal-accent); }
     #calendar .day-name {
         font-size: 9px;
         text-transform: uppercase;
         margin-bottom: 5px;
-        color: rgba(255, 255, 255, .5);
+        color: var(--cal-muted);
         letter-spacing: .7px;
     }
     #calendar .day-number { font-size: 22px; letter-spacing: 1.5px; }
@@ -129,12 +156,17 @@
     #calendar .red { background: rgba(240, 100, 100, 1); }
     #calendar .purple { background: rgba(180, 140, 230, 1); }
     #calendar .details {
-        position: relative;
-        width: 100%;
-        height: 75px;
-        background: rgba(164, 164, 164, 1);
-        margin-top: 5px;
-        border-radius: 4px;
+        position: absolute;
+        z-index: 300;
+        width: auto;
+        min-width: 180px;
+        max-width: 290px;
+        background: var(--cal-details-bg);
+        color: var(--cal-details-text);
+        border: 1px solid var(--cal-border);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+        overflow: visible;
     }
     #calendar .details.in {
         -webkit-animation: moveFromTopFade .5s ease both;
@@ -147,17 +179,23 @@
     #calendar .arrow {
         position: absolute;
         top: -5px;
+        transform: translateX(-50%);
         left: 50%;
-        margin-left: -2px;
         width: 0px;
         height: 0px;
         border-style: solid;
         border-width: 0 5px 5px 5px;
-        border-color: transparent transparent rgba(164, 164, 164, 1) transparent;
+        border-color: transparent transparent var(--cal-details-bg) transparent;
         transition: all 0.7s ease;
     }
+    #calendar .details.up .arrow {
+        top: auto;
+        bottom: -5px;
+        border-width: 5px 5px 0 5px;
+        border-color: var(--cal-details-bg) transparent transparent transparent;
+    }
     #calendar .events {
-        height: 75px;
+        max-height: 150px;
         padding: 7px 0;
         overflow-y: auto;
         overflow-x: hidden;
@@ -182,9 +220,9 @@
         letter-spacing: .5px;
         padding: 2px 16px;
         vertical-align: top;
-        color: rgba(255, 255, 255, 1);
+        color: var(--cal-details-text);
     }
-    #calendar .event.empty { color: #eee; }
+    #calendar .event.empty { color: var(--cal-muted); }
     #calendar .event-category {
         height: 10px;
         width: 10px;
@@ -198,7 +236,8 @@
         bottom: 0;
         width: 100%;
         height: 30px;
-        background: rgba(60, 60, 60, 1);
+        background: var(--cal-legend);
+        color: var(--cal-legend-text);
         line-height: 30px;
     }
     #calendar .entry {
@@ -563,6 +602,7 @@
             var self = this;
             this.getWeek(day);
             var outer = createElement('div', this.getDayClass(day));
+            outer.setAttribute('data-date', day.format('YYYY-MM-DD'));
             outer.addEventListener('click', function() {
                 self.openDay(this);
             });
@@ -602,34 +642,34 @@
         }
 
         Calendar.prototype.openDay = function(el) {
-            var details, arrow;
-            var dayNumber = +el.querySelectorAll('.day-number')[0].innerText || +el.querySelectorAll('.day-number')[0].textContent;
-            var day = this.current.clone().date(dayNumber);
+            var self = this;
+            var dayDate = el.getAttribute('data-date');
+            var day = dayDate
+                ? moment(dayDate, 'YYYY-MM-DD')
+                : this.current.clone().date(+el.querySelectorAll('.day-number')[0].textContent);
 
-            var currentOpened = document.querySelector('.details');
-            if (currentOpened && currentOpened.parentNode === el.parentNode) {
-                details = currentOpened;
-                arrow = document.querySelector('.arrow');
+            var currentOpened = this.el.querySelector('.details');
+            var liveOpened = currentOpened && currentOpened.className.indexOf('out') === -1 ? currentOpened : null;
+            var details, arrow;
+
+            if (liveOpened) {
+                details = liveOpened;
+                arrow = details.querySelector('.arrow');
             } else {
-                if (currentOpened) {
-                    currentOpened.addEventListener('webkitAnimationEnd', function() {
-                        currentOpened.parentNode.removeChild(currentOpened);
-                    });
-                    currentOpened.addEventListener('oanimationend', function() {
-                        currentOpened.parentNode.removeChild(currentOpened);
-                    });
-                    currentOpened.addEventListener('msAnimationEnd', function() {
-                        currentOpened.parentNode.removeChild(currentOpened);
-                    });
-                    currentOpened.addEventListener('animationend', function() {
-                        currentOpened.parentNode.removeChild(currentOpened);
-                    });
-                    currentOpened.className = 'details out';
+                var allDetails = this.el.querySelectorAll('.details');
+                for (var i = 0; i < allDetails.length; i++) {
+                    if (allDetails[i].className.indexOf('out') !== -1) {
+                        if (allDetails[i].parentNode) {
+                            allDetails[i].parentNode.removeChild(allDetails[i]);
+                        }
+                    } else {
+                        this.closeDetails(allDetails[i]);
+                    }
                 }
                 details = createElement('div', 'details in');
-                var arrow = createElement('div', 'arrow');
+                arrow = createElement('div', 'arrow');
                 details.appendChild(arrow);
-                el.parentNode.appendChild(details);
+                this.el.appendChild(details);
             }
 
             var todaysEvents = this.events.reduce(function(memo, ev) {
@@ -640,7 +680,45 @@
             }, []);
 
             this.renderEvents(todaysEvents, details);
-            arrow.style.left = (el.offsetLeft - el.parentNode.offsetLeft + el.offsetWidth / 2) + 'px';
+            this.positionDetails(details, arrow, el);
+        }
+
+        Calendar.prototype.positionDetails = function(details, arrow, el) {
+            var calRect = this.el.getBoundingClientRect();
+            var elRect = el.getBoundingClientRect();
+            var detailsRect = details.getBoundingClientRect();
+
+            var centerX = elRect.left - calRect.left + elRect.width / 2;
+            var left = centerX - detailsRect.width / 2;
+            left = Math.min(Math.max(left, 2), Math.max(calRect.width - detailsRect.width - 2, 2));
+            details.style.left = left + 'px';
+
+            details.classList.remove('up');
+            var top = elRect.bottom - calRect.top + 6;
+            if (top + detailsRect.height > calRect.height - 4) {
+                top = elRect.top - calRect.top - detailsRect.height - 6;
+                if (top < 2) {
+                    top = elRect.bottom - calRect.top + 6;
+                } else {
+                    details.classList.add('up');
+                }
+            }
+            details.style.top = top + 'px';
+
+            arrow.style.left = (centerX - left) + 'px';
+        }
+
+        Calendar.prototype.closeDetails = function(details) {
+            var remove = function() {
+                if (details.parentNode) {
+                    details.parentNode.removeChild(details);
+                }
+            };
+            details.className = 'details out';
+            details.addEventListener('webkitAnimationEnd', remove);
+            details.addEventListener('oanimationend', remove);
+            details.addEventListener('msAnimationEnd', remove);
+            details.addEventListener('animationend', remove);
         }
 
         Calendar.prototype.renderEvents = function(events, ele) {

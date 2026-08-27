@@ -60,6 +60,7 @@
         .cuti { color: #0891b2; }
         .alpha { color: #dc2626; }
         .libur { color: #64748b; }
+        .libur-nasional { color: #64748b; font-weight: 700; }
         .totals td {            font-weight: 700;
             background: #f1f5f9;
             border-top: 2px solid #1e293b;
@@ -128,6 +129,9 @@
                 $statusLabels = ['hadir' => 'Hadir', 'terlambat' => 'Terlambat', 'izin' => 'Izin', 'sakit' => 'Sakit', 'cuti' => 'Cuti', 'alpha' => 'Alpha', 'libur' => 'Libur'];
                 $statusClass = $att->status ?? 'alpha';
                 $displayStatus = ($att->leave_type_name ?? null) ?: ($statusLabels[$statusClass] ?? ucfirst($att->status));
+                if ($statusClass === 'libur' && !empty($att->holiday_name)) {
+                    $displayStatus = 'Libur Nasional: ' . $att->holiday_name;
+                }
                 $totalTelat += (int) $att->late_minutes;
                 $totalPulangAwal += (int) $att->early_leave_minutes;
                 $totalIstirahat += (int) $att->excess_break_minutes;
@@ -154,7 +158,7 @@
                 <td>@if($lateDisplay === 'Diabaikan')<span style="color:#d97706;font-weight:600;">Diabaikan</span>@else{{ $lateDisplay }}@endif</td>
                 <td>@if($earlyDisplay === 'Diabaikan')<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@else{{ $earlyDisplay }}@endif</td>
                 <td>@if($breakDisplay === 'Diabaikan')<span style="color:#0891b2;font-weight:600;">Diabaikan</span>@else{{ $breakDisplay }}@endif</td>
-                <td class="{{ $statusClass }}">{{ $displayStatus }}</td>
+                <td class="{{ $statusClass }} {{ $statusClass === 'libur' && !empty($att->holiday_name) ? 'libur-nasional' : '' }}">{{ $displayStatus }}</td>
             </tr>
             @endforeach
             <tr class="totals">

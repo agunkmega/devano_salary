@@ -65,7 +65,11 @@
                 <th class="right">Tunjangan</th>
                 <th class="right">Lembur</th>
                 <th class="right">U.Makan</th>
-                <th class="right">Potongan</th>
+                <th class="right">Telat</th>
+                <th class="right">Alpha</th>
+                <th class="right">Kasbon</th>
+                <th class="right">Pajak</th>
+                <th class="right">Lain-Lain</th>
                 <th class="right">BPJS Kes (Kr)</th>
                 <th class="right">BPJS Kes (Pr)</th>
                 <th class="right">BPJS Ket (Kr)</th>
@@ -79,7 +83,7 @@
         <tbody>
             @php
                 $totalGajiPokok = 0; $totalTunjangan = 0; $totalLembur = 0;
-                $totalUMakan = 0; $totalPotongan = 0; $totalBPJSKKr = 0;
+                $totalUMakan = 0; $totalTelat = 0; $totalAlpha = 0; $totalKasbon = 0; $totalPajak = 0; $totalLain = 0; $totalBPJSKKr = 0;
                 $totalBPJSKPr = 0; $totalBPJSKetKr = 0; $totalBPJSKetPr = 0;
                 $totalGajiKotor = 0; $totalIuran = 0; $totalGajiBersih = 0;
             @endphp
@@ -90,7 +94,11 @@
                 $totalTunjangan += $p->allowance;
                 $totalLembur += $p->overtime_pay;
                 $totalUMakan += $p->uang_makan_lembur + $p->uang_makan_harian;
-                $totalPotongan += $p->total_deductions;
+                $totalTelat += $p->late_penalty + $p->late_penalty_percent;
+                $totalAlpha += $p->absent_penalty;
+                $totalKasbon += $p->cash_advance_deduction;
+                $totalPajak += $p->tax_amount;
+                $totalLain += $p->other_deductions;
                 $totalBPJSKKr += $p->bpjs_kesehatan_deduction;
                 $totalBPJSKPr += $p->bpjs_kesehatan_company;
                 $totalBPJSKetKr += $p->bpjs_ketenagakerjaan_deduction;
@@ -108,7 +116,11 @@
                 <td class="right">Rp {{ number_format($p->allowance, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->overtime_pay, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->uang_makan_lembur + $p->uang_makan_harian, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($p->total_deductions, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($p->late_penalty + $p->late_penalty_percent, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($p->absent_penalty, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($p->cash_advance_deduction, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($p->tax_amount, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($p->other_deductions, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_kesehatan_deduction, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_kesehatan_company, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</td>
@@ -125,7 +137,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="17" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
+            <tr><td colspan="21" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
             @endforelse
             <tr class="totals">
                 <td colspan="4" style="text-align:right;">Total</td>
@@ -133,7 +145,11 @@
                 <td class="right">Rp {{ number_format($totalTunjangan, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalLembur, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalUMakan, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($totalPotongan, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalTelat, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalAlpha, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalKasbon, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalPajak, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalLain, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKKr, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKPr, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKetKr, 0, ',', '.') }}</td>

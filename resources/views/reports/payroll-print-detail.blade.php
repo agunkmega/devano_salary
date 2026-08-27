@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Payroll Detail - {{ $period ?? 'Semua Periode' }}</title>
+    <title>Payroll Resume - {{ $period ?? 'Semua Periode' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         @page { margin: 5mm; size: A4 landscape; }
@@ -52,8 +52,8 @@
     </style>
 </head>
 <body>
-    <h1>Laporan Payroll Detail</h1>
-    <p class="sub">Periode: {{ $period ?? 'Semua Periode' }} | {{ now()->format('d/m/Y H:i') }}</p>
+    <h1>Payroll Resume</h1>
+    <p class="sub">Periode: {{ $period ?? 'Semua Periode' }}@if($stationName ?? null) | Station: {{ $stationName }}@endif | {{ now()->format('d/m/Y H:i') }}</p>
     <table>
         <thead>
             <tr>
@@ -61,9 +61,6 @@
                 <th>Nama</th>
                 <th>Jabatan</th>
                 <th class="right">Jenis</th>
-                <th>Bank</th>
-                <th>No. Rek</th>
-                <th>Nama Rek</th>
                 <th class="right">Gaji Pokok</th>
                 <th class="right">Tunjangan</th>
                 <th class="right">Lembur</th>
@@ -107,9 +104,6 @@
                 <td>{{ $p->employee->full_name ?? '-' }}</td>
                 <td>{{ $p->employee->position->name ?? $p->employee->department->name ?? '-' }}</td>
                 <td class="right"><span class="badge {{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'badge-h' : 'badge-b' }}">{{ ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan' }}</span></td>
-                <td>{{ $p->employee->bank_name ?? '-' }}</td>
-                <td>{{ $p->employee->bank_account ?? '-' }}</td>
-                <td>{{ $p->employee->bank_holder ?? '-' }}</td>
                 <td class="right">Rp {{ number_format($p->base_salary, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->allowance, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->overtime_pay, 0, ',', '.') }}</td>
@@ -131,10 +125,10 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="20" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
+            <tr><td colspan="17" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
             @endforelse
             <tr class="totals">
-                <td colspan="7" style="text-align:right;">Total</td>
+                <td colspan="4" style="text-align:right;">Total</td>
                 <td class="right">Rp {{ number_format($totalGajiPokok, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalTunjangan, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalLembur, 0, ',', '.') }}</td>

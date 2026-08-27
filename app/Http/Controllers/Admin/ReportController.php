@@ -606,8 +606,9 @@ class ReportController extends Controller
 
         $payrolls = $query->orderBy('period', 'desc')->get();
         $period = $request->period;
+        $stationName = $request->filled('station_id') ? Station::find($request->station_id)?->name : null;
 
-        return view('reports.payroll-print', compact('payrolls', 'period'));
+        return view('reports.payroll-print', compact('payrolls', 'period', 'stationName'));
     }
 
     public function payrollExcel(Request $request)
@@ -722,8 +723,9 @@ class ReportController extends Controller
 
         $payrolls = $query->orderBy('period', 'desc')->get();
         $period = $request->period;
+        $stationName = $request->filled('station_id') ? Station::find($request->station_id)?->name : null;
 
-        return view('reports.payroll-print-detail', compact('payrolls', 'period'));
+        return view('reports.payroll-print-detail', compact('payrolls', 'period', 'stationName'));
     }
 
     public function payrollExcelDetail(Request $request)

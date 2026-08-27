@@ -62,7 +62,7 @@
 </head>
 <body>
     <h1>Laporan Payroll</h1>
-    <p class="sub">Periode: {{ $period ?? 'Semua Periode' }} | {{ now()->format('d/m/Y H:i') }}</p>
+    <p class="sub">Periode: {{ $period ?? 'Semua Periode' }}@if($stationName ?? null) | Station: {{ $stationName }}@endif | {{ now()->format('d/m/Y H:i') }}</p>
     @php
         $grouped = $payrolls->groupBy(fn($p) => $p->employee->bank_name ?? 'Cash (Tanpa Rekening)');
     @endphp

@@ -38,7 +38,8 @@ class EmployeeController extends Controller
             ->when(request('position_id'), function ($q, $posId) {
                 $q->where('position_id', $posId);
             })
-            ->when(request('status'), function ($q, $status) {
+            ->when(request('status', 'active') !== 'all', function ($q) {
+                $status = request('status', 'active');
                 if ($status === 'active') {
                     $q->where('is_active', true);
                 } elseif ($status === 'inactive') {

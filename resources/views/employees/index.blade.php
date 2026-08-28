@@ -31,9 +31,9 @@
                     @endforeach
                 </select>
                 <select name="status" @change="$el.form.requestSubmit()" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
-                    <option value="">Semua Status</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
+                    <option value="all" {{ request('status', 'active') == 'all' ? 'selected' : '' }}>Semua Status</option>
+                    <option value="active" {{ request('status', 'active') == 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ request('status', 'active') == 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
                 </select>
                 <select name="employee_type" @change="$el.form.requestSubmit()" class="text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500">
                     <option value="">Semua Jenis</option>

@@ -763,12 +763,13 @@ class ReportController extends Controller
 
         $payrolls = $query->orderBy('period', 'desc')->get();
 
-        $headings = ['No', 'Nama', 'Jabatan', 'Jenis', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'Telat', 'Potongan 8%', 'Alpha', 'Kasbon Tunai', 'Kasbon Non-Tunai', 'Pajak', 'Lain-Lain', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket (Kr)', 'BPJS Ket (Pr)', 'Total Gaji', 'Iuran', 'Gaji Bersih', 'Status'];
+        $headings = ['No', 'Nama', 'Jabatan', 'Jenis', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'Telat', 'Potongan 8%', 'Alpha', 'Kasbon Tunai', 'Kasbon Non-Tunai', 'Pajak', 'Lain-Lain', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket. Full (Kr)', 'BPJS Ket. Full (Pr)', 'BPJS Ket. Part. (Kr)', 'BPJS Ket. Part. (Pr)', 'Total Gaji', 'Iuran', 'Gaji Bersih', 'Status'];
 
         $data = collect();
 
         foreach ($payrolls as $i => $p) {
             $gajiKotor = $p->net_salary + $p->iuran_bulanan_deduction;
+            $isPartial = ($p->employee?->bpjs_ketenagakerjaan_type ?? null) === 'partial';
             $data->push([
                 $i + 1,
                 $p->employee?->full_name ?? '-',
@@ -787,8 +788,10 @@ class ReportController extends Controller
                 $p->other_deductions,
                 $p->bpjs_kesehatan_deduction,
                 $p->bpjs_kesehatan_company,
-                $p->bpjs_ketenagakerjaan_deduction,
-                $p->bpjs_ketenagakerjaan_company,
+                $isPartial ? 0 : $p->bpjs_ketenagakerjaan_deduction,
+                $isPartial ? 0 : $p->bpjs_ketenagakerjaan_company,
+                $isPartial ? $p->bpjs_ketenagakerjaan_deduction : 0,
+                $isPartial ? $p->bpjs_ketenagakerjaan_company : 0,
                 $gajiKotor,
                 $p->iuran_bulanan_deduction,
                 $p->net_salary,
@@ -799,13 +802,13 @@ class ReportController extends Controller
         if ($data->isNotEmpty()) {
             $sums = array_fill(0, count($headings), 0);
             foreach ($data as $row) {
-                foreach (range(4, 21) as $k) {
+                foreach (range(4, 23) as $k) {
                     $sums[$k] += $row[$k];
                 }
             }
             $totalRow = array_fill(0, count($headings), '');
             $totalRow[1] = 'Total';
-            foreach (range(4, 21) as $k) {
+            foreach (range(4, 23) as $k) {
                 $totalRow[$k] = $sums[$k];
             }
             $data->push($totalRow);

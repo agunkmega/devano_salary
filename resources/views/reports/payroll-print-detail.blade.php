@@ -74,8 +74,10 @@
                 <th class="right">Lain-Lain</th>
                 <th class="right">BPJS Kes (Kr)</th>
                 <th class="right">BPJS Kes (Pr)</th>
-                <th class="right">BPJS Ket (Kr)</th>
-                <th class="right">BPJS Ket (Pr)</th>
+                <th class="right">BPJS Ket. Full (Kr)</th>
+                <th class="right">BPJS Ket. Full (Pr)</th>
+                <th class="right">BPJS Ket. Part. (Kr)</th>
+                <th class="right">BPJS Ket. Part. (Pr)</th>
                 <th class="right">Total Gaji</th>
                 <th class="right">Iuran</th>
                 <th class="right">Gaji Bersih</th>
@@ -86,7 +88,7 @@
             @php
                 $totalGajiPokok = 0; $totalTunjangan = 0; $totalLembur = 0;
                 $totalUMakan = 0; $totalTelat = 0; $totalPenalty8 = 0; $totalAlpha = 0; $totalKasbonTunai = 0; $totalKasbonNontunai = 0; $totalPajak = 0; $totalLain = 0; $totalBPJSKKr = 0;
-                $totalBPJSKPr = 0; $totalBPJSKetKr = 0; $totalBPJSKetPr = 0;
+                $totalBPJSKPr = 0; $totalBPJSKetFullKr = 0; $totalBPJSKetFullPr = 0; $totalBPJSKetPartKr = 0; $totalBPJSKetPartPr = 0;
                 $totalGajiKotor = 0; $totalIuran = 0; $totalGajiBersih = 0;
             @endphp
             @forelse($payrolls as $i => $p)
@@ -105,8 +107,14 @@
                 $totalLain += $p->other_deductions;
                 $totalBPJSKKr += $p->bpjs_kesehatan_deduction;
                 $totalBPJSKPr += $p->bpjs_kesehatan_company;
-                $totalBPJSKetKr += $p->bpjs_ketenagakerjaan_deduction;
-                $totalBPJSKetPr += $p->bpjs_ketenagakerjaan_company;
+                $isPartial = ($p->employee?->bpjs_ketenagakerjaan_type ?? null) === 'partial';
+                if ($isPartial) {
+                    $totalBPJSKetPartKr += $p->bpjs_ketenagakerjaan_deduction;
+                    $totalBPJSKetPartPr += $p->bpjs_ketenagakerjaan_company;
+                } else {
+                    $totalBPJSKetFullKr += $p->bpjs_ketenagakerjaan_deduction;
+                    $totalBPJSKetFullPr += $p->bpjs_ketenagakerjaan_company;
+                }
                 $totalGajiKotor += $gajiKotor;
                 $totalIuran += $p->iuran_bulanan_deduction;
                 $totalGajiBersih += $p->net_salary;
@@ -129,8 +137,10 @@
                 <td class="right">Rp {{ number_format($p->other_deductions, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_kesehatan_deduction, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->bpjs_kesehatan_company, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($p->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($p->bpjs_ketenagakerjaan_company, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($isPartial ? 0 : $p->bpjs_ketenagakerjaan_deduction, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($isPartial ? 0 : $p->bpjs_ketenagakerjaan_company, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($isPartial ? $p->bpjs_ketenagakerjaan_deduction : 0, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($isPartial ? $p->bpjs_ketenagakerjaan_company : 0, 0, ',', '.') }}</td>
                 <td class="right" style="font-weight:600;">Rp {{ number_format($gajiKotor, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($p->iuran_bulanan_deduction, 0, ',', '.') }}</td>
                 <td class="right" style="font-weight:600;">Rp {{ number_format($p->net_salary, 0, ',', '.') }}</td>
@@ -143,7 +153,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="23" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
+            <tr><td colspan="25" style="text-align:center;padding:12px;color:#94a3b8;">Belum ada data</td></tr>
             @endforelse
             <tr class="totals">
                 <td colspan="4" style="text-align:right;">Total</td>
@@ -160,8 +170,10 @@
                 <td class="right">Rp {{ number_format($totalLain, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKKr, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalBPJSKPr, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($totalBPJSKetKr, 0, ',', '.') }}</td>
-                <td class="right">Rp {{ number_format($totalBPJSKetPr, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalBPJSKetFullKr, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalBPJSKetFullPr, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalBPJSKetPartKr, 0, ',', '.') }}</td>
+                <td class="right">Rp {{ number_format($totalBPJSKetPartPr, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalGajiKotor, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalIuran, 0, ',', '.') }}</td>
                 <td class="right">Rp {{ number_format($totalGajiBersih, 0, ',', '.') }}</td>

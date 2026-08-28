@@ -763,33 +763,53 @@ class ReportController extends Controller
 
         $payrolls = $query->orderBy('period', 'desc')->get();
 
-        $data = $payrolls->map(function ($p) {
-            return [
-                'Period' => $p->period,
-                'NIK' => $p->employee?->nik ?? '-',
-                'Nama' => $p->employee?->full_name ?? '-',
-                'Jabatan' => $p->employee?->position?->name ?? $p->employee?->department?->name ?? '-',
-                'Golongan/Grade' => $p->employee?->position_grade ?? '-',
-                'Jenis' => ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
-                'Bank' => $p->employee?->bank_name ?? '-',
-                'No Rek' => $p->employee?->bank_account ?? '-',
-                'Nama Rek' => $p->employee?->bank_holder ?? '-',
-                'Gaji Pokok' => $p->base_salary,
-                'Tunjangan' => $p->allowance,
-                'Lembur' => $p->overtime_pay,
-                'Uang Makan' => $p->uang_makan_lembur + $p->uang_makan_harian,
-                'BPJS Kes (Kr)' => $p->bpjs_kesehatan_deduction,
-                'BPJS Kes (Pr)' => $p->bpjs_kesehatan_company,
-                'BPJS Ket (Kr)' => $p->bpjs_ketenagakerjaan_deduction,
-                'BPJS Ket (Pr)' => $p->bpjs_ketenagakerjaan_company,
-                'Iuran Bulanan' => $p->iuran_bulanan_deduction,
-                'Total Potongan' => $p->total_deductions,
-                'Gaji Bersih' => $p->net_salary,
-                'Status' => $p->status,
-            ];
-        });
+        $headings = ['No', 'Nama', 'Jabatan', 'Jenis', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'Telat', 'Potongan 8%', 'Alpha', 'Kasbon Tunai', 'Kasbon Non-Tunai', 'Pajak', 'Lain-Lain', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket (Kr)', 'BPJS Ket (Pr)', 'Total Gaji', 'Iuran', 'Gaji Bersih', 'Status'];
 
-        $headings = ['Period', 'NIK', 'Nama', 'Jabatan', 'Golongan/Grade', 'Jenis', 'Bank', 'No Rek', 'Nama Rek', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Uang Makan', 'BPJS Kes (Kr)', 'BPJS Kes (Pr)', 'BPJS Ket (Kr)', 'BPJS Ket (Pr)', 'Iuran Bulanan', 'Total Potongan', 'Gaji Bersih', 'Status'];
+        $data = collect();
+
+        foreach ($payrolls as $i => $p) {
+            $gajiKotor = $p->net_salary + $p->iuran_bulanan_deduction;
+            $data->push([
+                $i + 1,
+                $p->employee?->full_name ?? '-',
+                $p->employee?->position?->name ?? $p->employee?->department?->name ?? '-',
+                ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
+                $p->base_salary,
+                $p->allowance,
+                $p->overtime_pay,
+                $p->uang_makan_lembur + $p->uang_makan_harian,
+                $p->late_penalty,
+                $p->late_penalty_percent,
+                $p->absent_penalty,
+                $p->cash_advance_tunai,
+                $p->cash_advance_nontunai,
+                $p->tax_amount,
+                $p->other_deductions,
+                $p->bpjs_kesehatan_deduction,
+                $p->bpjs_kesehatan_company,
+                $p->bpjs_ketenagakerjaan_deduction,
+                $p->bpjs_ketenagakerjaan_company,
+                $gajiKotor,
+                $p->iuran_bulanan_deduction,
+                $p->net_salary,
+                ucfirst($p->status),
+            ]);
+        }
+
+        if ($data->isNotEmpty()) {
+            $sums = array_fill(0, count($headings), 0);
+            foreach ($data as $row) {
+                foreach (range(4, 21) as $k) {
+                    $sums[$k] += $row[$k];
+                }
+            }
+            $totalRow = array_fill(0, count($headings), '');
+            $totalRow[1] = 'Total';
+            foreach (range(4, 21) as $k) {
+                $totalRow[$k] = $sums[$k];
+            }
+            $data->push($totalRow);
+        }
 
         return Excel::download(new class($data, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
             private $data;

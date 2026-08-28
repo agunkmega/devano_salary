@@ -539,6 +539,9 @@ class ReportController extends Controller
 
         $cashAll = $all->filter(fn($p) => empty($p->employee?->bank_account));
 
+        $bpjsKetFull = $all->filter(fn($p) => ($p->employee?->bpjs_ketenagakerjaan_type ?? null) !== 'partial');
+        $bpjsKetPartial = $all->filter(fn($p) => ($p->employee?->bpjs_ketenagakerjaan_type ?? null) === 'partial');
+
         $summary = [
             'count' => $all->count(),
             'total_base_salary' => $all->sum('base_salary'),
@@ -552,6 +555,10 @@ class ReportController extends Controller
             'total_bpjs_kesehatan_company' => $all->sum('bpjs_kesehatan_company'),
             'total_bpjs_ketenagakerjaan' => $all->sum('bpjs_ketenagakerjaan_deduction'),
             'total_bpjs_ketenagakerjaan_company' => $all->sum('bpjs_ketenagakerjaan_company'),
+            'total_bpjs_ketenagakerjaan_full' => $bpjsKetFull->sum('bpjs_ketenagakerjaan_deduction'),
+            'total_bpjs_ketenagakerjaan_full_company' => $bpjsKetFull->sum('bpjs_ketenagakerjaan_company'),
+            'total_bpjs_ketenagakerjaan_partial' => $bpjsKetPartial->sum('bpjs_ketenagakerjaan_deduction'),
+            'total_bpjs_ketenagakerjaan_partial_company' => $bpjsKetPartial->sum('bpjs_ketenagakerjaan_company'),
             'total_iuran_bulanan' => $all->sum('iuran_bulanan_deduction'),
             'total_tax' => $all->sum('tax_amount'),
             'total_cash_advance' => $all->sum('cash_advance_deduction'),

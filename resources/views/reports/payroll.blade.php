@@ -94,7 +94,7 @@
             <span x-text="showCards ? 'Sembunyikan Ringkasan' : 'Tampilkan Ringkasan'"></span>
         </button>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4" x-show="showCards">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" x-show="showCards">
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $summary['count'] }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">Total Pegawai</p>
@@ -132,12 +132,20 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Kes. (Perusahaan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan'], 0, ',', '.') }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. (Karyawan)</p>
+            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_full'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Full (Karyawan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_company'], 0, ',', '.') }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. (Perusahaan)</p>
+            <p class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_full_company'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Full (Perusahaan)</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_partial'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Partial (Karyawan)</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
+            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_partial_company'], 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Partial (Perusahaan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
             <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">Rp {{ number_format($summary['total_iuran_bulanan'], 0, ',', '.') }}</p>

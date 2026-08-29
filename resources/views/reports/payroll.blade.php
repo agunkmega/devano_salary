@@ -128,7 +128,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Kes. (Karyawan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-pink-600 dark:text-pink-400">Rp {{ number_format($summary['total_bpjs_kesehatan_company'], 0, ',', '.') }}</p>
+            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">Rp {{ number_format($summary['total_bpjs_kesehatan_company'], 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Kes. (Perusahaan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
@@ -136,7 +136,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Full (Karyawan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_full_company'], 0, ',', '.') }}</p>
+            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_full_company'], 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Full (Perusahaan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
@@ -144,7 +144,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Partial (Karyawan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_partial_company'], 0, ',', '.') }}</p>
+            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Rp {{ number_format($summary['total_bpjs_ketenagakerjaan_partial_company'], 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">BPJS Ket. Partial (Perusahaan)</p>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 text-center">

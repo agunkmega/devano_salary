@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
     const ROLE_SUPER_ADMIN = 'super_admin';
     const ROLE_HR = 'hr';
@@ -90,5 +91,16 @@ class User extends Authenticatable
     public function hasRole($role): bool
     {
         return $this->role === $role;
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo) {
+            return null;
+        }
+        if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
+            return $this->photo;
+        }
+        return url("storage/" . ltrim($this->photo, "/"));
     }
 }

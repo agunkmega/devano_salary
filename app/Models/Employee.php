@@ -170,4 +170,103 @@ class Employee extends Model
     {
         return $this->base_salary + $this->allowance + $this->allowance_absensi + $this->allowance_transport + $this->allowance_jabatan + $this->allowance_insentif;
     }
+
+    public static function dayLocaleMap(string $locale = 'id'): array
+    {
+        if ($locale === 'id') {
+            return [
+                'sunday'    => 'Minggu',
+                'monday'    => 'Senin',
+                'tuesday'   => 'Selasa',
+                'wednesday' => 'Rabu',
+                'thursday'  => 'Kamis',
+                'friday'    => 'Jumat',
+                'saturday'  => 'Sabtu',
+            ];
+        }
+
+        return [
+            'sunday'    => 'Sunday',
+            'monday'    => 'Monday',
+            'tuesday'   => 'Tuesday',
+            'wednesday' => 'Wednesday',
+            'thursday'  => 'Thursday',
+            'friday'    => 'Friday',
+            'saturday'  => 'Saturday',
+        ];
+    }
+
+    public function getOffDaysLocaleAttribute(): array
+    {
+        $map = self::dayLocaleMap('id');
+        $days = (array) ($this->off_days ?? []);
+
+        return array_values(array_map(function ($day) use ($map) {
+            $key = strtolower(trim((string) $day));
+            return $map[$key] ?? ucfirst($key);
+        }, $days));
+    }
+
+    public function getOffDaysFormattedAttribute(): string
+    {
+        $days = $this->off_days_locale;
+        return !empty($days) ? implode(', ', $days) : '-';
+    }
+
+    public function getGenderLabelAttribute(): string
+    {
+        if ($this->gender === 'L' || strtolower((string)$this->gender) === 'laki-laki') {
+            return 'Laki-laki';
+        }
+        if ($this->gender === 'P' || strtolower((string)$this->gender) === 'perempuan') {
+            return 'Perempuan';
+        }
+        return (string) ($this->gender ?? '-');
+    }
+
+    public function getEmploymentStatusLabelAttribute(): string
+    {
+        return match ($this->employment_status) {
+            'permanent'          => 'Karyawan Tetap',
+            'contract_year'      => 'Kontrak Tahunan',
+            'contract_permanent' => 'Kontrak Menuju Tetap',
+            default              => ucfirst(str_replace('_', ' ', (string) ($this->employment_status ?? 'Karyawan Tetap'))),
+        };
+    }
+
+    public function getEmployeeTypeLabelAttribute(): string
+    {
+        return match (strtolower((string) $this->employee_type)) {
+            'harian'  => 'Pegawai Harian',
+            default   => 'Pegawai Bulanan',
+        };
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo) {
+            return null;
+        }
+        if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
+            return $this->photo;
+        }
+        return url("storage/" . ltrim($this->photo, "/"));
+    }
+
+    public function getMasaKerjaAttribute(): string
+    {
+        if (!$this->join_date) {
+            return '-';
+        }
+        $join = \Carbon\Carbon::parse($this->join_date);
+        $diff = $join->diff(now());
+        $parts = [];
+        if ($diff->y > 0) {
+            $parts[] = "{$diff->y} Tahun";
+        }
+        if ($diff->m > 0) {
+            $parts[] = "{$diff->m} Bulan";
+        }
+        return !empty($parts) ? implode(' ', $parts) : ($diff->d > 0 ? "{$diff->d} Hari" : 'Baru Bergabung');
+    }
 }

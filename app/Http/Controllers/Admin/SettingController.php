@@ -111,6 +111,9 @@ class SettingController extends Controller
         if (str_starts_with($key, 'mail_')) {
             return 'email';
         }
+        if (str_starts_with($key, 'mobile_') || str_starts_with($key, 'auth_')) {
+            return 'mobile_api';
+        }
         $payrollKeys = ['bpjs_', 'tax_', 'iuran_wajib', 'overtime_', 'late_penalty'];
         foreach ($payrollKeys as $prefix) {
             if (str_starts_with($key, $prefix)) {

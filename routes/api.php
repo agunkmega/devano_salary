@@ -26,6 +26,9 @@ Route::post('/auth/activate', [AuthController::class, 'activate']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/profile', [AuthController::class, 'profile']);
+    Route::get('/me', [AuthController::class, 'profile']);
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::get('/user/profile', [AuthController::class, 'profile']);
     Route::post('/auth/profile/update', [ProfileVaultApiController::class, 'updateProfile']);
     Route::post('/auth/password', [ProfileVaultApiController::class, 'updatePassword']);
 

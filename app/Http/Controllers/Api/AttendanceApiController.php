@@ -27,6 +27,12 @@ class AttendanceApiController extends Controller
         $selfie = Setting::where('group', 'mobile_api')->where('key', 'mobile_attendance_selfie_required')->value('value') ?? '1';
         $disabledMsg = Setting::where('group', 'mobile_api')->where('key', 'mobile_attendance_disabled_message')->value('value') ?? 'Presensi online saat ini dinonaktifkan oleh administrator. Silakan lakukan absensi melalui mesin fingerprint kantor.';
 
+        $companyName = Setting::where('key', 'company_name')->value('value') ?? 'Kantor Pusat';
+        $companyAddr = Setting::where('key', 'company_address')->value('value') ?? 'Lokasi Kantor Utama';
+        $officeLat = (float) (Setting::where('key', 'office_latitude')->value('value') ?? '-8.5721');
+        $officeLng = (float) (Setting::where('key', 'office_longitude')->value('value') ?? '115.2635');
+        $officeRadius = (float) (Setting::where('key', 'office_radius_meters')->value('value') ?? '100');
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -34,6 +40,11 @@ class AttendanceApiController extends Controller
                 'is_geofence_enabled' => $geofence == '1' || $geofence === 'true',
                 'is_selfie_required' => $selfie == '1' || $selfie === 'true',
                 'disabled_message' => $disabledMsg,
+                'office_name' => $companyName,
+                'office_address' => $companyAddr,
+                'office_latitude' => $officeLat,
+                'office_longitude' => $officeLng,
+                'office_radius_meters' => $officeRadius,
             ],
         ]);
     }

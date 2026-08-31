@@ -7,28 +7,42 @@ use App\Models\Announcement;
 use App\Models\Notification;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class HomeApiController extends Controller
 {
     public function getAnnouncements()
     {
-        $announcements = Announcement::orderBy('is_important', 'desc')
+        $announcements = Announcement::active()
+            ->orderBy('is_important', 'desc')
             ->orderBy('id', 'desc')
             ->get();
 
         $data = $announcements->map(function ($a) {
+            $imageUrl = null;
+            if ($a->image) {
+                $imageUrl = Str::startsWith($a->image, ['http://', 'https://'])
+                    ? $a->image
+                    : url(Storage::url($a->image));
+            }
+
             return [
                 'id' => (string) $a->id,
                 'title' => $a->title,
-                'snippet' => $a->snippet,
+                'snippet' => $a->snippet ?: Str::limit(strip_tags($a->content), 120),
                 'content' => $a->content,
-                'category' => $a->category,
+                'category' => $a->category ?: 'perusahaan',
                 'date' => $a->publish_date ? $a->publish_date->toIso8601String() : $a->created_at?->toIso8601String(),
+                'image_url' => $imageUrl,
                 'is_important' => (bool) $a->is_important,
             ];
         });
 
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
     }
 
     public function getCelebrations()
@@ -73,7 +87,10 @@ class HomeApiController extends Controller
             }
         }
 
-        return response()->json(['data' => $celebrations]);
+        return response()->json([
+            'success' => true,
+            'data' => $celebrations,
+        ]);
     }
 
     public function sendWish(Request $request)
@@ -104,6 +121,7 @@ class HomeApiController extends Controller
         }
 
         return response()->json([
+            'success' => true,
             'message' => 'Ucapan selamat berhasil dikirim!',
         ]);
     }

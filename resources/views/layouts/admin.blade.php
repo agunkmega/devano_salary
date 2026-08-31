@@ -137,6 +137,7 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('adminLayout', () => ({
+            mobileOpen: false,
             darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches),
             init() {
                 this.$watch('darkMode', val => {

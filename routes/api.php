@@ -81,3 +81,25 @@ Route::middleware('auth:sanctum')->group(function () {
 // Portal fallback alias
 Route::middleware('auth:sanctum')->post('/portal/password', [ProfileVaultApiController::class, 'updatePassword']);
 Route::middleware('auth:sanctum')->post('/portal/cash-advance', [CashAdvanceApiController::class, 'store']);
+// Mobile App Release & Distribution
+Route::get('/mobile/latest-release', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'getLatest']);
+Route::post('/mobile/upload-apk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadApk']);
+
+// Global CORS Preflight Handler for API
+Route::options('/{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN, Application')
+        ->header('Access-Control-Max-Age', '86400');
+})->where('any', '.*');
+
+
+// ── Mobile App Distribution & Release History ──
+use App\Http\Controllers\MobileReleaseController;
+Route::prefix('mobile')->group(function () {
+    Route::get('/latest-release', [MobileReleaseController::class, 'getLatest']);
+    Route::get('/releases', [MobileReleaseController::class, 'getHistory']);
+    Route::post('/upload-apk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadApk']);
+    Route::post('/upload-apk-chunk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadChunk']);
+});

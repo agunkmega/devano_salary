@@ -145,3 +145,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Direct download APK file
+Route::get('/download/app-release.apk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'downloadApk'])->name('mobile.download-apk');
+Route::post('/admin/settings/mobile-app-release', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadApk'])->name('admin.settings.mobile-app-release');
+
+Route::post('/admin/settings/mobile-app-release-chunk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadChunk'])->name('admin.settings.mobile-app-release-chunk');

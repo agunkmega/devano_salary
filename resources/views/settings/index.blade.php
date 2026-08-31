@@ -338,6 +338,10 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                         Fitur Chat & Hak Akses
                     </button>
+                    <button type="button" @click="mobileSubTab = 'app_release'" class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2" :class="mobileSubTab === 'app_release' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'">
+                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Upload & Rilis APK Mobile
+                    </button>
                     <button type="button" @click="mobileSubTab = 'whatsapp'" class="px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2" :class="mobileSubTab === 'whatsapp' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'">
                         <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
                         WhatsApp Gateway
@@ -746,6 +750,449 @@
                 </div>
             </div>
 
+                        <!-- SUBTAB 5: UPLOAD & RILIS APLIKASI (APK) -->
+            <!-- SUBTAB 3: UPLOAD & RILIS APK MOBILE -->
+            <div x-show="mobileSubTab === 'app_release'" class="space-y-6" x-data="apkUploadManager()">
+                <!-- Header Info -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-purple-900/20 via-indigo-900/10 to-blue-900/20 border border-purple-200/60 dark:border-purple-800/40">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                Distribusi & Publikasi Paket APK Mobile
+                                <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">Android</span>
+                            </h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Unggah rilis baru, kelola riwayat versi, dan sediakan tautan unduh mandiri bagi karyawan.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ url('/download/app-release.apk') }}" target="_blank" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/60 transition shadow-sm inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Direct Link APK
+                        </a>
+                        <button type="button" @click="fetchHistory()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50 hover:bg-purple-100 transition inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4" :class="loadingHistory ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Segarkan Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Upload Card -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/80 shadow-sm space-y-6">
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/70 pb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="flex items-center justify-center w-7 h-7 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-bold">↑</span>
+                            <div>
+                                <h5 class="text-sm font-bold text-gray-900 dark:text-white">Unggah Berkas APK Rilis Baru</h5>
+                                <p class="text-xs text-gray-500">File APK akan disimpan ke storage server dan otomatis tercatat ke riwayat rilis.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropzone & File Input -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-2">Berkas APK (.apk) <span class="text-red-500">*</span></label>
+                        <div 
+                            @dragover.prevent="isDragging = true"
+                            @dragleave.prevent="isDragging = false"
+                            @drop.prevent="handleFileDrop($event)"
+                            @click="$refs.fileInput.click()"
+                            class="relative border-2 border-dashed rounded-2xl p-6 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center"
+                            :class="isDragging ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-900/20 scale-[1.005]' : (selectedFile ? 'border-emerald-400 bg-emerald-50/40 dark:bg-emerald-950/20' : 'border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40 hover:border-purple-400 hover:bg-purple-50/30 dark:hover:bg-purple-900/10')"
+                        >
+                            <input type="file" x-ref="fileInput" @change="handleFileSelect($event)" accept=".apk" class="hidden">
+                            
+                            <template x-if="!selectedFile">
+                                <div class="space-y-2">
+                                    <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                    </div>
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                        Klik untuk memilih file APK atau tarik & lepas di sini
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        Format: <span class="font-mono font-semibold text-purple-600 dark:text-purple-400">.apk</span> • Maksimal file: 250 MB
+                                    </p>
+                                </div>
+                            </template>
+
+                            <template x-if="selectedFile">
+                                <div class="flex items-center gap-4 text-left w-full max-w-md bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm" @click.stop>
+                                    <div class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white truncate" x-text="selectedFile?.name || ''"></p>
+                                        <p class="text-xs text-gray-500 font-medium" x-text="selectedFile ? formatBytes(selectedFile.size) : ''"></p>
+                                    </div>
+                                    <button type="button" @click.stop="clearFile()" class="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Version & Changelog Inputs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-1.5">Versi Rilis (Version Name) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" x-model="versionName" placeholder="Contoh: 1.0.0 (Build 1) atau 1.0.1" class="w-full px-4 py-2.5 pl-10 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm">
+                                <span class="absolute left-3.5 top-3 text-gray-400 font-bold text-xs">v</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-1.5">Opsi Pembaruan Wajib</label>
+                            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40 cursor-pointer">
+                                <input type="checkbox" x-model="isMandatory" class="rounded text-purple-600 focus:ring-purple-500">
+                                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Wajibkan pengguna mengupdate versi ini (Force Update)</span>
+                            </label>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-1.5">Catatan Rilis / Changelog</label>
+                            <textarea x-model="releaseNotes" rows="2" placeholder="Tuliskan pembaruan fitur, perbaikan bug, atau catatan rilis..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ── ANIMATED PROGRESS BAR SECTION ── -->
+                    <div x-show="isUploading" x-transition.opacity.duration.200ms class="space-y-3 p-4 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60">
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2 font-semibold text-purple-700 dark:text-purple-300">
+                                <svg class="w-4 h-4 animate-spin text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                <span x-text="uploadStageText"></span>
+                            </div>
+                            <div class="font-mono font-bold text-purple-700 dark:text-purple-300" x-text="progressPct + '%'"></div>
+                        </div>
+
+                        <!-- Striped Animated Progress Bar -->
+                        <div class="w-full bg-purple-200/60 dark:bg-purple-900/60 rounded-full h-3.5 overflow-hidden p-0.5 relative shadow-inner">
+                            <div 
+                                class="h-full rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 transition-all duration-150 relative overflow-hidden shadow-sm"
+                                :style="'width: ' + progressPct + '%'"
+                            >
+                                <div class="absolute inset-0 opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,0.25)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.25)_50%,rgba(255,255,255,0.25)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[move-bg_1s_linear_infinite]"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-[11px] text-purple-600/80 dark:text-purple-400/80 font-medium">
+                            <span x-text="bytesUploadedText"></span>
+                            <span x-text="uploadSpeedText"></span>
+                        </div>
+                    </div>
+
+                    <!-- ── DETAILED ERROR ALERT SECTION ── -->
+                    <div x-show="errorMessage" x-transition.opacity.duration.200ms class="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 space-y-2">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 mt-0.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div class="flex-1">
+                                <h6 class="text-xs font-bold text-red-800 dark:text-red-300 uppercase tracking-wider">Gagal Mengunggah Berkas APK</h6>
+                                <p class="text-xs text-red-700 dark:text-red-400 mt-0.5 leading-relaxed font-medium" x-text="errorMessage"></p>
+                                
+                                <template x-if="errorDetail">
+                                    <div class="mt-2 p-2.5 rounded-lg bg-red-100/70 dark:bg-red-900/30 text-[11px] font-mono text-red-800 dark:text-red-300 overflow-x-auto" x-text="errorDetail"></div>
+                                </template>
+                            </div>
+                            <button type="button" @click="errorMessage = ''; errorDetail = ''" class="text-red-400 hover:text-red-600 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ── SUCCESS ALERT SECTION ── -->
+                    <div x-show="successMessage" x-transition.opacity.duration.200ms class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="text-xs font-bold text-emerald-800 dark:text-emerald-300">Publikasi Berhasil!</h6>
+                            <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5 font-medium" x-text="successMessage"></p>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="flex items-center gap-3 pt-2">
+                        <button 
+                            type="button" 
+                            @click="startUpload()" 
+                            :disabled="isUploading || !selectedFile"
+                            class="px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-md shadow-purple-500/20 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            <template x-if="!isUploading">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            </template>
+                            <template x-if="isUploading">
+                                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            </template>
+                            <span x-text="isUploading ? 'Mengunggah...' : 'Upload & Publikasikan APK Baru'"></span>
+                        </button>
+                        
+                        <span class="text-xs text-gray-500" x-show="!isUploading && selectedFile" x-text="selectedFile ? ('Siap unggah: ' + selectedFile.name) : ''"></span>
+                    </div>
+                </div>
+
+                <!-- ── TABEL RIWAYAT VERSI UPLOAD ── -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/80 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/70 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse"></span>
+                            <h5 class="text-sm font-bold text-gray-900 dark:text-white">Riwayat Upload & Versi Aplikasi</h5>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-500" x-text="history.length + ' Rilis Tersedia'"></span>
+                    </div>
+
+                    <!-- History Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+                                    <th class="py-3 px-4 font-bold rounded-l-xl">Versi</th>
+                                    <th class="py-3 px-4 font-bold">Nama File & Ukuran</th>
+                                    <th class="py-3 px-4 font-bold">Waktu Upload</th>
+                                    <th class="py-3 px-4 font-bold">Pengunggah</th>
+                                    <th class="py-3 px-4 font-bold">Catatan Rilis</th>
+                                    <th class="py-3 px-4 font-bold text-right rounded-r-xl">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
+                                <template x-for="(rel, idx) in history" :key="rel.id || idx">
+                                    <tr class="hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition-colors">
+                                        <td class="py-3.5 px-4">
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold font-mono bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300" x-text="'v' + rel.version_name"></span>
+                                                <template x-if="idx === 0">
+                                                    <span class="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Aktif</span>
+                                                </template>
+                                            </div>
+                                        </td>
+                                        <td class="py-3.5 px-4 font-medium text-gray-900 dark:text-white">
+                                            <div class="font-mono text-xs" x-text="rel.file_name || 'app-release.apk'"></div>
+                                            <div class="text-[11px] text-gray-500 font-normal" x-text="rel.file_size || '-'"></div>
+                                        </td>
+                                        <td class="py-3.5 px-4 text-gray-600 dark:text-gray-300" x-text="rel.release_date || '-'"></td>
+                                        <td class="py-3.5 px-4 text-gray-600 dark:text-gray-300" x-text="rel.uploaded_by || 'Admin'"></td>
+                                        <td class="py-3.5 px-4 text-gray-500 max-w-xs truncate" x-text="rel.release_notes || '-'"></td>
+                                        <td class="py-3.5 px-4 text-right">
+                                            <a :href="rel.download_url" target="_blank" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition inline-flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                Unduh
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template x-if="history.length === 0 && !loadingHistory">
+                                    <tr>
+                                        <td colspan="6" class="py-8 text-center text-gray-400">
+                                            Belum ada data riwayat upload versi APK.
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+            @keyframes move-bg {
+                0% { background-position: 0 0; }
+                100% { background-position: 2rem 0; }
+            }
+            </style>
+
+            <script>
+            function apkUploadManager() {
+                return {
+                    selectedFile: null,
+                    versionName: '1.0.1',
+                    releaseNotes: '',
+                    isMandatory: false,
+                    isDragging: false,
+                    isUploading: false,
+                    progressPct: 0,
+                    uploadStageText: 'Mengunggah berkas...',
+                    bytesUploadedText: '0 MB / 0 MB',
+                    uploadSpeedText: '',
+                    errorMessage: '',
+                    errorDetail: '',
+                    successMessage: '',
+                    history: [],
+                    loadingHistory: false,
+
+                    init() {
+                        this.fetchHistory();
+                    },
+
+                    handleFileSelect(e) {
+                        const files = e.target.files;
+                        if (files && files.length) {
+                            this.setFile(files[0]);
+                        }
+                    },
+
+                    handleFileDrop(e) {
+                        this.isDragging = false;
+                        const files = e.dataTransfer.files;
+                        if (files && files.length) {
+                            this.setFile(files[0]);
+                        }
+                    },
+
+                    setFile(file) {
+                        if (!file.name.toLowerCase().endsWith('.apk')) {
+                            this.errorMessage = 'Format file tidak valid. Harap pilih berkas dengan ekstensi .apk';
+                            this.errorDetail = 'Nama file: ' + file.name;
+                            return;
+                        }
+                        this.selectedFile = file;
+                        this.errorMessage = '';
+                        this.errorDetail = '';
+                        this.successMessage = '';
+
+                        // Auto extract version suggestion if present
+                        const match = file.name.match(/v?(\d+\.\d+(\.\d+)?(\+\d+)?)/i);
+                        if (match && match[1]) {
+                            this.versionName = match[1];
+                        }
+                    },
+
+                    clearFile() {
+                        this.selectedFile = null;
+                        if (this.$refs.fileInput) this.$refs.fileInput.value = '';
+                    },
+
+                    formatBytes(bytes) {
+                        if (!bytes || bytes === 0) return '0 B';
+                        const mb = bytes / (1024 * 1024);
+                        return mb.toFixed(1) + ' MB (' + (bytes).toLocaleString() + ' bytes)';
+                    },
+
+                    fetchHistory() {
+                        this.loadingHistory = true;
+                        fetch('{{ url('/api/mobile/releases') }}', {
+                            headers: { 'Accept': 'application/json' }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.loadingHistory = false;
+                            if (data && data.data) {
+                                this.history = data.data;
+                            }
+                        })
+                        .catch(() => {
+                            this.loadingHistory = false;
+                        });
+                    },
+
+                    async startUpload() {
+                        if (!this.selectedFile) {
+                            this.errorMessage = 'Silakan pilih berkas APK terlebih dahulu.';
+                            return;
+                        }
+                        if (!this.versionName.trim()) {
+                            this.errorMessage = 'Silakan masukkan nomor versi rilis (contoh: 1.0.1).';
+                            return;
+                        }
+
+                        this.isUploading = true;
+                        this.progressPct = 0;
+                        this.errorMessage = '';
+                        this.errorDetail = '';
+                        this.successMessage = '';
+
+                        const file = this.selectedFile;
+                        const CHUNK_SIZE = 3 * 1024 * 1024; // 3 MB per batch chunk (aman dari batas server apapun!)
+                        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+                        const uploadId = 'apk_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                        const startTime = Date.now();
+
+                        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                            const start = chunkIndex * CHUNK_SIZE;
+                            const end = Math.min(start + CHUNK_SIZE, file.size);
+                            const chunkBlob = file.slice(start, end);
+
+                            this.uploadStageText = 'Mengunggah batch potongan ' + (chunkIndex + 1) + ' dari ' + totalChunks + '...';
+
+                            const formData = new FormData();
+                            formData.append('upload_id', uploadId);
+                            formData.append('chunk_index', chunkIndex);
+                            formData.append('total_chunks', totalChunks);
+                            formData.append('version_name', this.versionName.trim());
+                            formData.append('release_notes', this.releaseNotes.trim());
+                            formData.append('is_mandatory', this.isMandatory ? '1' : '0');
+                            formData.append('file_chunk', chunkBlob, file.name);
+                            formData.append('_token', '{{ csrf_token() }}');
+
+                            try {
+                                const response = await new Promise((resolve, reject) => {
+                                    const xhr = new XMLHttpRequest();
+                                    xhr.open('POST', '{{ url('/api/mobile/upload-apk-chunk') }}', true);
+                                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                                    xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+                                    xhr.setRequestHeader('Accept', 'application/json');
+
+                                    xhr.upload.onprogress = (e) => {
+                                        if (e.lengthComputable) {
+                                            const currentUploaded = start + e.loaded;
+                                            const pct = Math.min(99, Math.round((currentUploaded / file.size) * 100));
+                                            this.progressPct = pct;
+
+                                            const mbLoaded = (currentUploaded / (1024 * 1024)).toFixed(1);
+                                            const mbTotal = (file.size / (1024 * 1024)).toFixed(1);
+                                            this.bytesUploadedText = mbLoaded + ' MB / ' + mbTotal + ' MB';
+
+                                            const elapsedSec = (Date.now() - startTime) / 1000;
+                                            if (elapsedSec > 0.5) {
+                                                const speed = (currentUploaded / elapsedSec) / (1024 * 1024);
+                                                this.uploadSpeedText = speed.toFixed(1) + ' MB/detik';
+                                            }
+                                        }
+                                    };
+
+                                    xhr.onload = () => {
+                                        let res = {};
+                                        try { res = JSON.parse(xhr.responseText); } catch(_) {}
+                                        if (xhr.status >= 200 && xhr.status < 300) {
+                                            resolve(res);
+                                        } else {
+                                            reject(new Error(res.message || xhr.responseText || 'Error saat upload chunk ' + (chunkIndex + 1)));
+                                        }
+                                    };
+
+                                    xhr.onerror = () => {
+                                        reject(new Error('Koneksi terputus saat mengunggah batch ke-' + (chunkIndex + 1)));
+                                    };
+
+                                    xhr.send(formData);
+                                });
+
+                                if (chunkIndex === totalChunks - 1) {
+                                    this.progressPct = 100;
+                                    this.uploadStageText = 'Potongan selesai disatukan. Rilis sukses dipublikasikan!';
+                                    this.successMessage = response.message || ('Paket APK versi ' + this.versionName + ' berhasil diunggah via Batch Chunks!');
+                                    this.clearFile();
+                                    this.fetchHistory();
+                                }
+                            } catch (err) {
+                                this.isUploading = false;
+                                this.errorMessage = 'Gagal pada batch potongan ke-' + (chunkIndex + 1) + '/' + totalChunks + ': ' + err.message;
+                                this.errorDetail = 'File dipecah menjadi ' + totalChunks + ' batch (@ 3MB). Cek log server jika terjadi masalah jaringan.';
+                                return;
+                            }
+                        }
+
+                        this.isUploading = false;
+                    }
+                };
+            }
+            </script>
+            </div>
             <!-- Submit Button -->
             <div class="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
@@ -770,3 +1217,4 @@
 </script>
 @endpush
 @endsection
+

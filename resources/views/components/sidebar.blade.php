@@ -63,9 +63,8 @@ function userCanSee($itemRoles, $userRole) {
 }
 @endphp
 
-<aside
-    x-data="{ mobileOpen: false }"
-    @toggle-sidebar.window="mobileOpen = !mobileOpen"
+<div x-data="{ mobileOpen: false }" @toggle-sidebar.window="mobileOpen = !mobileOpen">
+    <aside
     class="fixed inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col"
     :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
 >
@@ -117,11 +116,9 @@ function userCanSee($itemRoles, $userRole) {
         </a>
         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
     </div>
-</aside>
-
-<template x-teleport="body">
-    <div x-show="mobileOpen" class="fixed inset-0 z-20 bg-black/50 lg:hidden" @click="mobileOpen = false"></div>
-</template>
+    </aside>
+    <div x-show="mobileOpen" x-cloak class="fixed inset-0 z-20 bg-black/50 lg:hidden" @click="mobileOpen = false"></div>
+</div>
 
 @push('scripts')
 <script>

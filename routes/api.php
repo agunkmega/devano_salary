@@ -43,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendances', [AttendanceApiController::class, 'index']);
     Route::post('/attendance/clock-in', [AttendanceApiController::class, 'clockIn']);
     Route::post('/attendance/clock-out', [AttendanceApiController::class, 'clockOut']);
+Route::post('/attendance/break-out', [AttendanceApiController::class, 'breakOut']);
+Route::post('/attendance/break-in', [AttendanceApiController::class, 'breakIn']);
 
     // Payrolls
     Route::get('/payrolls', [PayrollController::class, 'index']);

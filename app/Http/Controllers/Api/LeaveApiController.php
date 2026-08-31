@@ -14,6 +14,9 @@ class LeaveApiController extends Controller
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
+        if (!$employee && $user->email) {
+            $employee = Employee::where('email', $user->email)->first();
+        }
 
         if (!$employee) {
             return response()->json(['message' => 'Employee not found.'], 404);
@@ -25,10 +28,23 @@ class LeaveApiController extends Controller
             ->get();
 
         $data = $leaves->map(function ($l) {
+            $typeName = $l->leaveType?->name ?? 'Izin';
+            $code = strtoupper($l->leaveType?->code ?? '');
+            
+            $category = 'ijin';
+            if ($code === 'DP' || str_contains(strtoupper($typeName), 'DP') || str_contains(strtoupper($typeName), 'DAY OFF')) {
+                $category = 'dp';
+            } elseif ($code === 'CT' || str_contains(strtoupper($typeName), 'CUTI')) {
+                $category = 'cuti';
+            } elseif ($code === 'SK' || str_contains(strtoupper($typeName), 'SAKIT')) {
+                $category = 'sakit';
+            }
+
             return [
                 'id' => $l->id,
                 'leave_type_id' => $l->leave_type_id,
-                'leave_type_name' => $l->leaveType?->name ?? 'Izin',
+                'leave_type_name' => $typeName,
+                'leave_type_category' => $category,
                 'start_date' => $l->start_date?->format('Y-m-d'),
                 'end_date' => $l->end_date?->format('Y-m-d'),
                 'reason' => $l->reason,
@@ -49,24 +65,80 @@ class LeaveApiController extends Controller
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-
-        $totalQuota = 12;
-        $used = 0;
-
-        if ($employee) {
-            $used = Leave::where('employee_id', $employee->id)
-                ->where('status', 'approved')
-                ->whereYear('start_date', now()->year)
-                ->count();
+        if (!$employee && $user->email) {
+            $employee = Employee::where('email', $user->email)->first();
         }
 
-        $remaining = max(0, $totalQuota - $used);
+        if (!$employee) {
+            return response()->json([
+                'data' => [
+                    'annual_quota' => 12,
+                    'total_quota' => 12,
+                    'used_quota' => 0,
+                    'remaining_quota' => 12,
+                    'dp_granted' => 0,
+                    'dp_used' => 0,
+                    'dp_remaining' => 0,
+                ],
+            ]);
+        }
+
+        // Calculation matched with Portal/DashboardController@index
+        $now = now();
+        if ($now->month === 12 && $now->day >= 26) {
+            $leaveYearStart = \Carbon\Carbon::create($now->year, 12, 26)->startOfDay();
+            $leaveYearEnd = \Carbon\Carbon::create($now->year + 1, 12, 25)->endOfDay();
+            $leaveYearLabel = $now->year . '/' . ($now->year + 1);
+        } else {
+            $leaveYearStart = \Carbon\Carbon::create($now->year - 1, 12, 26)->startOfDay();
+            $leaveYearEnd = \Carbon\Carbon::create($now->year, 12, 25)->endOfDay();
+            $leaveYearLabel = ($now->year - 1) . '/' . $now->year;
+        }
+
+        $tenureDays = $employee->join_date ? $employee->join_date->diffInDays(now()) : 0;
+        $eligible = $employee->cuti_eligible && $tenureDays >= 365;
+
+        $effectiveCtQuota = 0;
+        if ($eligible && $employee->join_date) {
+            $anniversary = $employee->join_date->copy()->addYear();
+            if ($anniversary->lte($leaveYearStart)) {
+                $effectiveCtQuota = 12;
+            } elseif ($anniversary->gt($leaveYearEnd)) {
+                $effectiveCtQuota = 0;
+            } else {
+                $effectiveCtQuota = min(12, ($leaveYearEnd->year - $anniversary->year) * 12 + ($leaveYearEnd->month - $anniversary->month) + 1);
+            }
+        }
+
+        // Used Cuti Tahunan in leave year period (26 Dec to 25 Dec)
+        $ctType = \App\Models\LeaveType::whereIn('code', ['CT', 'CUTI'])->first();
+        $ctTypeId = $ctType ? $ctType->id : 1;
+
+        $ctUsed = Leave::where('employee_id', $employee->id)
+            ->where('leave_type_id', $ctTypeId)
+            ->where('status', 'approved')
+            ->whereBetween('start_date', [$leaveYearStart, $leaveYearEnd])
+            ->get()
+            ->sum(fn($l) => $l->start_date->diffInDays($l->end_date) + 1);
+
+        $ctRemaining = max(0, $effectiveCtQuota - $ctUsed);
+
+        // DP (Day Off Replacement / Hutang Libur)
+        $dpGranted = (int) ($employee->dp_granted ?? 0);
+        $dpUsed = (int) ($employee->dp_used ?? 0);
+        $dpRemaining = (int) ($employee->dp_remaining ?? max(0, $dpGranted - $dpUsed));
 
         return response()->json([
             'data' => [
-                'annual_quota' => $totalQuota,
-                'used_quota' => $used,
-                'remaining_quota' => $remaining,
+                'annual_quota' => $effectiveCtQuota,
+                'total_quota' => $effectiveCtQuota,
+                'used_quota' => $ctUsed,
+                'remaining_quota' => $ctRemaining,
+                'dp_granted' => $dpGranted,
+                'dp_used' => $dpUsed,
+                'dp_remaining' => $dpRemaining,
+                'leave_year_label' => $leaveYearLabel,
+                'eligible' => $eligible,
             ],
         ]);
     }
@@ -83,6 +155,9 @@ class LeaveApiController extends Controller
 
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
+        if (!$employee && $user->email) {
+            $employee = Employee::where('email', $user->email)->first();
+        }
 
         if (!$employee) {
             return response()->json(['message' => 'Employee not found.'], 404);
@@ -104,7 +179,7 @@ class LeaveApiController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Pengajuan cuti berhasil dikirim.',
+            'message' => 'Pengajuan cuti/DP berhasil dikirim.',
             'data' => [
                 'id' => $leave->id,
                 'leave_type_id' => $leave->leave_type_id,
@@ -120,6 +195,9 @@ class LeaveApiController extends Controller
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
+        if (!$employee && $user->email) {
+            $employee = Employee::where('email', $user->email)->first();
+        }
 
         if (!$employee) {
             return response()->json(['message' => 'Employee not found.'], 404);
@@ -130,7 +208,7 @@ class LeaveApiController extends Controller
             ->first();
 
         if (!$leave) {
-            return response()->json(['message' => 'Data cuti tidak ditemukan.'], 404);
+            return response()->json(['message' => 'Data pengajuan tidak ditemukan.'], 404);
         }
 
         if ($leave->status !== 'pending') {
@@ -140,7 +218,7 @@ class LeaveApiController extends Controller
         $leave->update(['status' => 'cancelled']);
 
         return response()->json([
-            'message' => 'Pengajuan cuti berhasil dibatalkan.',
+            'message' => 'Pengajuan berhasil dibatalkan.',
         ]);
     }
 
@@ -151,19 +229,34 @@ class LeaveApiController extends Controller
         if ($types->isEmpty()) {
             return response()->json([
                 'data' => [
-                    ['id' => 1, 'name' => 'Cuti Tahunan', 'category' => 'cuti'],
-                    ['id' => 2, 'name' => 'Izin Sakit', 'category' => 'sakit'],
-                    ['id' => 3, 'name' => 'Izin Keperluan Pribadi', 'category' => 'ijin'],
+                    ['id' => 1, 'name' => 'Cuti Tahunan (Potong Quota)', 'category' => 'cuti'],
+                    ['id' => 4, 'name' => 'DP - Day Off Replacement (Hak Libur)', 'category' => 'dp'],
+                    ['id' => 2, 'name' => 'Sakit dengan Surat Dokter', 'category' => 'sakit'],
+                    ['id' => 6, 'name' => 'Izin Keperluan Pribadi', 'category' => 'ijin'],
                 ],
             ]);
         }
 
         return response()->json([
-            'data' => $types->map(fn($t) => [
-                'id' => $t->id,
-                'name' => $t->name,
-                'category' => $t->is_paid ? 'cuti' : 'ijin',
-            ]),
+            'data' => $types->map(function ($t) {
+                $code = strtoupper($t->code ?? '');
+                $name = strtoupper($t->name ?? '');
+
+                $category = 'ijin';
+                if ($code === 'DP' || str_contains($name, 'DP') || str_contains($name, 'DAY OFF')) {
+                    $category = 'dp';
+                } elseif ($code === 'CT' || str_contains($name, 'CUTI')) {
+                    $category = 'cuti';
+                } elseif ($code === 'SK' || str_contains($name, 'SAKIT')) {
+                    $category = 'sakit';
+                }
+
+                return [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'category' => $category,
+                ];
+            }),
         ]);
     }
 }

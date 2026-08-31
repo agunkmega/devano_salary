@@ -150,10 +150,13 @@ class AuthController extends Controller
             'phone' => $employee->phone,
         ]);
 
+        $defaultPhoto = "https://ui-avatars.com/api/?name=" . urlencode($employee->full_name) . "&background=1E3A8A&color=fff&size=256";
+
         $employee->update([
             'user_id' => $user->id,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'photo' => $employee->photo ?: $defaultPhoto,
         ]);
 
                 $token = $user->createToken('mobile-app', ['employee:read'])->plainTextToken;

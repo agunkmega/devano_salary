@@ -242,10 +242,11 @@ class Employee extends Model
         };
     }
 
-    public function getPhotoUrlAttribute(): ?string
+    public function getPhotoUrlAttribute(): string
     {
         if (!$this->photo) {
-            return null;
+            $name = urlencode($this->full_name ?? 'User');
+            return "https://ui-avatars.com/api/?name={$name}&background=1E3A8A&color=fff&size=256";
         }
         if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
             return $this->photo;

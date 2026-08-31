@@ -43,8 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendances', [AttendanceApiController::class, 'index']);
     Route::post('/attendance/clock-in', [AttendanceApiController::class, 'clockIn']);
     Route::post('/attendance/clock-out', [AttendanceApiController::class, 'clockOut']);
-Route::post('/attendance/break-out', [AttendanceApiController::class, 'breakOut']);
-Route::post('/attendance/break-in', [AttendanceApiController::class, 'breakIn']);
+    Route::post('/attendance/break-out', [AttendanceApiController::class, 'breakOut']);
+    Route::post('/attendance/break-in', [AttendanceApiController::class, 'breakIn']);
 
     // Payrolls
     Route::get('/payrolls', [PayrollController::class, 'index']);
@@ -105,6 +105,22 @@ Route::options('/{any}', function () {
         ->header('Access-Control-Max-Age', '86400');
 })->where('any', '.*');
 
+// ── Stream Foto & Media dengan Header CORS Resmi Laravel ──
+Route::get('/media/{path}', function ($path) {
+    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    if (!$disk->exists($path)) {
+        abort(404, 'File not found');
+    }
+    $file = $disk->get($path);
+    $type = $disk->mimeType($path) ?? 'image/jpeg';
+    
+    return response($file, 200)
+        ->header('Content-Type', $type)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+        ->header('Access-Control-Allow-Headers', '*')
+        ->header('Cache-Control', 'public, max-age=86400');
+})->where('path', '.*');
 
 // ── Mobile App Distribution & Release History ──
 use App\Http\Controllers\MobileReleaseController;

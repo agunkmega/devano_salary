@@ -251,7 +251,8 @@ class Employee extends Model
         if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
             return $this->photo;
         }
-        return url("storage/" . ltrim($this->photo, "/"));
+        // Gunakan route /api/media/ agar aman dari CORS di Web
+        return url("api/media/" . ltrim($this->photo, "/"));
     }
 
     public function getMasaKerjaAttribute(): string

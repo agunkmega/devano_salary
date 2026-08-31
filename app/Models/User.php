@@ -93,14 +93,17 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
-    public function getPhotoUrlAttribute(): ?string
+    public function getPhotoUrlAttribute(): string
     {
         if (!$this->photo) {
-            return null;
+            $name = urlencode($this->full_name ?? 'User');
+            return "https://ui-avatars.com/api/?name={$name}&background=1E3A8A&color=fff&size=256";
         }
         if (filter_var($this->photo, FILTER_VALIDATE_URL)) {
             return $this->photo;
         }
-        return url("storage/" . ltrim($this->photo, "/"));
+        // Gunakan route /api/media/ agar aman dari CORS di Web
+        return url("api/media/" . ltrim($this->photo, "/"));
     }
+
 }

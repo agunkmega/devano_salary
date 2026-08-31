@@ -66,7 +66,7 @@ class PayrollController extends Controller
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (!$employee) {
-            return response()->json(['message' => 'Employee not found.'], 404);
+            return response()->json(['message' => 'No payroll found.'], 404);
         }
 
         $payroll = Payroll::where('employee_id', $employee->id)
@@ -92,8 +92,10 @@ class PayrollController extends Controller
             '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
 
-        [$year, $month] = explode('-', $p->period);
-        $periodLabel = ($monthNames[$month] ?? $month) . ' ' . $year;
+        [$yearStr, $monthStr] = explode('-', $p->period);
+        $monthInt = (int) $monthStr;
+        $yearInt = (int) $yearStr;
+        $periodLabel = ($monthNames[$monthStr] ?? $monthStr) . ' ' . $yearStr;
 
         $allowances = [];
         if ((float) $p->allowance > 0) {
@@ -150,13 +152,28 @@ class PayrollController extends Controller
             'paid' => 'Lunas',
         ];
 
+        $totalAllowancesAmount = (float) ($p->allowance + $p->bonus + $p->overtime_pay + $p->uang_makan_lembur + $p->uang_makan_harian + ($p->other_additions ?? 0));
+        
+        $sumDeductions = 0.0;
+        foreach ($deductions as $d) {
+            $sumDeductions += (float) $d['amount'];
+        }
+        $totalDeductionsAmount = (float) ($p->deductions > 0 ? $p->deductions : $sumDeductions);
+
         return [
             'id' => $p->id,
             'period' => $p->period,
             'period_label' => $periodLabel,
+            'month' => $monthInt,
+            'year' => $yearInt,
+            'base_salary' => (float) $p->base_salary,
             'gross_salary' => (int) round((float) $p->base_salary),
+            'allowance' => $totalAllowancesAmount,
+            'total_allowances' => $totalAllowancesAmount,
             'allowances' => $allowances,
             'deductions' => $deductions,
+            'deductions_total' => $totalDeductionsAmount,
+            'total_deductions' => $totalDeductionsAmount,
             'net_salary' => (int) round((float) $p->net_salary),
             'status' => $statusMap[$p->status] ?? $p->status,
             'attendance_days' => $p->attendance_days,

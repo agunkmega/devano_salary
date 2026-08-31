@@ -64,7 +64,27 @@ class AuthController extends Controller
             $employee->update(['user_id' => $user->id]);
         }
 
-        $token = $user->createToken('mobile-app', ['employee:read'])->plainTextToken;
+                $token = $user->createToken('mobile-app', ['employee:read'])->plainTextToken;
+
+        // Record User Device Info
+        $deviceId = $request->input('device_id') ?? $request->header('X-Device-Id') ?? md5($request->userAgent() . $request->ip());
+        $deviceName = $request->input('device_name') ?? ($request->userAgent() ? (str_contains($request->userAgent(), 'Android') ? 'Android Device' : (str_contains($request->userAgent(), 'iPhone') ? 'iPhone' : 'Web Browser')) : 'Perangkat Mobile');
+        $osVersion = $request->input('os_version') ?? 'Android/iOS';
+        $deviceType = $request->input('device_type') ?? 'mobile';
+
+        try {
+            \App\Models\UserDevice::updateOrCreate(
+                ['user_id' => $user->id, 'device_id' => $deviceId],
+                [
+                    'device_name' => $deviceName,
+                    'os_version' => $osVersion,
+                    'device_type' => $deviceType,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'last_active_at' => now(),
+                ]
+            );
+        } catch (\Exception $e) {}
 
         \App\Models\ActivityLog::create([
             'log_type' => 'api',
@@ -136,7 +156,27 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('mobile-app', ['employee:read'])->plainTextToken;
+                $token = $user->createToken('mobile-app', ['employee:read'])->plainTextToken;
+
+        // Record User Device Info
+        $deviceId = $request->input('device_id') ?? $request->header('X-Device-Id') ?? md5($request->userAgent() . $request->ip());
+        $deviceName = $request->input('device_name') ?? ($request->userAgent() ? (str_contains($request->userAgent(), 'Android') ? 'Android Device' : (str_contains($request->userAgent(), 'iPhone') ? 'iPhone' : 'Web Browser')) : 'Perangkat Mobile');
+        $osVersion = $request->input('os_version') ?? 'Android/iOS';
+        $deviceType = $request->input('device_type') ?? 'mobile';
+
+        try {
+            \App\Models\UserDevice::updateOrCreate(
+                ['user_id' => $user->id, 'device_id' => $deviceId],
+                [
+                    'device_name' => $deviceName,
+                    'os_version' => $osVersion,
+                    'device_type' => $deviceType,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'last_active_at' => now(),
+                ]
+            );
+        } catch (\Exception $e) {}
 
         return response()->json([
             'message' => 'Akun berhasil diaktivasi.',

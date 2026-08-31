@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\HomeApiController;
 use App\Http\Controllers\Api\LeaveApiController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ProfileVaultApiController;
+use App\Http\Controllers\Api\UserDeviceApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('attendance')->name('api.attendance.')->group(function () {
@@ -24,6 +25,11 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/activate', [AuthController::class, 'activate']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Device Security
+    Route::get('/user/devices', [UserDeviceApiController::class, 'index']);
+    Route::post('/user/devices/unbind', [UserDeviceApiController::class, 'unbind']);
+    Route::post('/user/devices/logout-all', [UserDeviceApiController::class, 'logoutAll']);
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/profile', [AuthController::class, 'profile']);
     Route::get('/me', [AuthController::class, 'profile']);

@@ -1,31 +1,31 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\EmployeeController;
-use App\Http\Controllers\Admin\DepartmentController;
-use App\Http\Controllers\Admin\PositionController;
-use App\Http\Controllers\Admin\StationController;
-use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\AttendanceController;
-use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\CashAdvanceController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DpBalanceController;
+use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\FingerSpotController;
+use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\LeaveTypeController;
+use App\Http\Controllers\Admin\NationalHolidayController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PayrollController;
+use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\NotificationController;
-use App\Http\Controllers\Admin\ActivityLogController;
-use App\Http\Controllers\Admin\NationalHolidayController;
-use App\Http\Controllers\Admin\AnnouncementController;
-use App\Http\Controllers\Admin\DpBalanceController;
+use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\StationController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\FingerSpotController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
-use App\Http\Controllers\Portal\DashboardController as PortalDashboardController;
-use App\Http\Controllers\Portal\LeaveController as PortalLeaveController;
-use App\Http\Controllers\Portal\LeaveApprovalController as PortalLeaveApprovalController;
 use App\Http\Controllers\Portal\CashAdvanceController as PortalCashAdvanceController;
+use App\Http\Controllers\Portal\DashboardController as PortalDashboardController;
+use App\Http\Controllers\Portal\LeaveApprovalController as PortalLeaveApprovalController;
+use App\Http\Controllers\Portal\LeaveController as PortalLeaveController;
+use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/admin/dashboard');
 
@@ -50,7 +50,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
 
     Route::resource('leave-types', LeaveTypeController::class)->except(['show']);
     Route::get('leaves/{employee}/balance', [LeaveController::class, 'balance'])->name('leaves.balance');
-Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
+    Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leave']);
     Route::patch('leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
     Route::patch('leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
     Route::patch('leaves/{leave}/cancel', [LeaveController::class, 'cancel'])->name('leaves.cancel');
@@ -118,6 +118,7 @@ Route::resource('leaves', LeaveController::class)->parameters(['leaves' => 'leav
     Route::get('fingerspot', [FingerSpotController::class, 'index'])->name('fingerspot.index');
     Route::get('fingerspot/machines', [FingerSpotController::class, 'machines'])->name('fingerspot.machines');
     Route::post('fingerspot/fetch', [FingerSpotController::class, 'fetch'])->name('fingerspot.fetch');
+    Route::post('fingerspot/sync', [FingerSpotController::class, 'sync'])->name('fingerspot.sync');
     Route::post('fingerspot/import', [FingerSpotController::class, 'import'])->name('fingerspot.import');
     Route::get('fingerspot/export', [FingerSpotController::class, 'exportExcel'])->name('fingerspot.export');
 });

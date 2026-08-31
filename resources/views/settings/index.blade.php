@@ -300,6 +300,16 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Device ID</label>
                     <input type="text" name="settings[fingerspot_device_id]" value="{{ $settings->get('fingerspot')?->firstWhere('key', 'fingerspot_device_id')?->value ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Serial number mesin">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Cloud Base URL (developer)</label>
+                    <input type="text" name="settings[fingerspot_cloud_base_url]" value="{{ $settings->get('fingerspot')?->firstWhere('key', 'fingerspot_cloud_base_url')?->value ?? 'https://developer.fingerspot.io' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="https://developer.fingerspot.io">
+                    <p class="text-xs text-gray-400 mt-1">Base URL untuk endpoint get_attlog (https://developer.fingerspot.io).</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Cloud ID</label>
+                    <input type="text" name="settings[fingerspot_cloud_id]" value="{{ $settings->get('fingerspot')?->firstWhere('key', 'fingerspot_cloud_id')?->value ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Cloud ID dari portal Fingerspot">
+                    <p class="text-xs text-gray-400 mt-1">Diisi otomatis dari webhook. Isi manual jika webhook belum pernah masuk.</p>
+                </div>
             </div>
             <div class="flex justify-end">
                 <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">Simpan</button>

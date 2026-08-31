@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\FingerspotWebhookExport;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Employee;
-use App\Exports\FingerspotWebhookExport;
 use App\Models\Setting;
 use App\Services\FingerSpotService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FingerSpotController extends Controller
@@ -32,7 +31,7 @@ class FingerSpotController extends Controller
         $query->whereBetween('attendance_date', [$dateFrom->startOfDay(), $dateTo->endOfDay()]);
 
         if ($name = $request->name) {
-            $query->whereHas('employee', fn($q) => $q->where('full_name', 'like', "%$name%"));
+            $query->whereHas('employee', fn ($q) => $q->where('full_name', 'like', "%$name%"));
         }
 
         $recent = $query->orderBy('attendance_date', 'desc')
@@ -58,6 +57,66 @@ class FingerSpotController extends Controller
             ->with('info', 'Fitur import tidak digunakan. Data otomatis masuk via webhook.');
     }
 
+    public function sync(Request $request)
+    {
+        $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::today()->subDays(2);
+        $dateTo = $request->date_to ? Carbon::parse($request->date_to) : Carbon::today();
+
+        if ($dateFrom->greaterThan($dateTo)) {
+            return redirect()->route('admin.fingerspot.machines')
+                ->with('error', 'Tanggal awal tidak boleh melebihi tanggal akhir.');
+        }
+
+        $counts = ['created' => 0, 'updated' => 0, 'ignored' => 0, 'failed' => 0];
+        $messages = ['success' => [], 'error' => []];
+
+        $cursor = $dateFrom->copy();
+        while ($cursor->lessThanOrEqualTo($dateTo)) {
+            $chunkStart = $cursor->copy();
+            $chunkEnd = $cursor->copy()->addDays(1)->min($dateTo);
+
+            try {
+                $records = $this->fingerSpot->fetchAttendanceLogs(
+                    $chunkStart->format('Y-m-d'),
+                    $chunkEnd->format('Y-m-d')
+                );
+            } catch (\Exception $e) {
+                $messages['error'][] = $e->getMessage();
+                $counts['failed']++;
+                break;
+            }
+
+            collect($records)
+                ->sortBy(fn ($r) => strtotime($r['scan'] ?? 0))
+                ->each(function ($rec) use (&$counts) {
+                    $result = $this->fingerSpot->processScan($rec);
+                    $counts[$result['status'] === 'created' || $result['status'] === 'updated'
+                        ? $result['status']
+                        : 'ignored']++;
+                });
+
+            $cursor = $chunkEnd->copy()->addDay();
+        }
+
+        $summary = sprintf(
+            'Sinkron selesai: %d dibuat, %d diperbarui, %d diabaikan.',
+            $counts['created'],
+            $counts['updated'],
+            $counts['ignored']
+        );
+
+        if ($counts['failed'] > 0) {
+            return redirect()->route('admin.fingerspot.machines')
+                ->with('sync_summary', $summary)
+                ->with('sync_errors', $messages['error'])
+                ->with('error', 'Sinkron selesai dengan sebagian error.');
+        }
+
+        return redirect()->route('admin.fingerspot.machines')
+            ->with('sync_summary', $summary)
+            ->with('success', $summary);
+    }
+
     public function exportExcel(Request $request)
     {
         $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : Carbon::today();
@@ -66,7 +125,7 @@ class FingerSpotController extends Controller
 
         return Excel::download(
             new FingerspotWebhookExport($dateFrom, $dateTo, $name),
-            'riwayat-webhook-' . now()->format('Y-m-d') . '.xlsx'
+            'riwayat-webhook-'.now()->format('Y-m-d').'.xlsx'
         );
     }
 
@@ -74,22 +133,23 @@ class FingerSpotController extends Controller
     {
         $settings = Setting::whereIn('key', [
             'fingerspot_api_url', 'fingerspot_api_token', 'fingerspot_device_id',
+            'fingerspot_cloud_base_url', 'fingerspot_cloud_id',
         ])->get()->keyBy('key');
 
         $apiUrl = $settings->get('fingerspot_api_url')?->value ?? 'https://api.fingerspot.io/api/v1';
         $deviceId = $settings->get('fingerspot_device_id')?->value ?? '-';
         $apiToken = $settings->get('fingerspot_api_token')?->value;
+        $cloudBaseUrl = $settings->get('fingerspot_cloud_base_url')?->value ?? 'https://developer.fingerspot.io';
+        $cloudId = $settings->get('fingerspot_cloud_id')?->value ?? cache()->get('fingerspot_cloud_id', 'Belum ada data');
 
         $employeeCount = Employee::count();
 
         $lastWebhook = Attendance::where('notes', 'webhook')
             ->latest()->first();
 
-        $cloudId = cache()->get('fingerspot_cloud_id', 'Belum ada data');
-
         return view('fingerspot.machines', compact(
-            'apiUrl', 'deviceId', 'apiToken',
-            'employeeCount', 'lastWebhook', 'cloudId'
+            'apiUrl', 'deviceId', 'apiToken', 'cloudBaseUrl', 'cloudId',
+            'employeeCount', 'lastWebhook'
         ));
     }
 }

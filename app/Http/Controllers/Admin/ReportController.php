@@ -686,12 +686,13 @@ class ReportController extends Controller
 
         $headings = ['No', 'Nama', 'No. KTP', 'Jenis', 'Bank', 'No. Rekening', 'Nama Rekening', 'Gaji Bersih'];
 
-        return Excel::download(new class($rows, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+        return Excel::download(new class($rows, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithColumnFormatting {
             private $data;
             private $headings;
             public function __construct($data, $headings) { $this->data = $data; $this->headings = $headings; }
             public function array(): array { return $this->data->toArray(); }
             public function headings(): array { return $this->headings; }
+            public function columnFormats(): array { return ['C' => '@', 'F' => '@']; }
         }, 'payroll-' . now()->format('Y-m-d') . '.xlsx');
     }
 

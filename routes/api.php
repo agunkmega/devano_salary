@@ -31,13 +31,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/devices/unbind', [UserDeviceApiController::class, 'unbind']);
     Route::post('/user/devices/logout-all', [UserDeviceApiController::class, 'logoutAll']);
 
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
-    Route::get('/auth/profile', [AuthController::class, 'profile']);
     Route::get('/me', [AuthController::class, 'profile']);
     Route::get('/profile', [AuthController::class, 'profile']);
-    Route::get('/user/profile', [AuthController::class, 'profile']);
-    Route::post('/auth/profile/update', [ProfileVaultApiController::class, 'updateProfile']);
-    Route::post('/auth/password', [ProfileVaultApiController::class, 'updatePassword']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/profile', [AuthController::class, 'profile']);
+    Route::post('/auth/password', [ProfileVaultApiController::class, 'updatePassword']); 
+    
+    // Profile Vault & Emergency Contacts
+    Route::post('/profile/update', [ProfileVaultApiController::class, 'updateProfile']);
+    Route::get('/profile/documents', [ProfileVaultApiController::class, 'getDocuments']);
+    Route::get('/profile/emergency-contacts', [ProfileVaultApiController::class, 'getEmergencyContacts']);
+    Route::post('/profile/emergency-contacts', [ProfileVaultApiController::class, 'addEmergencyContact']);
+    Route::post('/profile/emergency-contacts/{id}/delete', [ProfileVaultApiController::class, 'deleteEmergencyContact']);
 
     // Attendances (Mobile API)
     Route::get('/attendance/config', [AttendanceApiController::class, 'config']);
@@ -62,13 +67,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/leaves', [LeaveApiController::class, 'store']);
     Route::post('/leaves/{id}/cancel', [LeaveApiController::class, 'cancel']);
     Route::get('/leave-types', [LeaveApiController::class, 'leaveTypes']);
-
-    // Profile Vault & Emergency Contacts
-    Route::get('/user/documents', [ProfileVaultApiController::class, 'getDocuments']);
-    Route::get('/user/emergency-contacts', [ProfileVaultApiController::class, 'getEmergencyContacts']);
-    Route::post('/user/emergency-contacts', [ProfileVaultApiController::class, 'addEmergencyContact']);
-    Route::post('/user/emergency-contacts/{id}/delete', [ProfileVaultApiController::class, 'deleteEmergencyContact']);
-
 
     // Notifications
     Route::get('/notifications', [NotificationApiController::class, 'index']);

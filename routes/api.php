@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\LeaveApiController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ProfileVaultApiController;
 use App\Http\Controllers\Api\UserDeviceApiController;
+use App\Http\Controllers\MobileReleaseController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('attendance')->name('api.attendance.')->group(function () {
@@ -105,25 +106,39 @@ Route::options('/{any}', function () {
         ->header('Access-Control-Max-Age', '86400');
 })->where('any', '.*');
 
-// ── Stream Foto & Media dengan Header CORS Resmi Laravel ──
+// ── Route Streaming Media Gambar (Bebas CORS untuk Flutter Web & Mobile) ──
 Route::get('/media/{path}', function ($path) {
-    $disk = \Illuminate\Support\Facades\Storage::disk('public');
-    if (!$disk->exists($path)) {
-        abort(404, 'File not found');
+    // 1. Cari file di beberapa kemungkinan direktori storage Laravel
+    $candidates = [
+        storage_path('app/public/' . $path),
+        storage_path('app/' . $path),
+        public_path('storage/' . $path),
+        public_path($path),
+    ];
+    $targetFile = null;
+    foreach ($candidates as $candidate) {
+        if (File::exists($candidate) && !File::isDirectory($candidate)) {
+            $targetFile = $candidate;
+            break;
+        }
     }
-    $file = $disk->get($path);
-    $type = $disk->mimeType($path) ?? 'image/jpeg';
-    
-    return response($file, 200)
-        ->header('Content-Type', $type)
-        ->header('Access-Control-Allow-Origin', '*')
-        ->header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-        ->header('Access-Control-Allow-Headers', '*')
-        ->header('Cache-Control', 'public, max-age=86400');
-})->where('path', '.*');
+    // Jika file benar-benar tidak ada di server
+    if (!$targetFile) {
+        abort(404, 'File media tidak ditemukan: ' . $path);
+    }
+    // 2. Ambil mime type otomatis (image/jpeg, image/png, dsb)
+    $mimeType = File::mimeType($targetFile) ?? 'application/octet-stream';
+    // 3. Return file dengan header CORS lengkap
+    return response()->file($targetFile, [
+        'Content-Type'                => $mimeType,
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods'=> 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers'=> '*',
+        'Cache-Control'               => 'public, max-age=86400',
+    ]);
+})->where('path', '.*'); // <-- PENTING: agar subfolder terbaca lengkap!
 
 // ── Mobile App Distribution & Release History ──
-use App\Http\Controllers\MobileReleaseController;
 Route::prefix('mobile')->group(function () {
     Route::get('/latest-release', [MobileReleaseController::class, 'getLatest']);
     Route::get('/releases', [MobileReleaseController::class, 'getHistory']);

@@ -664,10 +664,10 @@ class ReportController extends Controller
                 $rows->push([
                     'No' => $no++,
                     'Nama' => $p->employee->full_name ?? '-',
-                    'No. KTP' => $p->employee->identity_number ?? '-',
+                    'No. KTP' => $p->employee->identity_number ? "'" . $p->employee->identity_number : '-',
                     'Jenis' => ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
                     'Bank' => $p->employee->bank_name ?? 'Cash',
-                    'No. Rekening' => $p->employee->bank_account ?? '-',
+                    'No. Rekening' => $p->employee->bank_account ? "'" . $p->employee->bank_account : '-',
                     'Nama Rekening' => $p->employee->bank_holder ?? '-',
                     'Gaji Bersih' => (float) $p->net_salary,
                 ]);

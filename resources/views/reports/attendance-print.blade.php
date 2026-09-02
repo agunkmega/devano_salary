@@ -52,6 +52,7 @@
         tr:nth-child(even) td { background: #f8fafc; }
         tbody tr.sunday td { background: #fecaca; }
         tbody tr.sunday td.day-cell { font-weight: 700; color: #dc2626; }
+        td.jam { font-size: 9px; font-weight: 600; letter-spacing: 0.2px; }
         .hadir, .terlambat { font-weight: 600; }
         .hadir { color: #059669; }
         .terlambat { color: #d97706; }
@@ -115,8 +116,8 @@
                 <th style="width:10%;">Clock Out</th>
                 <th style="width:10%;">Lembur</th>
                 <th style="width:7%;">Telat</th>
-                <th style="width:7%;">P. Awal</th>
-                <th style="width:8%;">Ist. Lebih</th>
+                <th style="width:7%;">Ist. Lebih</th>
+                <th style="width:8%;">P. Awal</th>
                 <th style="width:10%;">Status</th>
             </tr>
         </thead>
@@ -150,14 +151,14 @@
             <tr @if(\Carbon\Carbon::parse($att->attendance_date)->isSunday()) class="sunday" @endif>
                 <td>{{ \Carbon\Carbon::parse($att->attendance_date)->format('d/m/Y') }}</td>
                 <td class="day-cell {{ $statusClass === 'libur' ? 'libur' : '' }}">{{ $att->day_name ?? \Carbon\Carbon::parse($att->attendance_date)->locale('id')->dayName }}</td>
-                <td>{{ $att->clock_in ? \Carbon\Carbon::parse($att->clock_in)->format('H:i') : '-' }}</td>
-                <td>{{ $att->break_out ? \Carbon\Carbon::parse($att->break_out)->format('H:i') : '-' }}</td>
-                <td>{{ $att->break_in ? \Carbon\Carbon::parse($att->break_in)->format('H:i') : '-' }}</td>
-                <td>{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('H:i') : '-' }}</td>
-                <td>{{ $att->overtime_in && $att->overtime_out ? \Carbon\Carbon::parse($att->overtime_in)->format('H:i') . '-' . \Carbon\Carbon::parse($att->overtime_out)->format('H:i') : '-' }}</td>
+                <td class="jam">{{ $att->clock_in ? \Carbon\Carbon::parse($att->clock_in)->format('H:i') : '-' }}</td>
+                <td class="jam">{{ $att->break_out ? \Carbon\Carbon::parse($att->break_out)->format('H:i') : '-' }}</td>
+                <td class="jam">{{ $att->break_in ? \Carbon\Carbon::parse($att->break_in)->format('H:i') : '-' }}</td>
+                <td class="jam">{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('H:i') : '-' }}</td>
+                <td class="jam">{{ $att->overtime_in && $att->overtime_out ? \Carbon\Carbon::parse($att->overtime_in)->format('H:i') . '-' . \Carbon\Carbon::parse($att->overtime_out)->format('H:i') : '-' }}</td>
                 <td>@if($lateDisplay === 'Diabaikan')<span style="color:#d97706;font-weight:600;">Diabaikan</span>@else{{ $lateDisplay }}@endif</td>
-                <td>@if($earlyDisplay === 'Diabaikan')<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@else{{ $earlyDisplay }}@endif</td>
                 <td>@if($breakDisplay === 'Diabaikan')<span style="color:#0891b2;font-weight:600;">Diabaikan</span>@else{{ $breakDisplay }}@endif</td>
+                <td>@if($earlyDisplay === 'Diabaikan')<span style="color:#7c3aed;font-weight:600;">Diabaikan</span>@else{{ $earlyDisplay }}@endif</td>
                 <td class="{{ $statusClass }} {{ $statusClass === 'libur' && !empty($att->holiday_name) ? 'libur-nasional' : '' }}">{{ $displayStatus }}</td>
             </tr>
             @endforeach
@@ -165,8 +166,8 @@
                 <td colspan="6" style="text-align:right;">Total&nbsp;</td>
                 <td>{{ $totalLembur > 0 ? $totalLembur . 'm' : '-' }}</td>
                 <td>{{ $totalTelat > 0 ? $totalTelat . 'm' : '-' }}</td>
-                <td>{{ $totalPulangAwal > 0 ? $totalPulangAwal . 'm' : '-' }}</td>
                 <td>{{ $totalIstirahat > 0 ? $totalIstirahat . 'm' : '-' }}</td>
+                <td>{{ $totalPulangAwal > 0 ? $totalPulangAwal . 'm' : '-' }}</td>
                 <td>H{{ $totalHadir }} T{{ $totalTerlambat }} C{{ $totalCuti }} I{{ $totalIzin }} S{{ $totalSakit }} A{{ $totalAlpha }}</td>
             </tr>
         </tbody>

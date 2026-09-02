@@ -125,7 +125,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
 
 Route::prefix('portal')->name('portal.')->group(function () {
     Route::get('login', [PortalAuthController::class, 'login'])->name('login');
-    Route::post('login', [PortalAuthController::class, 'authenticate'])->name('login');
+    Route::post('login', [PortalAuthController::class, 'authenticate'])->name('login.post');
     Route::post('logout', [PortalAuthController::class, 'logout'])->name('logout');
 
     Route::middleware('portal')->group(function () {
@@ -152,3 +152,4 @@ Route::get('/download/app-release.apk', [App\Http\Controllers\Api\MobileReleaseA
 Route::post('/admin/settings/mobile-app-release', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadApk'])->name('admin.settings.mobile-app-release');
 
 Route::post('/admin/settings/mobile-app-release-chunk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadChunk'])->name('admin.settings.mobile-app-release-chunk');
+

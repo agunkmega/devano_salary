@@ -267,5 +267,238 @@ class LeaveApiController extends Controller
             }),
         ]);
     }
+
+    public function approvals(Request $request)
+    {
+        $user = $request->user();
+        $employee = \App\Models\Employee::where('user_id', $user->id)->first();
+        if (!$employee && $user->email) {
+            $employee = \App\Models\Employee::where('email', $user->email)->first();
+        }
+
+        if (!$employee) {
+            return response()->json([
+                'is_department_head' => false,
+                'department_name' => null,
+                'pending_count' => 0,
+                'data' => [],
+            ]);
+        }
+
+        $department = \App\Models\Department::where('department_head_id', $employee->id)->first();
+        if (!$department) {
+            return response()->json([
+                'is_department_head' => false,
+                'department_name' => null,
+                'pending_count' => 0,
+                'data' => [],
+            ]);
+        }
+
+        $status = $request->query('status', 'all');
+
+        $baseQuery = Leave::with(['employee.department', 'leaveType'])
+            ->where('employee_id', '!=', $employee->id)
+            ->whereHas('employee', function ($q) use ($department) {
+                $q->where('department_id', $department->id);
+            });
+
+        $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
+
+        $query = clone $baseQuery;
+        if ($status === 'pending') {
+            $query->where('status', 'pending');
+        } elseif ($status === 'history') {
+            $query->whereIn('status', ['approved', 'rejected']);
+        } elseif ($status !== 'all' && in_array($status, ['approved', 'rejected'])) {
+            $query->where('status', $status);
+        }
+
+        $leaves = $query->orderBy('created_at', 'desc')->get();
+
+        $data = $leaves->map(function ($l) use ($department) {
+            $emp = $l->employee;
+            $attachmentUrl = null;
+            if ($l->attachment) {
+                $attachmentUrl = str_starts_with($l->attachment, 'http')
+                    ? $l->attachment
+                    : asset('storage/' . $l->attachment);
+            }
+
+            $avatarUrl = null;
+            if ($emp?->photo) {
+                $avatarUrl = str_starts_with($emp->photo, 'http')
+                    ? $emp->photo
+                    : asset('storage/' . $emp->photo);
+            }
+
+            return [
+                'id' => $l->id,
+                'employee_id' => $l->employee_id,
+                'employee_name' => $emp?->full_name ?? 'Pegawai',
+                'employee_nik' => $emp?->nik ?? '-',
+                'employee_avatar' => $avatarUrl,
+                'department_name' => $department->name,
+                'leave_type_id' => $l->leave_type_id,
+                'leave_type_name' => $l->leaveType?->name ?? 'Izin / Cuti',
+                'leave_type_code' => $l->leaveType?->code ?? '',
+                'start_date' => $l->start_date?->format('Y-m-d'),
+                'end_date' => $l->end_date?->format('Y-m-d'),
+                'total_days' => $l->total_days ?? 1,
+                'submission_date' => $l->submission_date?->format('Y-m-d') ?? $l->created_at?->format('Y-m-d'),
+                'reason' => $l->reason,
+                'attachment_url' => $attachmentUrl,
+                'status' => $l->status,
+                'rejection_reason' => $l->rejection_reason,
+                'approved_by_head' => $l->approved_by_head,
+                'approval_date' => $l->approval_date?->format('Y-m-d H:i'),
+                'dp_remaining' => (int) ($emp?->dp_remaining ?? 0),
+                'created_at' => $l->created_at?->format('Y-m-d H:i'),
+            ];
+        });
+
+        return response()->json([
+            'is_department_head' => true,
+            'department_id' => $department->id,
+            'department_name' => $department->name,
+            'pending_count' => $pendingCount,
+            'data' => $data,
+        ]);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $user = $request->user();
+        $employee = \App\Models\Employee::where('user_id', $user->id)->first();
+        if (!$employee && $user->email) {
+            $employee = \App\Models\Employee::where('email', $user->email)->first();
+        }
+
+        if (!$employee) {
+            return response()->json(['message' => 'Employee tidak ditemukan.'], 404);
+        }
+
+        $department = \App\Models\Department::where('department_head_id', $employee->id)->first();
+        if (!$department) {
+            return response()->json(['message' => 'Anda tidak memiliki hak akses sebagai Kepala Departemen.'], 403);
+        }
+
+        $leave = Leave::with(['employee', 'leaveType'])->find($id);
+        if (!$leave) {
+            return response()->json(['message' => 'Data pengajuan cuti tidak ditemukan.'], 404);
+        }
+
+        if (!$leave->employee || $leave->employee->department_id !== $department->id) {
+            return response()->json(['message' => 'Anda tidak berwenang menyetujui cuti pegawai ini.'], 403);
+        }
+
+        if ($leave->employee_id === $employee->id) {
+            return response()->json(['message' => 'Anda tidak dapat menyetujui pengajuan cuti Anda sendiri.'], 422);
+        }
+
+        if ($leave->status !== 'pending') {
+            return response()->json(['message' => 'Pengajuan cuti ini sudah diproses sebelumnya.'], 422);
+        }
+
+        $subordinate = $leave->employee;
+        if ($subordinate && strtoupper($leave->leaveType?->code ?? '') === 'DP' && $leave->total_days > ($subordinate->dp_remaining ?? 0)) {
+            return response()->json([
+                'message' => 'Saldo DP pegawai tidak mencukupi (' . ($subordinate->dp_remaining ?? 0) . ' hari tersisa).'
+            ], 422);
+        }
+
+        $leave->update([
+            'status' => 'approved',
+            'approved_by_head' => $employee->id,
+            'approval_date' => \Carbon\Carbon::now(),
+        ]);
+
+        if ($subordinate?->user_id) {
+            \App\Services\NotificationService::sendToUser(
+                $subordinate->user_id,
+                'Cuti Disetujui',
+                'Pengajuan ' . ($leave->leaveType?->name ?? 'Cuti') . ' (' . $leave->total_days . ' hari) telah disetujui oleh Kepala Departemen (' . $employee->full_name . ').',
+                'leave',
+                '/leaves'
+            );
+        }
+
+        return response()->json([
+            'message' => 'Pengajuan cuti berhasil disetujui.',
+            'data' => [
+                'id' => $leave->id,
+                'status' => $leave->status,
+                'approval_date' => $leave->approval_date?->format('Y-m-d H:i'),
+            ],
+        ]);
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $user = $request->user();
+        $employee = \App\Models\Employee::where('user_id', $user->id)->first();
+        if (!$employee && $user->email) {
+            $employee = \App\Models\Employee::where('email', $user->email)->first();
+        }
+
+        if (!$employee) {
+            return response()->json(['message' => 'Employee tidak ditemukan.'], 404);
+        }
+
+        $department = \App\Models\Department::where('department_head_id', $employee->id)->first();
+        if (!$department) {
+            return response()->json(['message' => 'Anda tidak memiliki hak akses sebagai Kepala Departemen.'], 403);
+        }
+
+        $leave = Leave::with(['employee', 'leaveType'])->find($id);
+        if (!$leave) {
+            return response()->json(['message' => 'Data pengajuan cuti tidak ditemukan.'], 404);
+        }
+
+        if (!$leave->employee || $leave->employee->department_id !== $department->id) {
+            return response()->json(['message' => 'Anda tidak berwenang menolak cuti pegawai ini.'], 403);
+        }
+
+        if ($leave->employee_id === $employee->id) {
+            return response()->json(['message' => 'Anda tidak dapat menolak pengajuan cuti Anda sendiri.'], 422);
+        }
+
+        if ($leave->status !== 'pending') {
+            return response()->json(['message' => 'Pengajuan cuti ini sudah diproses sebelumnya.'], 422);
+        }
+
+        $subordinate = $leave->employee;
+
+        $leave->update([
+            'status' => 'rejected',
+            'approved_by_head' => $employee->id,
+            'approval_date' => \Carbon\Carbon::now(),
+            'rejection_reason' => $validated['reason'],
+        ]);
+
+        if ($subordinate?->user_id) {
+            \App\Services\NotificationService::sendToUser(
+                $subordinate->user_id,
+                'Cuti Ditolak',
+                'Pengajuan ' . ($leave->leaveType?->name ?? 'Cuti') . ' ditolak oleh Kepala Departemen (' . $employee->full_name . '): ' . $validated['reason'],
+                'leave',
+                '/leaves'
+            );
+        }
+
+        return response()->json([
+            'message' => 'Pengajuan cuti telah ditolak.',
+            'data' => [
+                'id' => $leave->id,
+                'status' => $leave->status,
+                'rejection_reason' => $leave->rejection_reason,
+                'approval_date' => $leave->approval_date?->format('Y-m-d H:i'),
+            ],
+        ]);
+    }
 }
 

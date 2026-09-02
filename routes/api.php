@@ -68,6 +68,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/leaves/{id}/cancel', [LeaveApiController::class, 'cancel']);
     Route::get('/leave-types', [LeaveApiController::class, 'leaveTypes']);
 
+    // Leave Approvals (Department Head)
+    Route::get('/leave-approvals', [LeaveApiController::class, 'approvals']);
+    Route::post('/leave-approvals/{id}/approve', [LeaveApiController::class, 'approve']);
+    Route::post('/leave-approvals/{id}/reject', [LeaveApiController::class, 'reject']);
+
     // Notifications
     Route::get('/notifications', [NotificationApiController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationApiController::class, 'unreadCount']);

@@ -38,7 +38,7 @@ class AuthController extends Controller
         }
 
         $passwordValid = false;
-        if ($employee->user && $employee->user->password) {
+        if ($employee->user && $employee->user->password && Hash::check($request->password, $employee->user->password)) {
             $passwordValid = true;
         } elseif ($employee->password && Hash::check($request->password, $employee->password)) {
             $passwordValid = true;

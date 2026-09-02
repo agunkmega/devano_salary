@@ -23,6 +23,20 @@ class Leave extends Model
         'rejection_reason',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($leave) {
+            if (empty($leave->submission_date)) {
+                $leave->submission_date = now()->toDateString();
+            }
+            if (empty($leave->total_days) && !empty($leave->start_date) && !empty($leave->end_date)) {
+                $start = \Carbon\Carbon::parse($leave->start_date);
+                $end = \Carbon\Carbon::parse($leave->end_date);
+                $leave->total_days = max(1, $start->diffInDays($end) + 1);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -54,3 +68,4 @@ class Leave extends Model
         return $this->belongsTo(Employee::class, 'approved_by_head');
     }
 }
+

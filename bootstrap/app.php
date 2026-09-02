@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -47,9 +48,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->wantsJson()) {
+                $status = ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) ? $e->getStatusCode() : 500;
                 return response()->json([
-                    'message' => $e->getMessage() ?: 'Terjadi kesalahan sistem pada server.',
-                ], 500);
+                    'message' => $e->getMessage() ?: ($status === 403 ? 'Akses channel ditolak.' : 'Terjadi kesalahan sistem pada server.'),
+                ], $status);
             }
         });
     })->create();
+

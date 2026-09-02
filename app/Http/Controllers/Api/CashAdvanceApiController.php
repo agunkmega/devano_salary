@@ -97,6 +97,8 @@ class CashAdvanceApiController extends Controller
             'status' => 'pending',
         ]);
 
+        \App\Services\NotificationService::notifyCashAdvanceSubmission($cashAdvance);
+
         $statusMap = [
             'pending' => 'Pending',
             'approved' => 'Disetujui',

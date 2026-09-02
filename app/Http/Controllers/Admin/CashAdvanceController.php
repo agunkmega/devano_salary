@@ -207,15 +207,7 @@ class CashAdvanceController extends Controller
         $employee = $cashAdvance->employee;
         $this->logActivity('cash_advance', 'Approve', 'Menyetujui kasbon ' . $employee->full_name, 'CashAdvance', $cashAdvance->id);
 
-        if ($employee && $employee->user_id) {
-            Notification::create([
-                'user_id' => $employee->user_id,
-                'title' => 'Kasbon Disetujui',
-                'message' => 'Pengajuan kasbon Rp ' . number_format($cashAdvance->amount, 0, ',', '.') . ' telah disetujui',
-                'type' => 'cash_advance',
-                'icon' => 'check',
-            ]);
-        }
+        \App\Services\NotificationService::notifyCashAdvanceStatus($cashAdvance);
 
         return redirect()->route('admin.cash-advances.index')
             ->with('success', 'Cash advance approved successfully.');
@@ -239,15 +231,7 @@ class CashAdvanceController extends Controller
         $employee = $cashAdvance->employee;
         $this->logActivity('cash_advance', 'Reject', 'Menolak kasbon ' . $employee->full_name, 'CashAdvance', $cashAdvance->id);
 
-        if ($employee && $employee->user_id) {
-            Notification::create([
-                'user_id' => $employee->user_id,
-                'title' => 'Kasbon Ditolak',
-                'message' => 'Pengajuan kasbon Rp ' . number_format($cashAdvance->amount, 0, ',', '.') . ' ditolak: ' . $validated['notes'],
-                'type' => 'cash_advance',
-                'icon' => 'x',
-            ]);
-        }
+        \App\Services\NotificationService::notifyCashAdvanceStatus($cashAdvance, $validated['notes']);
 
         return redirect()->route('admin.cash-advances.index')
             ->with('success', 'Cash advance rejected successfully.');
@@ -321,3 +305,4 @@ class CashAdvanceController extends Controller
             ->with('success', 'Payment recorded successfully.');
     }
 }
+

@@ -1,6 +1,0 @@
-# Use this PowerShell command to start the dev server:
-# Start-Process -FilePath "C:\Users\PC\.config\herd\bin\php84\php.exe" -ArgumentList '-S 127.0.0.1:9000 -t "F:\ai-agent\hris-absensi\public"' -WindowStyle Hidden -PassThru
-
-# IMPORTANT: DO NOT use Start-Job for the PHP server.
-# Start-Job leaves zombie processes on the port when removed.
-# Always use Start-Process -PassThru with PID tracking instead.

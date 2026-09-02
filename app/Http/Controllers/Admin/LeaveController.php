@@ -216,15 +216,7 @@ class LeaveController extends Controller
 
         $this->logActivity('leave', 'Approve', 'Menyetujui cuti ' . $leave->employee?->full_name, 'Leave', $leave->id);
 
-        if ($leave->employee?->user_id) {
-            Notification::create([
-                'user_id' => $leave->employee->user_id,
-                'title' => 'Cuti Disetujui',
-                'message' => 'Pengajuan cuti ' . ($leave->leaveType?->name ?? '') . ' ' . $leave->total_days . ' hari telah disetujui',
-                'type' => 'leave',
-                'icon' => 'check',
-            ]);
-        }
+        \App\Services\NotificationService::notifyLeaveStatus($leave);
 
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave approved successfully.');
@@ -252,15 +244,7 @@ class LeaveController extends Controller
 
         $this->logActivity('leave', 'Reject', 'Menolak cuti ' . $leave->employee?->full_name . ': ' . $validated['notes'], 'Leave', $leave->id);
 
-        if ($leave->employee?->user_id) {
-            Notification::create([
-                'user_id' => $leave->employee->user_id,
-                'title' => 'Cuti Ditolak',
-                'message' => 'Pengajuan cuti ' . ($leave->leaveType?->name ?? '') . ' ditolak: ' . $validated['notes'],
-                'type' => 'leave',
-                'icon' => 'x',
-            ]);
-        }
+        \App\Services\NotificationService::notifyLeaveStatus($leave, $validated['notes']);
 
         return redirect()->route('admin.leaves.index')
             ->with('success', 'Leave rejected successfully.');
@@ -340,3 +324,4 @@ class LeaveController extends Controller
         return ($employee->dp_granted - $used) >= $days;
     }
 }
+

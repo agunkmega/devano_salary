@@ -86,6 +86,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chat/directory', [ChatApiController::class, 'getDirectory']);
     Route::get('/chat/rooms/{id}/messages', [ChatApiController::class, 'getMessages']);
     Route::post('/chat/rooms/{id}/send', [ChatApiController::class, 'sendMessage']);
+
+    // Personal Transactions (Wallet Sync)
+    Route::get('/personal-transactions', [\App\Http\Controllers\Api\PersonalTransactionApiController::class, 'index']);
+    Route::post('/personal-transactions', [\App\Http\Controllers\Api\PersonalTransactionApiController::class, 'store']);
+    Route::delete('/personal-transactions/{id}', [\App\Http\Controllers\Api\PersonalTransactionApiController::class, 'destroy']);
+    Route::post('/personal-transactions/sync', [\App\Http\Controllers\Api\PersonalTransactionApiController::class, 'sync']);
+
+    // Personal Schedules (Calendar Sync)
+    Route::get('/personal-schedules', [\App\Http\Controllers\Api\PersonalScheduleApiController::class, 'index']);
+    Route::post('/personal-schedules', [\App\Http\Controllers\Api\PersonalScheduleApiController::class, 'store']);
+    Route::put('/personal-schedules/{id}', [\App\Http\Controllers\Api\PersonalScheduleApiController::class, 'update']);
+    Route::delete('/personal-schedules/{id}', [\App\Http\Controllers\Api\PersonalScheduleApiController::class, 'destroy']);
+    Route::post('/personal-schedules/sync', [\App\Http\Controllers\Api\PersonalScheduleApiController::class, 'sync']);
 });
 
 // Portal fallback alias
@@ -143,3 +156,48 @@ Route::prefix('mobile')->group(function () {
     Route::post('/upload-apk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadApk']);
     Route::post('/upload-apk-chunk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadChunk']);
 });
+
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+    if (!$user) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+
+    $socketId = $request->input('socket_id');
+    $channelName = $request->input('channel_name');
+
+    if (!$socketId || !$channelName) {
+        return response()->json(['message' => 'socket_id and channel_name are required.'], 422);
+    }
+
+    $appKey = config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY', 'employee-key');
+    $appSecret = config('broadcasting.connections.reverb.secret') ?? env('REVERB_APP_SECRET', 'employee-secret');
+
+    if (str_starts_with($channelName, 'presence-')) {
+        $channelData = json_encode([
+            'user_id' => (string) $user->id,
+            'user_info' => [
+                'id' => (string) $user->id,
+                'name' => $user->name,
+                'avatar' => $user->avatar ?? null,
+                'role' => $user->role ?? null,
+            ],
+        ]);
+        $stringToSign = "$socketId:$channelName:$channelData";
+        $signature = hash_hmac('sha256', $stringToSign, $appSecret);
+        return response()->json([
+            'auth' => "$appKey:$signature",
+            'channel_data' => $channelData,
+        ]);
+    } else {
+        $stringToSign = "$socketId:$channelName";
+        $signature = hash_hmac('sha256', $stringToSign, $appSecret);
+        return response()->json([
+            'auth' => "$appKey:$signature",
+        ]);
+    }
+});
+
+
+
+

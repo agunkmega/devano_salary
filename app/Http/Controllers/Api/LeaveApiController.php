@@ -168,15 +168,23 @@ class LeaveApiController extends Controller
             $attachmentPath = $request->file('attachment')->store('leaves', 'public');
         }
 
+        $startDate = \Carbon\Carbon::parse($validated['start_date']);
+        $endDate = \Carbon\Carbon::parse($validated['end_date']);
+        $totalDays = max(1, $startDate->diffInDays($endDate) + 1);
+
         $leave = Leave::create([
             'employee_id' => $employee->id,
             'leave_type_id' => $validated['leave_type_id'],
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
+            'total_days' => $totalDays,
+            'submission_date' => now()->toDateString(),
             'reason' => $validated['reason'],
             'status' => 'pending',
             'attachment' => $attachmentPath,
         ]);
+
+        \App\Services\NotificationService::notifyLeaveSubmission($leave);
 
         return response()->json([
             'message' => 'Pengajuan cuti/DP berhasil dikirim.',
@@ -260,3 +268,4 @@ class LeaveApiController extends Controller
         ]);
     }
 }
+

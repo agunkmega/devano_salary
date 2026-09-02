@@ -7,8 +7,12 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 }, ['guards' => ['sanctum', 'web']]);
 
+Broadcast::channel('users.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+}, ['guards' => ['sanctum', 'web']]);
+
 // ── 1. Presence Channel untuk Status Online / Offline Realtime ──
-Broadcast::channel('presence-chat', function ($user) {
+$presenceCallback = function ($user) {
     if ($user) {
         return [
             'id' => (string) $user->id,
@@ -18,14 +22,23 @@ Broadcast::channel('presence-chat', function ($user) {
         ];
     }
     return false;
-}, ['guards' => ['sanctum', 'web']]);
+};
+
+Broadcast::channel('chat', $presenceCallback, ['guards' => ['sanctum', 'web']]);
+Broadcast::channel('presence-chat', $presenceCallback, ['guards' => ['sanctum', 'web']]);
 
 // ── 2. Private Chat Channel ──
-Broadcast::channel('private-chat.{userId}', function ($user, $userId) {
+$chatCallback = function ($user, $userId) {
     return (string) $user->id === (string) $userId;
-}, ['guards' => ['sanctum', 'web']]);
+};
+
+Broadcast::channel('chat.{userId}', $chatCallback, ['guards' => ['sanctum', 'web']]);
+Broadcast::channel('private-chat.{userId}', $chatCallback, ['guards' => ['sanctum', 'web']]);
 
 // ── 3. Private Notifications Channel ──
-Broadcast::channel('private-notifications.{userId}', function ($user, $userId) {
+$notifCallback = function ($user, $userId) {
     return (string) $user->id === (string) $userId;
-}, ['guards' => ['sanctum', 'web']]);
+};
+
+Broadcast::channel('notifications.{userId}', $notifCallback, ['guards' => ['sanctum', 'web']]);
+Broadcast::channel('private-notifications.{userId}', $notifCallback, ['guards' => ['sanctum', 'web']]);

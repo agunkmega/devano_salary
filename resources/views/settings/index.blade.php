@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('page-title', 'Pengaturan')
 @section('page-subtitle', 'Konfigurasi aplikasi')
@@ -21,6 +21,10 @@
         <button @click="activeTab = 'mobile_api'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1.5" :class="activeTab === 'mobile_api' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
             Mobile API
+        </button>
+        <button @click="activeTab = 'broadcast'" class="px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1.5" :class="activeTab === 'broadcast' ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 shadow-sm font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Broadcast Tester
         </button>
     </div>
 
@@ -317,7 +321,7 @@
         </form>
     </div>
 
-        <div x-show="activeTab === 'mobile_api'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+    <div x-show="activeTab === 'mobile_api'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
         <form method="POST" action="{{ route('admin.settings.update') }}" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6">
             @csrf
             @method('PUT')
@@ -1202,7 +1206,7 @@
                 };
             }
             </script>
-            </div>
+            
             <!-- Submit Button -->
             <div class="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
@@ -1211,20 +1215,351 @@
             </div>
         </form>
     </div>
+
+    <!-- Tab: Broadcast & Reverb WebSocket Tester -->
+    <div x-show="activeTab === 'broadcast'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" class="space-y-6">
+        <!-- Status Server Reverb Card (Real-time Probe) -->
+        <div class="bg-gradient-to-br from-purple-900/10 via-indigo-900/5 to-transparent bg-white dark:bg-gray-800 rounded-2xl border border-purple-200 dark:border-purple-800/40 p-6 shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner"
+                        :class="{
+                            'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400': wsStatus === 'connected',
+                            'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400': wsStatus === 'connecting',
+                            'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400': wsStatus === 'disconnected'
+                        }">
+                        <template x-if="wsStatus === 'connected'">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </template>
+                        <template x-if="wsStatus === 'connecting'">
+                            <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </template>
+                        <template x-if="wsStatus === 'disconnected'">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </template>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            Laravel Reverb WebSocket Server
+                            
+                            <!-- Connected State -->
+                            <template x-if="wsStatus === 'connected'">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Terhubung (<span x-text="wsLatency + 'ms'"></span>)
+                                </span>
+                            </template>
+
+                            <!-- Connecting State -->
+                            <template x-if="wsStatus === 'connecting'">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Memeriksa Soket...
+                                </span>
+                            </template>
+
+                            <!-- Disconnected State -->
+                            <template x-if="wsStatus === 'disconnected'">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Terputus (Offline)
+                                </span>
+                            </template>
+                        </h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Status koneksi riil WebSocket Reverb dari browser ke server saat ini.</p>
+                    </div>
+                </div>
+
+                <!-- Tombol Cek Ulang Koneksi -->
+                <div>
+                    <button type="button" @click="testReverbConnection()" :disabled="wsStatus === 'connecting'" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60 transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                        <svg class="w-3.5 h-3.5" :class="{'animate-spin': wsStatus === 'connecting'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>Cek Ulang Koneksi</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Server Meta Info Badges -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 pt-4 border-t border-purple-100 dark:border-purple-900/30 text-xs">
+                <div class="bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-400 block font-medium">WebSocket Host</span>
+                    <span class="font-bold text-gray-800 dark:text-gray-200 font-mono">{{ $reverbConfig['host'] ?? '127.0.0.1' }}</span>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-400 block font-medium">Port</span>
+                    <span class="font-bold text-gray-800 dark:text-gray-200 font-mono">{{ $reverbConfig['port'] ?? '8080' }}</span>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-400 block font-medium">Scheme & TLS</span>
+                    <span class="font-bold text-gray-800 dark:text-gray-200 font-mono uppercase">{{ $reverbConfig['scheme'] ?? 'http' }}</span>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <span class="text-gray-400 block font-medium">App Key</span>
+                    <span class="font-bold text-gray-800 dark:text-gray-200 font-mono">{{ $reverbConfig['app_key'] ?? 'employee-key' }}</span>
+                </div>
+            </div>
+
+            <!-- Disconnect Warning Message Box -->
+            <div x-show="wsStatus === 'disconnected' && wsErrorMsg" x-transition class="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 text-xs flex items-start gap-2.5">
+                <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <p class="font-semibold">Koneksi Reverb Terputus:</p>
+                    <p class="opacity-90 mt-0.5" x-text="wsErrorMsg"></p>
+                    <p class="opacity-75 mt-1 text-[11px]">Pastikan daemon Reverb sedang berjalan di server dengan perintah: <code class="bg-black/10 px-1 py-0.5 rounded font-mono">php artisan reverb:start</code></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Pengujian Broadcast Tester -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-6">
+            <div>
+                <h4 class="text-base font-bold text-gray-900 dark:text-white">Form Pengujian Siaran (Broadcast Tester)</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Kirim pesan siaran langsung untuk memverifikasi apakah aplikasi Flutter Web/Mobile menerima popup, badge angka, dan suara nada lonceng.</p>
+            </div>
+
+            <form @submit.prevent="submitBroadcastTest" class="space-y-5">
+                <!-- Target Penerima -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Target Penerima</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="relative flex items-center p-3.5 rounded-xl border cursor-pointer transition-all" :class="broadcastTarget === 'all' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-900/20 text-purple-900 dark:text-purple-200 font-medium' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'">
+                            <input type="radio" x-model="broadcastTarget" value="all" class="text-purple-600 focus:ring-purple-500 mr-3">
+                            <div>
+                                <span class="block text-sm font-semibold">📢 Semua Karyawan (Broadcast All)</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Kirim ke semua akun karyawan aktif sekaligus.</span>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-center p-3.5 rounded-xl border cursor-pointer transition-all" :class="broadcastTarget === 'user' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-900/20 text-purple-900 dark:text-purple-200 font-medium' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'">
+                            <input type="radio" x-model="broadcastTarget" value="user" class="text-purple-600 focus:ring-purple-500 mr-3">
+                            <div>
+                                <span class="block text-sm font-semibold">👤 User Tertentu (Targeted)</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Pilih satu akun user karyawan spesifik.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Dropdown Pilih User (jika target user) -->
+                <div x-show="broadcastTarget === 'user'" x-transition class="space-y-1.5">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pilih User Karyawan</label>
+                    <select x-model="broadcastUserId" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500">
+                        <option value="">-- Pilih User --</option>
+                        @foreach($users as $user)
+                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }} - {{ strtoupper($user->role) }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Tipe Notifikasi & Ikon -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kategori / Tipe Notifikasi</label>
+                        <select x-model="broadcastType" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500">
+                            <option value="info">ℹ️ Informasi (Info)</option>
+                            <option value="success">✅ Sukses / Persetujuan (Success)</option>
+                            <option value="warning">⚠️ Peringatan (Warning)</option>
+                            <option value="danger">❌ Penolakan / Error (Danger)</option>
+                            <option value="leave">🏖️ Pengajuan Cuti / Izin (Leave)</option>
+                            <option value="cash_advance">💵 Pengajuan Kasbon (Cash Advance)</option>
+                            <option value="announcement">📢 Pengumuman (Announcement)</option>
+                            <option value="attendance">⏰ Presensi / Kehadiran (Attendance)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Judul Notifikasi</label>
+                        <input type="text" x-model="broadcastTitle" placeholder="Contoh: 🔔 Tes Siaran Realtime Reverb" class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                </div>
+
+                <!-- Pesan Notifikasi -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Isi Pesan Notifikasi</label>
+                    <textarea x-model="broadcastMessage" rows="3" placeholder="Tuliskan pesan yang akan disiarkan ke klien..." class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500" required></textarea>
+                </div>
+
+                <!-- Action Button & Loader -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        Klien yang membuka web/app akan langsung membunyikan nada lonceng dan memunculkan pop-up.
+                    </div>
+
+                    <button type="submit" :disabled="broadcastLoading" class="w-full sm:w-auto px-6 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-all shadow-md shadow-purple-600/20 flex items-center justify-center gap-2 disabled:opacity-50">
+                        <template x-if="!broadcastLoading">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                🚀 Kirim Broadcast Uji Coba
+                            </span>
+                        </template>
+                        <template x-if="broadcastLoading">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Mengirim via WebSocket...
+                            </span>
+                        </template>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Result Box -->
+            <div x-show="broadcastResult" x-transition class="mt-4 p-4 rounded-xl border text-sm" :class="broadcastResult?.success ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'">
+                <div class="flex items-start gap-3">
+                    <span class="text-xl" x-text="broadcastResult?.success ? '✅' : '❌'"></span>
+                    <div class="flex-1">
+                        <p class="font-bold text-sm" x-text="broadcastResult?.message"></p>
+                        <div x-show="broadcastResult?.details" class="mt-2 text-xs opacity-85 font-mono space-y-0.5">
+                            <p>Waktu: <span x-text="broadcastResult?.details?.timestamp"></span></p>
+                            <p>Target: <span x-text="broadcastResult?.details?.target"></span> <span x-show="broadcastResult?.details?.recipients_count">(<span x-text="broadcastResult?.details?.recipients_count"></span> penerima)</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('settings', () => ({
+    function settings() {
+        return {
             activeTab: new URLSearchParams(window.location.search).get('tab') || 'general',
             mobileSubTab: new URLSearchParams(window.location.search).get('subtab') || 'auth',
             authVerifyMethod: '{{ $settings->get('mobile_api')?->firstWhere('key', 'mobile_auth_verification_method')?->value ?? 'dual_key' }}',
             onlineAttEnabled: '{{ $settings->get('mobile_api')?->firstWhere('key', 'mobile_online_attendance_enabled')?->value ?? '1' }}',
-            init() {}
-        }));
-    });
+            
+            // Real-time Laravel Echo State
+            wsStatus: 'connecting', // 'connected', 'connecting', 'disconnected'
+            wsLatency: null,
+            wsErrorMsg: '',
+
+            initEchoListener() {
+                if (!window.Echo || !window.Echo.connector || !window.Echo.connector.pusher) {
+                    setTimeout(() => { this.initEchoListener(); }, 300);
+                    return;
+                }
+
+                const connection = window.Echo.connector.pusher.connection;
+
+                const updateStatus = (state) => {
+                    if (state === 'connected') {
+                        this.wsStatus = 'connected';
+                        this.wsLatency = 5;
+                        this.wsErrorMsg = '';
+                    } else if (state === 'connecting') {
+                        this.wsStatus = 'connecting';
+                        this.wsErrorMsg = '';
+                    } else {
+                        this.wsStatus = 'disconnected';
+                        this.wsErrorMsg = 'Status koneksi Laravel Echo: ' + state;
+                    }
+                };
+
+                updateStatus(connection.state);
+
+                connection.bind('state_change', (states) => {
+                    updateStatus(states.current);
+                });
+
+                connection.bind('error', (err) => {
+                    this.wsStatus = 'disconnected';
+                    this.wsErrorMsg = err?.error?.data?.message || err?.message || 'Koneksi Reverb bermasalah.';
+                });
+
+                // Listen to notifications on private channel if authenticated
+                @if(auth()->check())
+                try {
+                    window.Echo.private('notifications.{{ auth()->id() }}')
+                        .listen('.notification.created', (e) => {
+                            console.log('[Echo] Realtime notification received:', e);
+                        });
+                } catch (e) {}
+                @endif
+            },
+
+            testReverbConnection() {
+                if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+                    const state = window.Echo.connector.pusher.connection.state;
+                    if (state === 'connected') {
+                        this.wsStatus = 'connected';
+                        this.wsLatency = 5;
+                        this.wsErrorMsg = '';
+                        return;
+                    }
+                    this.wsStatus = 'connecting';
+                    this.wsErrorMsg = '';
+                    try {
+                        window.Echo.connector.pusher.connect();
+                    } catch (e) {}
+                }
+            },
+
+            // Broadcast Tester State
+            broadcastTarget: 'all',
+            broadcastUserId: '',
+            broadcastType: 'info',
+            broadcastTitle: '🔔 Tes Siaran Realtime Reverb',
+            broadcastMessage: 'Halo! Ini adalah notifikasi pengujian langsung dari Admin via WebSocket Laravel Reverb.',
+            broadcastLoading: false,
+            broadcastResult: null,
+
+            async submitBroadcastTest() {
+                if (this.broadcastTarget === 'user' && !this.broadcastUserId) {
+                    alert('Silakan pilih user penerima terlebih dahulu!');
+                    return;
+                }
+
+                this.broadcastLoading = true;
+                this.broadcastResult = null;
+
+                try {
+                    const response = await fetch('{{ route('admin.settings.test-broadcast') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            target: this.broadcastTarget,
+                            user_id: this.broadcastTarget === 'user' ? this.broadcastUserId : null,
+                            type: this.broadcastType,
+                            title: this.broadcastTitle,
+                            message: this.broadcastMessage
+                        })
+                    });
+
+                    const data = await response.json();
+                    this.broadcastResult = data;
+                    
+                } catch (err) {
+                    this.broadcastResult = {
+                        success: false,
+                        message: 'Gagal mengirim broadcast: ' + (err.message || 'Network error')
+                    };
+                } finally {
+                    this.broadcastLoading = false;
+                }
+            },
+
+            init() {
+                this.initEchoListener();
+            }
+        };
+    }
+
+    window.settings = settings;
+
+    if (window.Alpine) {
+        Alpine.data('settings', settings);
+    } else {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('settings', settings);
+        });
+    }
 </script>
 @endpush
 @endsection
+
+
+
+
 

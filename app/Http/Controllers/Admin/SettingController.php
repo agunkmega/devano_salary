@@ -41,7 +41,15 @@ class SettingController extends Controller
         }
         rsort($backups);
 
-        return view('settings.index', compact('settings', 'backups'));
+        $users = \App\Models\User::where('is_active', true)->orderBy('name')->get();
+        $reverbConfig = [
+            'host' => config('reverb.servers.reverb.hostname') ?: env('REVERB_HOST', '127.0.0.1'),
+            'port' => config('reverb.servers.reverb.port') ?: env('REVERB_PORT', 8080),
+            'scheme' => config('reverb.apps.apps.0.options.scheme') ?: env('REVERB_SCHEME', 'http'),
+            'app_key' => config('reverb.apps.apps.0.key') ?: env('REVERB_APP_KEY', 'employee-key'),
+        ];
+
+        return view('settings.index', compact('settings', 'backups', 'users', 'reverbConfig'));
     }
 
     public function update(Request $request)
@@ -289,5 +297,53 @@ class SettingController extends Controller
 
         return redirect()->route('admin.settings.index', ['tab' => 'database'])
             ->with('success', 'Backup berhasil dihapus.');
+    }
+
+    public function testBroadcast(Request $request)
+    {
+        $validated = $request->validate([
+            'target' => 'required|in:all,user',
+            'user_id' => 'nullable|required_if:target,user|exists:users,id',
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'type' => 'nullable|string|in:info,success,warning,danger,leave,cash_advance,announcement,attendance',
+        ]);
+
+        $title = $validated['title'];
+        $message = $validated['message'];
+        $type = $validated['type'] ?? 'info';
+
+        if ($validated['target'] === 'all') {
+            event(new \App\Events\BroadcastTestEvent($title, $message, $type));
+
+            return response()->json([
+                'success' => true,
+                'message' => "Siaran uji coba (Snackbar + Suara) berhasil dikirim ke semua klien tanpa menyimpan ke database.",
+                'details' => [
+                    'target' => 'all',
+                    'save_to_db' => false,
+                    'title' => $title,
+                    'type' => $type,
+                    'timestamp' => now()->format('Y-m-d H:i:s'),
+                ],
+            ]);
+        } else {
+            $user = \App\Models\User::findOrFail($validated['user_id']);
+            event(new \App\Events\BroadcastTestEvent($title, $message, $type, (int) $user->id));
+
+            return response()->json([
+                'success' => true,
+                'message' => "Pesan uji coba (Snackbar + Suara) berhasil dikirim ke {$user->name} tanpa menyimpan ke database.",
+                'details' => [
+                    'target' => 'user',
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'save_to_db' => false,
+                    'title' => $title,
+                    'type' => $type,
+                    'timestamp' => now()->format('Y-m-d H:i:s'),
+                ],
+            ]);
+        }
     }
 }

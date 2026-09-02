@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -15,6 +15,12 @@
             if (stored === 'true' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
             }
+            window.reverbConfig = {
+                host: '{{ config('reverb.servers.reverb.hostname') ?: env('REVERB_HOST', '127.0.0.1') }}',
+                port: '{{ config('reverb.servers.reverb.port') ?: env('REVERB_PORT', 8080) }}',
+                scheme: '{{ config('reverb.apps.apps.0.options.scheme') ?: env('REVERB_SCHEME', 'http') }}',
+                app_key: '{{ config('reverb.apps.apps.0.key') ?: env('REVERB_APP_KEY', 'employee-key') }}'
+            };
         })();
     </script>
     @stack('head')
@@ -135,8 +141,8 @@
 
 @stack('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('adminLayout', () => ({
+    function adminLayout() {
+        return {
             mobileOpen: false,
             darkMode: localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches),
             init() {
@@ -146,8 +152,18 @@
                 });
                 document.documentElement.classList.toggle('dark', this.darkMode);
             }
-        }));
-    });
+        };
+    }
+
+    window.adminLayout = adminLayout;
+
+    if (window.Alpine) {
+        Alpine.data('adminLayout', adminLayout);
+    } else {
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('adminLayout', adminLayout);
+        });
+    }
 </script>
 </body>
 </html>

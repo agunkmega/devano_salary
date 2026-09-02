@@ -100,6 +100,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'role:su
     Route::post('settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
     Route::get('settings/backup/{filename}/download', [SettingController::class, 'downloadBackup'])->name('settings.backup.download');
     Route::delete('settings/backup/{filename}', [SettingController::class, 'deleteBackup'])->name('settings.backup.delete');
+    Route::post('settings/test-broadcast', [SettingController::class, 'testBroadcast'])->name('settings.test-broadcast');
 
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('notifications/{notification}/mark-read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
@@ -152,4 +153,5 @@ Route::get('/download/app-release.apk', [App\Http\Controllers\Api\MobileReleaseA
 Route::post('/admin/settings/mobile-app-release', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadApk'])->name('admin.settings.mobile-app-release');
 
 Route::post('/admin/settings/mobile-app-release-chunk', [App\Http\Controllers\Api\MobileReleaseApiController::class, 'uploadChunk'])->name('admin.settings.mobile-app-release-chunk');
+
 

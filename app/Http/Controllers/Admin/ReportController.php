@@ -664,10 +664,10 @@ class ReportController extends Controller
                 $rows->push([
                     'No' => $no++,
                     'Nama' => $p->employee->full_name ?? '-',
-                    'No. KTP' => $p->employee->identity_number ?? '-',
+                    'No. KTP' => $p->employee->identity_number ? "'" . $p->employee->identity_number : '-',
                     'Jenis' => ($p->employee_type ?? 'bulanan') === 'harian' ? 'Harian' : 'Bulanan',
                     'Bank' => $p->employee->bank_name ?? 'Cash',
-                    'No. Rekening' => $p->employee->bank_account ?? '-',
+                    'No. Rekening' => $p->employee->bank_account ? "'" . $p->employee->bank_account : '-',
                     'Nama Rekening' => $p->employee->bank_holder ?? '-',
                     'Gaji Bersih' => (float) $p->net_salary,
                 ]);
@@ -686,12 +686,13 @@ class ReportController extends Controller
 
         $headings = ['No', 'Nama', 'No. KTP', 'Jenis', 'Bank', 'No. Rekening', 'Nama Rekening', 'Gaji Bersih'];
 
-        return Excel::download(new class($rows, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+        return Excel::download(new class($rows, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithColumnFormatting {
             private $data;
             private $headings;
             public function __construct($data, $headings) { $this->data = $data; $this->headings = $headings; }
             public function array(): array { return $this->data->toArray(); }
             public function headings(): array { return $this->headings; }
+            public function columnFormats(): array { return ['C' => '@', 'F' => '@']; }
         }, 'payroll-' . now()->format('Y-m-d') . '.xlsx');
     }
 

@@ -85,8 +85,8 @@
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Lembur Out</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Total Lembur</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Telat</th>
-                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Pulang Awal</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Lebih Istirahat</th>
+                        <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Pulang Awal</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Status</th>
                         <th class="text-left py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Note</th>
                         <th class="text-right py-3 px-3 text-gray-500 dark:text-gray-400 font-medium">Aksi</th>
@@ -132,19 +132,19 @@
                                 </template>
                             </td>
                             <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
-                                <template x-if="att.ignore_early_leave">
-                                    <span class="text-xs font-semibold text-purple-500 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-1.5 py-0.5 rounded">Diabaikan</span>
-                                </template>
-                                <template x-if="!att.ignore_early_leave">
-                                    <span x-text="att.early_leave_minutes != null && att.early_leave_minutes > 0 ? att.early_leave_minutes + ' menit' : '-'"></span>
-                                </template>
-                            </td>
-                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
                                 <template x-if="att.ignore_excess_break">
                                     <span class="text-xs font-semibold text-cyan-500 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20 px-1.5 py-0.5 rounded">Diabaikan</span>
                                 </template>
                                 <template x-if="!att.ignore_excess_break">
                                     <span x-text="att.excess_break_minutes != null && att.excess_break_minutes > 0 ? att.excess_break_minutes + ' menit' : '-'"></span>
+                                </template>
+                            </td>
+                            <td class="py-3 px-3 text-gray-600 dark:text-gray-400">
+                                <template x-if="att.ignore_early_leave">
+                                    <span class="text-xs font-semibold text-purple-500 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-1.5 py-0.5 rounded">Diabaikan</span>
+                                </template>
+                                <template x-if="!att.ignore_early_leave">
+                                    <span x-text="att.early_leave_minutes != null && att.early_leave_minutes > 0 ? att.early_leave_minutes + ' menit' : '-'"></span>
                                 </template>
                             </td>
                             <td class="py-3 px-3">
@@ -194,13 +194,13 @@
                         "></td>
                         <td class="py-3 px-3 text-gray-700 dark:text-gray-300" x-text="
                             (() => {
-                                let total = filteredAttendances.reduce((sum, a) => sum + (a.early_leave_minutes || 0), 0);
+                                let total = filteredAttendances.reduce((sum, a) => sum + ((a.excess_break_minutes || 0) > 0 ? a.excess_break_minutes : 0), 0);
                                 return total > 0 ? total + ' menit' : '-';
                             })()
                         "></td>
                         <td class="py-3 px-3 text-gray-700 dark:text-gray-300" x-text="
                             (() => {
-                                let total = filteredAttendances.reduce((sum, a) => sum + ((a.excess_break_minutes || 0) > 0 ? a.excess_break_minutes : 0), 0);
+                                let total = filteredAttendances.reduce((sum, a) => sum + (a.early_leave_minutes || 0), 0);
                                 return total > 0 ? total + ' menit' : '-';
                             })()
                         "></td>
@@ -330,12 +330,12 @@
                         <label for="edit_ignore_late" class="text-sm text-gray-700 dark:text-gray-300">Abaikan telat</label>
                     </div>
                     <div class="flex items-center gap-2 py-1">
-                        <input type="checkbox" x-model="editForm.ignore_early_leave" name="ignore_early_leave" id="edit_ignore_early_leave" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="edit_ignore_early_leave" class="text-sm text-gray-700 dark:text-gray-300">Abaikan pulang awal</label>
-                    </div>
-                    <div class="flex items-center gap-2 py-1">
                         <input type="checkbox" x-model="editForm.ignore_excess_break" name="ignore_excess_break" id="edit_ignore_excess_break" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
                         <label for="edit_ignore_excess_break" class="text-sm text-gray-700 dark:text-gray-300">Abaikan lebih istirahat</label>
+                    </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" x-model="editForm.ignore_early_leave" name="ignore_early_leave" id="edit_ignore_early_leave" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="edit_ignore_early_leave" class="text-sm text-gray-700 dark:text-gray-300">Abaikan pulang awal</label>
                     </div>
                     <div class="flex items-center gap-2 py-1">
                         <input type="checkbox" x-model="editForm.is_half_day" name="is_half_day" id="edit_is_half_day" value="1" class="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500">

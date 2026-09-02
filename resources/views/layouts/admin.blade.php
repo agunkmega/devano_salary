@@ -15,12 +15,6 @@
             if (stored === 'true' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
             }
-            window.reverbConfig = {
-                host: '{{ config('reverb.servers.reverb.hostname') ?: env('REVERB_HOST', '127.0.0.1') }}',
-                port: '{{ config('reverb.servers.reverb.port') ?: env('REVERB_PORT', 8080) }}',
-                scheme: '{{ config('reverb.apps.apps.0.options.scheme') ?: env('REVERB_SCHEME', 'http') }}',
-                app_key: '{{ config('reverb.apps.apps.0.key') ?: env('REVERB_APP_KEY', 'employee-key') }}'
-            };
         })();
     </script>
     @stack('head')
